@@ -13,9 +13,9 @@ AI agent skills for [Langfuse](https://langfuse.com) observability and prompt ma
 ## Installation
 
 ```bash
-npx skills add <owner>/skills --skill "langfuse-observability"
-npx skills add <owner>/skills --skill "langfuse-prompt-migration"
-npx skills add <owner>/skills --skill "langfuse-api"
+npx skills add langfuse/skills --skill "langfuse-observability"
+npx skills add langfuse/skills --skill "langfuse-prompt-migration"
+npx skills add langfuse/skills --skill "langfuse-api"
 ```
 
 ## Usage
