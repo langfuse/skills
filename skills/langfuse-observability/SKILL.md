@@ -18,6 +18,7 @@ Instrument LLM applications with Langfuse tracing, following best practices and 
 ### 1. Assess Current State
 
 Check the project:
+
 - Is Langfuse SDK installed?
 - What LLM frameworks are used? (OpenAI SDK, LangChain, LlamaIndex, Vercel AI SDK, etc.)
 - Is there existing instrumentation?
@@ -30,15 +31,15 @@ Check the project:
 
 Every trace should have these fundamentals:
 
-| Requirement | Check | Why |
-|-------------|-------|-----|
-| Model name | Is the LLM model captured? | Enables model comparison and filtering |
-| Token usage | Are input/output tokens tracked? | Enables automatic cost calculation |
-| Good trace names | Are names descriptive? (`chat-response`, not `trace-1`) | Makes traces findable and filterable |
-| Span hierarchy | Are multi-step operations nested properly? | Shows which step is slow or failing |
-| Correct observation types | Are generations marked as generations? | Enables model-specific analytics |
-| Sensitive data masked | Is PII/confidential data excluded or masked? | Prevents data leakage |
-| Trace input/output | Does the trace capture the full data being processed as input, and the result as output? | Enables debugging and understanding what was processed |
+| Requirement               | Check                                                                                    | Why                                                    |
+| ------------------------- | ---------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| Model name                | Is the LLM model captured?                                                               | Enables model comparison and filtering                 |
+| Token usage               | Are input/output tokens tracked?                                                         | Enables automatic cost calculation                     |
+| Good trace names          | Are names descriptive? (`chat-response`, not `trace-1`)                                  | Makes traces findable and filterable                   |
+| Span hierarchy            | Are multi-step operations nested properly?                                               | Shows which step is slow or failing                    |
+| Correct observation types | Are generations marked as generations?                                                   | Enables model-specific analytics                       |
+| Sensitive data masked     | Is PII/confidential data excluded or masked?                                             | Prevents data leakage                                  |
+| Trace input/output        | Does the trace capture the full data being processed as input, and the result as output? | Enables debugging and understanding what was processed |
 
 Framework integrations (OpenAI, LangChain, etc.) handle model name, tokens, and observation types automatically. Prefer integrations over manual instrumentation.
 
@@ -51,6 +52,7 @@ Once baseline instrumentation is working, encourage the user to explore their tr
 "Your traces are now appearing in Langfuse. Take a look at a few of them—see what data is being captured, what's useful, and what's missing. This will help us decide what additional context to add."
 
 This helps the user:
+
 - Understand what they're already getting
 - Form opinions about what's missing
 - Ask better questions about what they need
@@ -61,13 +63,13 @@ Determine what additional instrumentation would be valuable. **Infer from code w
 
 **Infer from code:**
 
-| If you see in code... | Infer | Suggest |
-|-----------------------|-------|---------|
-| Conversation history, chat endpoints, message arrays | Multi-turn app | `session_id` |
-| User authentication, `user_id` variables | User-aware app | `user_id` on traces |
-| Multiple distinct endpoints/features | Multi-feature app | `feature` tag |
-| Customer/tenant identifiers | Multi-tenant app | `customer_id` or tier tag |
-| Feedback collection, ratings | Has user feedback | Capture as scores |
+| If you see in code...                                | Infer             | Suggest                   |
+| ---------------------------------------------------- | ----------------- | ------------------------- |
+| Conversation history, chat endpoints, message arrays | Multi-turn app    | `session_id`              |
+| User authentication, `user_id` variables             | User-aware app    | `user_id` on traces       |
+| Multiple distinct endpoints/features                 | Multi-feature app | `feature` tag             |
+| Customer/tenant identifiers                          | Multi-tenant app  | `customer_id` or tier tag |
+| Feedback collection, ratings                         | Has user feedback | Capture as scores         |
 
 **Only ask when not obvious from code:**
 
@@ -77,13 +79,13 @@ Determine what additional instrumentation would be valuable. **Infer from code w
 
 **Additions and their value:**
 
-| Addition | Why | Docs |
-|----------|-----|------|
-| `session_id` | Groups conversations together | https://langfuse.com/docs/tracing-features/sessions |
-| `user_id` | Enables user filtering and cost attribution | https://langfuse.com/docs/tracing-features/users |
-| User feedback score | Enables quality filtering and trends | https://langfuse.com/docs/scores/overview |
-| `feature` tag | Per-feature analytics | https://langfuse.com/docs/tracing-features/tags |
-| `customer_tier` tag | Cost/quality breakdown by segment | https://langfuse.com/docs/tracing-features/tags |
+| Addition            | Why                                         | Docs                                                |
+| ------------------- | ------------------------------------------- | --------------------------------------------------- |
+| `session_id`        | Groups conversations together               | https://langfuse.com/docs/tracing-features/sessions |
+| `user_id`           | Enables user filtering and cost attribution | https://langfuse.com/docs/tracing-features/users    |
+| User feedback score | Enables quality filtering and trends        | https://langfuse.com/docs/scores/overview           |
+| `feature` tag       | Per-feature analytics                       | https://langfuse.com/docs/tracing-features/tags     |
+| `customer_tier` tag | Cost/quality breakdown by segment           | https://langfuse.com/docs/tracing-features/tags     |
 
 These are NOT baseline requirements—only add what's relevant based on inference or user input.
 
@@ -100,13 +102,13 @@ After adding context, point users to relevant UI features:
 
 Prefer these over manual instrumentation:
 
-| Framework | Integration | Docs |
-|-----------|-------------|------|
-| OpenAI SDK | Drop-in replacement | https://langfuse.com/docs/integrations/openai |
-| LangChain | Callback handler | https://langfuse.com/docs/integrations/langchain |
-| LlamaIndex | Callback handler | https://langfuse.com/docs/integrations/llama-index |
+| Framework     | Integration            | Docs                                                 |
+| ------------- | ---------------------- | ---------------------------------------------------- |
+| OpenAI SDK    | Drop-in replacement    | https://langfuse.com/docs/integrations/openai        |
+| LangChain     | Callback handler       | https://langfuse.com/docs/integrations/langchain     |
+| LlamaIndex    | Callback handler       | https://langfuse.com/docs/integrations/llama-index   |
 | Vercel AI SDK | OpenTelemetry exporter | https://langfuse.com/docs/integrations/vercel-ai-sdk |
-| LiteLLM | Callback or proxy | https://langfuse.com/docs/integrations/litellm |
+| LiteLLM       | Callback or proxy      | https://langfuse.com/docs/integrations/litellm       |
 
 Full list: https://langfuse.com/docs/integrations
 
@@ -126,12 +128,12 @@ Learn more: https://langfuse.com/docs/tracing-features/sessions"
 
 ## Common Mistakes
 
-| Mistake | Problem | Fix |
-|---------|---------|-----|
-| No `flush()` in scripts | Traces never sent | Call `langfuse.flush()` before exit |
-| Flat traces | Can't see which step failed | Use nested spans for distinct steps |
-| Generic trace names | Hard to filter | Use descriptive names: `chat-response`, `doc-summary` |
-| Logging sensitive data | Data leakage risk | Mask PII before tracing |
-| Manual instrumentation when integration exists | More code, less context | Use framework integration |
-| Langfuse import before env vars loaded | Langfuse initializes with missing/wrong credentials | Import Langfuse AFTER loading environment variables (e.g., after `load_dotenv()`) |
-| Wrong import order with OpenAI | Langfuse can't patch the OpenAI client | Import Langfuse and call its setup BEFORE importing OpenAI client |
+| Mistake                                        | Problem                                             | Fix                                                                               |
+| ---------------------------------------------- | --------------------------------------------------- | --------------------------------------------------------------------------------- |
+| No `flush()` in scripts                        | Traces never sent                                   | Call `langfuse.flush()` before exit                                               |
+| Flat traces                                    | Can't see which step failed                         | Use nested spans for distinct steps                                               |
+| Generic trace names                            | Hard to filter                                      | Use descriptive names: `chat-response`, `doc-summary`                             |
+| Logging sensitive data                         | Data leakage risk                                   | Mask PII before tracing                                                           |
+| Manual instrumentation when integration exists | More code, less context                             | Use framework integration                                                         |
+| Langfuse import before env vars loaded         | Langfuse initializes with missing/wrong credentials | Import Langfuse AFTER loading environment variables (e.g., after `load_dotenv()`) |
+| Wrong import order with OpenAI                 | Langfuse can't patch the OpenAI client              | Import Langfuse and call its setup BEFORE importing OpenAI client                 |
