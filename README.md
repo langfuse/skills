@@ -1,29 +1,43 @@
 # Langfuse Skills
 
-AI agent skills for [Langfuse](https://langfuse.com) observability and prompt management.
+[Agent Skills](https://github.com/anthropics/skills) that teach AI coding assistants (Claude Code, Cursor, etc.) how to work with [Langfuse](https://langfuse.com) — the open-source LLM engineering platform for tracing, prompt management, and evaluation.
 
 ## Skills
 
-| Skill | Description |
-|-------|-------------|
-| [langfuse-observability](./skills/langfuse-observability) | Instrument LLM applications with Langfuse tracing |
-| [langfuse-prompt-migration](./skills/langfuse-prompt-migration) | Migrate hardcoded prompts to Langfuse |
-| [langfuse-cli](./skills/langfuse-cli) | Interact with the Langfuse REST API |
+| Skill                                                           | Description                                                                                        |
+| --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| [langfuse](./skills/langfuse)                                   | Query and manage traces, prompts, datasets, and scores via the Langfuse API; look up documentation |
+| [langfuse-observability](./skills/langfuse-observability)       | Add Langfuse tracing to LLM applications with framework-specific best practices                    |
+| [langfuse-prompt-migration](./skills/langfuse-prompt-migration) | Migrate hardcoded prompts to Langfuse for version control and deployment-free iteration            |
 
 ## Installation
 
+Install via the [skills CLI](https://github.com/anthropics/skills):
+
 ```bash
+npx skills add langfuse/skills --skill "langfuse"
 npx skills add langfuse/skills --skill "langfuse-observability"
 npx skills add langfuse/skills --skill "langfuse-prompt-migration"
-npx skills add langfuse/skills --skill "langfuse-cli"
 ```
+
+## Prerequisites
+
+You need a Langfuse account ([cloud](https://cloud.langfuse.com) or [self-hosted](https://langfuse.com/docs/deployment/self-host)) and API keys:
+
+```bash
+export LANGFUSE_PUBLIC_KEY=pk-lf-...
+export LANGFUSE_SECRET_KEY=sk-lf-...
+export LANGFUSE_HOST=https://cloud.langfuse.com  # or https://us.cloud.langfuse.com, or self-hosted URL
+```
+
+API keys are found in your Langfuse project under **Settings > API Keys**.
 
 ## Usage
 
-These skills work with Claude Code, Cursor, and other AI coding agents that support the [Agent Skills](https://github.com/anthropics/skills) format.
+Once installed, the agent will automatically use these skills when relevant — for example:
 
-Once installed, the agent will automatically use these skills when:
 - Setting up Langfuse tracing in a project
+- Auditing existing instrumentation
 - Migrating prompts to Langfuse prompt management
 - Querying traces, prompts, or datasets via the API
-- Auditing existing Langfuse instrumentation
+- Looking up Langfuse docs, SDK usage, or integration guides
