@@ -8,14 +8,14 @@ AI agent skills for [Langfuse](https://langfuse.com) observability and prompt ma
 |-------|-------------|
 | [langfuse-observability](./skills/langfuse-observability) | Instrument LLM applications with Langfuse tracing |
 | [langfuse-prompt-migration](./skills/langfuse-prompt-migration) | Migrate hardcoded prompts to Langfuse |
-| [langfuse-api](./skills/langfuse-api) | Interact with the Langfuse REST API |
+| [langfuse-cli](./skills/langfuse-cli) | Interact with the Langfuse REST API |
 
 ## Installation
 
 ```bash
 npx skills add langfuse/skills --skill "langfuse-observability"
 npx skills add langfuse/skills --skill "langfuse-prompt-migration"
-npx skills add langfuse/skills --skill "langfuse-api"
+npx skills add langfuse/skills --skill "langfuse-cli"
 ```
 
 ## Usage
