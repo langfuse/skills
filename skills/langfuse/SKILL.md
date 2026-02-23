@@ -5,7 +5,23 @@ description: Interact with Langfuse and access its documentation. Use when needi
 
 # Langfuse
 
-Two core capabilities: **programmatic API access** via the Langfuse CLI, and **documentation retrieval** via llms.txt, page fetching, and search. Don't rely on your existing knowledge about langfuse. It might be outdated. Always fetch the latest documentation.
+This skill helps you use Langfuse effectively across all common workflows: instrumenting applications, migrating prompts, debugging traces, and accessing data programmatically.
+
+## Core Principles
+
+Follow these principles for ALL Langfuse work:
+
+1. **Documentation First**: NEVER implement based on memory. Always fetch current docs before writing code (Langfuse updates frequently) See the section below on how to access documentation.
+2. **CLI for Data Access**: Use `langfuse-cli` when querying/modifying Langfuse data. See the section below on how to use the CLI. 
+3. **Best Practices by Use Case**: Check the relevant reference file below for use-case-specific guidelines before implementing
+4. **Use latest Langfuse versions**: Unless the user specified otherwise or there's a good reason, always use the latest version of Langfuse SDKs/APIs.
+
+
+## Use case specific references
+
+- instrumenting an existing function/application: references/instrumentation.md
+- migrating prompts from a codebase into Langfuse: references/prompt-migration.md
+- further tips on using the Langfuse CLI: references/cli.md
 
 ## 1. Langfuse API via CLI
 
