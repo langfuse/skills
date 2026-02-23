@@ -35,10 +35,10 @@ Set environment variables before making calls:
 ```bash
 export LANGFUSE_PUBLIC_KEY=pk-lf-...
 export LANGFUSE_SECRET_KEY=sk-lf-...
-export LANGFUSE_HOST=https://cloud.langfuse.com  # optional, default is EU
+export LANGFUSE_HOST=https://cloud.langfuse.com # example for EU cloud. For US cloud it's us.cloud.langfuse.com, and can also be a self-hosted URL. The server must always be specified in order to access Langfuse.
 ```
 
-If not set, ask the user for their API keys (found in Langfuse UI → Settings → API Keys) and which host they use (`cloud.langfuse.com`, `us.cloud.langfuse.com`, or self-hosted URL).
+If not set, ask the user for their API keys (found in Langfuse UI → Settings → API Keys).
 
 ### Detailed CLI Reference
 
