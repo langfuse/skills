@@ -6,9 +6,7 @@
 
 | Skill                                                           | Description                                                                                        |
 | --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| [langfuse](./skills/langfuse)                                   | Query and manage traces, prompts, datasets, and scores via the Langfuse API; look up documentation |
-| [langfuse-observability](./skills/langfuse-observability)       | Add Langfuse tracing to LLM applications with framework-specific best practices                    |
-| [langfuse-prompt-migration](./skills/langfuse-prompt-migration) | Migrate hardcoded prompts to Langfuse for version control and deployment-free iteration            |
+| [langfuse](./skills/langfuse)                                   | Main skill to work with Langfuse. Query and manage traces, prompts, datasets, and scores via the Langfuse API; look up documentation; do things with best practices in mind. |
 
 ## Installation
 
@@ -16,8 +14,6 @@ Install via the [skills CLI](https://github.com/anthropics/skills):
 
 ```bash
 npx skills add langfuse/skills --skill "langfuse"
-npx skills add langfuse/skills --skill "langfuse-observability"
-npx skills add langfuse/skills --skill "langfuse-prompt-migration"
 ```
 
 ## Prerequisites
