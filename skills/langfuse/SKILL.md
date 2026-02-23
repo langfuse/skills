@@ -5,17 +5,13 @@ description: Interact with Langfuse and access its documentation. Use when needi
 
 # Langfuse
 
-Two core capabilities: **programmatic API access** via the Langfuse CLI, and **documentation retrieval** via llms.txt, page fetching, and search.
+Two core capabilities: **programmatic API access** via the Langfuse CLI, and **documentation retrieval** via llms.txt, page fetching, and search. Don't rely on your existing knowledge about langfuse. It might be outdated. Always fetch the latest documentation.
 
 ## 1. Langfuse API via CLI
 
 Use the `langfuse-cli` to interact with the full Langfuse REST API from the command line. Run via npx (no install required):
 
-```bash
-npx langfuse-cli api <resource> <action>
-```
-
-### Quick Start
+Start by discovering the schema and available arguments:
 
 ```bash
 # Discover all available resources
