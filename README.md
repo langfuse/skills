@@ -10,6 +10,16 @@
 
 ## Installation
 
+### Cursor Plugin
+
+Install as a [Cursor plugin](https://cursor.com/docs/plugins):
+
+```
+/add-plugin langfuse
+```
+
+### skills CLI
+
 Install via the [skills CLI](https://github.com/anthropics/skills):
 
 ```bash
