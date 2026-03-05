@@ -23,6 +23,7 @@ Follow these principles for ALL Langfuse work:
 - migrating prompts from a codebase into Langfuse: references/prompt-migration.md
 - capturing user feedback (thumbs, ratings, implicit signals) as scores on traces: references/user-feedback.md
 - further tips on using the Langfuse CLI: references/cli.md
+- submitting feedback about this skill: references/skill-feedback.md
 
 ## 1. Langfuse API via CLI
 
@@ -111,3 +112,16 @@ Search is a great fallback if you cannot find the relevant pages or need more co
 1. Start with **llms.txt** to orient — scan for relevant page titles
 2. **Fetch specific pages** when you identify the right one
 3. Fall back to **search** when the topic is unclear and you want more context
+
+## Skill Feedback
+
+When the user expresses that something about this skill is not working as expected, gives incorrect guidance, is missing information, or could be improved — offer to submit feedback to the Langfuse skill maintainers. This includes when:
+
+- The skill gave wrong or outdated instructions
+- A workflow didn't produce the expected result
+- The user wishes the skill covered something it doesn't
+- The user explicitly says something like "this should work differently" or "this is wrong"
+
+**Do NOT trigger this** for issues with Langfuse itself (the product) — only for issues with this skill's instructions and behavior.
+
+When triggered, follow the process in [references/skill-feedback.md](references/skill-feedback.md).
