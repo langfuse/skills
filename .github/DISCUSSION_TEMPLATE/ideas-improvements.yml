@@ -1,12 +1,13 @@
-title: ""
 labels: []
 body:
   - type: textarea
+    id: idea
     attributes:
       label: Describe your idea or feedback
     validations:
       required: true
   - type: textarea
+    id: outcome
     attributes:
       label: What would the ideal outcome look like?
     validations:
