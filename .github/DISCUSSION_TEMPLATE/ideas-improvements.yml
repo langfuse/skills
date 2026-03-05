@@ -1,0 +1,13 @@
+title: ""
+labels: []
+body:
+  - type: textarea
+    attributes:
+      label: Describe your idea or feedback
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: What would the ideal outcome look like?
+    validations:
+      required: false

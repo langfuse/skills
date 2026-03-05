@@ -47,3 +47,7 @@ Once installed, the agent will automatically use these skills when relevant — 
 - Migrating prompts to Langfuse prompt management
 - Querying traces, prompts, or datasets via the API
 - Looking up Langfuse docs, SDK usage, or integration guides
+
+## Feedback & Requests
+
+Something not working as expected, or want a new skill? [Start a discussion](https://github.com/langfuse/skills/discussions/new?category=ideas-improvements).
