@@ -21,6 +21,7 @@ Follow these principles for ALL Langfuse work:
 
 - instrumenting an existing function/application: references/instrumentation.md
 - migrating prompts from a codebase into Langfuse: references/prompt-migration.md
+- capturing user feedback (thumbs, ratings, implicit signals) as scores on traces: references/user-feedback.md
 - further tips on using the Langfuse CLI: references/cli.md
 
 ## 1. Langfuse API via CLI
