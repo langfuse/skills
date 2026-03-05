@@ -26,6 +26,15 @@ Install via the [skills CLI](https://github.com/anthropics/skills):
 npx skills add langfuse/skills --skill "langfuse"
 ```
 
+### Manual symlink
+
+Clone this repo and symlink the skill into your agent's skills directory:
+
+```bash
+git clone https://github.com/langfuse/skills.git /path/to/langfuse-skills
+ln -s /path/to/langfuse-skills/skills/langfuse /path/to/skills-directory/langfuse
+```
+
 ## Prerequisites
 
 You need a Langfuse account ([cloud](https://cloud.langfuse.com) or [self-hosted](https://langfuse.com/docs/deployment/self-host)) and API keys:
