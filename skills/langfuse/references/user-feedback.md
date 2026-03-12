@@ -13,7 +13,20 @@ Docs: https://langfuse.com/docs/observability/features/user-feedback
 
 ### 1. Determine What Feedback to Capture
 
-If the user has asked for something specific, go with that. Otherwise, look at the application and suggest what makes sense.
+If the user has asked for something specific, go with that. Otherwise, look at the application and **present a few UX options** for how feedback could work, then ask the user which they prefer before implementing.
+
+Common UX patterns to suggest:
+
+| UX Pattern | Best for | How it works |
+|------------|----------|--------------|
+| Thumbs up/down | Chat apps, Q&A | Simple binary buttons next to each response |
+| Star rating (1–5) | Content generation, summaries | Star row or dropdown after each output |
+| "Was this helpful?" banner | Search, documentation assistants | Single yes/no prompt at the bottom of a response |
+| Regenerate / copy tracking | Any app with these actions | Implicit — log when users retry (negative signal) or copy output (positive signal) |
+| Free-text comment | Complex outputs, internal tools | Optional text field alongside a rating |
+| Report button | Any user-facing app | Flag icon to report bad/harmful responses |
+
+This table is not exhaustive — if the application suggests a different feedback pattern that fits better, propose that instead. Present 2–3 options that match the application's use case and ask the user which approach they'd like. This decision shapes everything downstream (score names, data types, frontend components), so it's important to align early.
 
 Feedback can be **explicit** (user rates via thumbs, stars, etc.) or **implicit** (derived from behavior like copying output, retrying, or escalating to support). Both are stored as scores. Explicit feedback requires the trace ID to reach the frontend; implicit feedback is logged server-side where the event already happens.
 

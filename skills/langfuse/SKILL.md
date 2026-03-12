@@ -61,7 +61,7 @@ For common workflows, tips, and full usage patterns, see [references/cli.md](ref
 
 ## 2. Langfuse Documentation
 
-Three methods to access Langfuse docs, in order of preference:
+Three methods to access Langfuse docs, in order of preference. **Always prefer your application's native web fetch and search tools** (e.g., `WebFetch`, `WebSearch`, `mcp_fetch`, etc.) over `curl` when available. The URLs and patterns below work with any fetching method — the `curl` examples are just illustrative.
 
 ### 2a. Documentation Index (llms.txt)
 
@@ -77,7 +77,7 @@ Alternatively, you can start on `https://langfuse.com/docs` and explore the site
 
 ### 2b. Fetch Individual Pages as Markdown
 
-Any page listed in llms.txt can be fetched as markdown by appending `.md` to its path or by using Accept: text/markdown in the request headers. Use this when you know which page contains the information needed. Returns clean markdown with code examples and configuration details.
+Any page listed in llms.txt can be fetched as markdown by appending `.md` to its path or by using `Accept: text/markdown` in the request headers. Use this when you know which page contains the information needed. Returns clean markdown with code examples and configuration details.
 
 ```bash
 curl -s "https://langfuse.com/docs/observability/overview.md"
