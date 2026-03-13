@@ -55,6 +55,19 @@ export LANGFUSE_HOST=https://cloud.langfuse.com # example for EU cloud. For US c
 
 If not set, ask the user for their API keys (found in Langfuse UI → Settings → API Keys).
 
+Here's how to obtain them:
+
+1. **Log in** to your Langfuse instance:
+   - Cloud (EU): https://cloud.langfuse.com
+   - Cloud (US): https://us.cloud.langfuse.com
+   - Self-hosted: your own URL
+2. **Select your project** (or create organization + project if you don't have one yet)
+3. Navigate to **Settings → API Keys**
+4. Click **Create new API key** — this generates a `pk-lf-...` (public key) and `sk-lf-...` (secret key) pair
+5. Copy both keys immediately — the secret key is only shown once
+
+Set them as environment variables as shown above, or add them to your `.env` file.
+
 ### Detailed CLI Reference
 
 For common workflows, tips, and full usage patterns, see [references/cli.md](references/cli.md).
