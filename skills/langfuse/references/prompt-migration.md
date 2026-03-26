@@ -32,7 +32,21 @@ If not set, ask user to configure them first.
 8. Verify application works
 ```
 
-## Step 1: Find Prompts
+## Step 1: Find Prompts and Build an Inventory
+
+Before writing ANY code, make a complete list of every prompt you found. For each one, note:
+
+- Name: descriptive, lowercase, hyphenated (e.g. chat-assistant, email-classifier)
+- Source file: where the prompt text lives
+- Code file to refactor: the Python/JS file that USES the prompt (for asset files like .txt/.yaml/.md, this is the file that reads/loads the asset — NOT the asset file itself)
+- Type: chat (used as a message in a chat API) or text (used as a plain string)
+- Variables: values interpolated into the prompt, converted to {{var}} syntax:
+f-string {var} → {{var}}
+.format(var=...) → {{var}}
+${var} → {{var}}
+String concatenation + var + → {{var}}
+YAML {var} → {{var}}
+- Prompt content: the actual text to upload, with variables converted to {{var}} syntax
 
 Search for these patterns:
 
@@ -54,6 +68,8 @@ Search for these patterns:
 | `{var}` / `${var}` | ⚠️ | Convert to `{{var}}` |
 | `{% if %}` / `{% for %}` | ❌ | Move logic to code |
 | `{{ var \| filter }}` | ❌ | Apply filter in code |
+
+**CRITICAL — Variable syntax:** Langfuse uses DOUBLE curly braces for variables: `{{var}}`. When uploading prompt content, you MUST convert every single-brace `{var}` from the original code to double-brace `{{var}}`. Never upload `{var}` — it must be `{{var}}`.
 
 ### Decision Tree
 
