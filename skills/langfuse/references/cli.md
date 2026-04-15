@@ -1,5 +1,7 @@
 # Langfuse CLI Reference
 
+Documentation: https://langfuse.com/docs/api-and-data-platform/features/cli
+
 ## Install
 
 ```bash
