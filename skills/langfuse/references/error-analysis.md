@@ -44,7 +44,7 @@ Example:
 
 Don't list every sub-step. Keep it short enough that the user can skim it in ten seconds.
 
-**Throughout the workflow:** whenever you present a list of options for the user to choose from, render a multiselect. Don't ask in free text when you already know the options. Examples: which environments to include, which observation to target, which signals to use for sampling, which proposed failure categories to keep.
+**Throughout the workflow:** whenever you present a list of options for the user to choose from, list the options as a plain numbered or bulleted list. Don't ask in free text when you already know the options. Examples: which environments to include, which observation to target, which signals to use for sampling, which proposed failure categories to keep.
 
 ## Workflow
 
