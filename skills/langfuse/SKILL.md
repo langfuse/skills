@@ -24,6 +24,7 @@ Follow these principles for ALL Langfuse work:
 - capturing user feedback (thumbs, ratings, implicit signals) as scores on traces: references/user-feedback.md
 - further tips on using the Langfuse CLI: references/cli.md
 - upgrading or migrating Langfuse SDKs to the latest version: references/sdk-upgrade.md
+- systematic error analysis — reading traces, building failure taxonomy, deciding what to fix: references/error-analysis.md
 - submitting feedback about this skill: references/skill-feedback.md
 
 ## 1. Langfuse API via CLI
