@@ -81,7 +81,7 @@ npx langfuse-cli@latest api traces list \
 Show the result to the user and ask:
 - Are sessions used in your app? (`sessionId` populated and consistent?)
 - What does one trace represent — a full conversation, or a single API call?
-- Which `environment` values should be included? Render a multiselect of the distinct values found. (Watch for `development` or synthetic data.)
+- Which `environment` values should be included? List the distinct values found as a plain bulleted list and ask the user to pick. (Watch for `development` or synthetic data.)
 
 **1b. If sessions are used: deduplicate to last interaction per session**
 
@@ -119,7 +119,7 @@ npx langfuse-cli@latest api observations list \
       output: (.output // "" | .[0:200])}'
 ```
 
-Show the result and ask: which observation contains the final response you want to evaluate? Render a multiselect of the distinct observation names found (filter to GENERATION type). Then ask:
+Show the result and ask: which observation contains the final response you want to evaluate? List the distinct observation names found (filter to GENERATION type) as a plain bulleted list. Then ask:
 - Is it always a direct child of the root span, or nested under a specific parent?
 
 > **CRITICAL:** Use `objectType: OBSERVATION` pointing to the GENERATION observation ID when adding items to the annotation queue. Using `objectType: TRACE` shows nothing annotatable in the Langfuse UI when traces are instrumented via OpenTelemetry.
@@ -168,10 +168,10 @@ npx langfuse-cli@latest api traces list \
 
 **2c. Present what you found and ask the user**
 
-Summarise what you found, then render two multiselects:
+Summarise what you found, then ask the user two questions with plain bulleted lists:
 
-1. **Tags to prioritise** — list all distinct tags found. Ask the user to select any that indicate problems (e.g. `error`, `flagged`, `complaint`).
-2. **Score dimensions to prioritise** — list all score config names found. Ask the user to select any where low values indicate failures worth over-sampling.
+1. **Tags to prioritise** — list all distinct tags found. Ask the user which indicate problems (e.g. `error`, `flagged`, `complaint`).
+2. **Score dimensions to prioritise** — list all score config names found. Ask the user which have low values that indicate failures worth over-sampling.
 
 Then ask in free text: are there any other known problem areas (specific trace names, time windows, user segments) to include?
 
@@ -342,7 +342,7 @@ For each category: a clear name, one-sentence definition, which annotations belo
 - Actionable — each points toward a specific fix
 - 5–10 total; split when root causes differ, group when they share a root cause
 
-**Always review LLM-suggested groupings with the user** before finalising. LLMs cluster by surface similarity; the user catches domain-specific distinctions. Present the proposed categories as a multiselect and ask the user to confirm which to keep, then follow up on any they removed or want to split/merge.
+**Always review LLM-suggested groupings with the user** before finalising. LLMs cluster by surface similarity; the user catches domain-specific distinctions. Present the proposed categories as a plain numbered list and ask the user to confirm which to keep, then follow up on any they removed or want to split/merge.
 
 **Anti-patterns:**
 - Brainstorming categories before reading traces — let them emerge
