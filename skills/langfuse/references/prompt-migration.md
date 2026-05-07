@@ -9,15 +9,15 @@ Migrate hardcoded prompts to Langfuse for version control, A/B testing, and depl
 
 ## Prerequisites
 
-Verify credentials before starting:
+Verify credentials are set before starting. Check existence only — never print the secret key, since the value would land in the agent's context and transcripts:
 
 ```bash
-echo $LANGFUSE_PUBLIC_KEY   # pk-...
-echo $LANGFUSE_SECRET_KEY   # sk-...
-echo $LANGFUSE_HOST         # https://cloud.langfuse.com or self-hosted
+[ -n "$LANGFUSE_PUBLIC_KEY" ] && echo "LANGFUSE_PUBLIC_KEY: set" || echo "LANGFUSE_PUBLIC_KEY: missing"
+[ -n "$LANGFUSE_SECRET_KEY" ] && echo "LANGFUSE_SECRET_KEY: set" || echo "LANGFUSE_SECRET_KEY: missing"
+[ -n "$LANGFUSE_HOST" ]       && echo "LANGFUSE_HOST: $LANGFUSE_HOST" || echo "LANGFUSE_HOST: missing"
 ```
 
-If not set, ask user to configure them first.
+If not set, ask the user to configure them in their shell or a `.env` file. Do not ask them to paste keys into chat.
 
 ## Migration Flow
 
