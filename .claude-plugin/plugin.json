@@ -1,6 +1,6 @@
 {
   "name": "langfuse",
-  "description": "Skills for working with Langfuse — the open-source LLM engineering platform for tracing, prompt management, and evaluation.",
+  "description": "Skills for working with Langfuse, the open-source LLM engineering platform for tracing, prompt management, and evaluation.",
   "version": "1.0.0",
   "author": {
     "name": "Langfuse",
