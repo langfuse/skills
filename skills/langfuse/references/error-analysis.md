@@ -39,11 +39,19 @@ If not set, check `.env` in the project root: `export $(grep -v '^#' .env | xarg
 
 ```bash
 AUTH=$(echo -n "${LANGFUSE_PUBLIC_KEY}:${LANGFUSE_SECRET_KEY}" | base64)
+
+# Verify before proceeding
+STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+  -H "Authorization: Basic $AUTH" \
+  "${LANGFUSE_HOST}/api/public/projects")
+echo "Auth check: $STATUS"
 ```
+
+If status is not `200`, stop and ask the user to check their credentials and host before continuing.
 
 ### Annotation target: OBSERVATION not TRACE
 
-> **CRITICAL:** In OpenTelemetry-instrumented apps, trace-level `input`/`output` can be null — content lives in a GENERATION observation. Always add `objectType: OBSERVATION` pointing to the GENERATION observation ID to annotation queues. Adding `objectType: TRACE` shows nothing in the UI.
+> **CRITICAL:** In OpenTelemetry-instrumented apps, trace-level `input`/`output` is null — content lives in a GENERATION observation. Always add `objectType: OBSERVATION` pointing to the GENERATION observation ID to annotation queues. Adding `objectType: TRACE` shows nothing in the UI.
 
 ### Annotation queues
 
@@ -80,4 +88,4 @@ When a category warrants an evaluator setup, propose the type of evaluator and o
 | Creating score config without checking existing | `GET /api/public/score-configs` first; can't delete |
 | Queue created before score configs | Create configs → collect IDs → create queue |
 | `--limit` > 100 on traces list | API hard cap; paginate with `--page` |
-| No rate limiting on queue item creation on hobby plans| `sleep 0.4` between calls to avoid 429 |
+| No rate limiting on queue item creation | `sleep 0.4` between calls to avoid 429 |
