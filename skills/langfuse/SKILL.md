@@ -12,7 +12,7 @@ allowed-tools:
   - Bash(bunx langfuse-cli api * --help *)
   - Bash(bunx langfuse-cli api * list *)
   - Bash(bunx langfuse-cli api * get *)
-  - Read(~/.claude/skills/langfuse/references/**)
+  - Read(./references/**)
 ---
 
 # Langfuse

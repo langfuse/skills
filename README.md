@@ -1,6 +1,6 @@
 # Langfuse Skills
 
-[Agent Skills](https://github.com/anthropics/skills) that teach AI coding assistants (Claude Code, Cursor, etc.) how to work with [Langfuse](https://langfuse.com) — the open-source LLM engineering platform for tracing, prompt management, and evaluation.
+[Agent Skills](https://github.com/anthropics/skills) that teach AI coding assistants (Claude Code, Cursor, Kiro, etc.) how to work with [Langfuse](https://langfuse.com) — the open-source LLM engineering platform for tracing, prompt management, and evaluation.
 
 ## Skills
 
@@ -17,6 +17,18 @@ Install as a [Cursor plugin](https://cursor.com/docs/plugins):
 ```
 /add-plugin langfuse
 ```
+
+### Kiro
+
+Clone this repo and copy the skill into your project's `.kiro/skills/` directory:
+
+```bash
+git clone https://github.com/langfuse/skills.git /tmp/langfuse-skills
+mkdir -p .kiro/skills
+cp -r /tmp/langfuse-skills/skills/langfuse .kiro/skills/langfuse
+```
+
+For global availability across all projects, copy to `~/.kiro/skills/` instead. Kiro's agent loads the skill automatically when your request matches the skill description.
 
 ### skills CLI
 
