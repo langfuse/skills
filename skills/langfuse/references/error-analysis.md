@@ -9,7 +9,7 @@ description: Systematic error analysis of an LLM pipeline using Langfuse traces.
 
 **1. Fetch the guide in this blogpost**
 
-https://langfuse-docs-git-update-error-analysis-blogpost-langfuse.vercel.app/guides/cookbook/error-analysis-llm-applications.md
+https://langfuse.com/guides/cookbook/error-analysis-llm-applications.md
 
 Read it in full. It defines the authoritative 5-step process (sample selection → open coding → clustering → labelling → deciding what to fix).
 
