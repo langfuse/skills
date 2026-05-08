@@ -17,6 +17,7 @@ description: Deep-dive error analysis of an LLM pipeline or AI application using
 **1. Fetch the guide in this blogpost**
 
 https://langfuse.com/guides/cookbook/error-analysis-llm-applications.md
+
 If fetch is not available query for langfuse.com error analysis guide
 
 Read it in full. It defines the authoritative 5-step process (sample selection → open coding → clustering → labelling → deciding what to fix).
