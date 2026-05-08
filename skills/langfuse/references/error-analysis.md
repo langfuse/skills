@@ -51,7 +51,7 @@ If status is not `200`, stop and ask the user to check their credentials and hos
 
 ### Annotation target: OBSERVATION not TRACE
 
-> **CRITICAL:** In OpenTelemetry-instrumented apps, trace-level `input`/`output` is null — content lives in a GENERATION observation. Always add `objectType: OBSERVATION` pointing to the GENERATION observation ID to annotation queues. Adding `objectType: TRACE` shows nothing in the UI.
+> **CRITICAL:** In OpenTelemetry-instrumented apps, trace-level `input`/`output` can be null — content lives in a GENERATION observation. Always add `objectType: OBSERVATION` pointing to the GENERATION observation ID to annotation queues. Adding `objectType: TRACE` shows nothing in the UI.
 
 ### Annotation queues
 
