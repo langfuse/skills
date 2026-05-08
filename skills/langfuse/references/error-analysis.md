@@ -3,7 +3,7 @@ name: langfuse-error-analysis
 description: Deep-dive error analysis of an LLM pipeline or AI application using Langfuse traces.
   Use this skill whenever the user wants to understand why their AI system is producing
   bad outputs, where their pipeline is failing, how to categorise or label failures,
-  what to prioritise fixing, or how to set up evaluators. Also trigger for: "review my
+  what to prioritise fixing, or how to set up evaluators. Also trigger for "review my
   traces", "my outputs look wrong", "help me debug my LLM app", "I want to analyse
   errors", "build a failure taxonomy", "what's going wrong with my pipeline", or any
   request to systematically inspect, annotate, or score Langfuse traces. If the user
