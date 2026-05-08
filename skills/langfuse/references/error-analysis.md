@@ -1,132 +1,192 @@
 ---
 name: langfuse-error-analysis
 description: Systematic error analysis of an LLM pipeline using Langfuse traces. Use when the user wants to understand how their system fails, build a failure category taxonomy, prioritise what to fix, and decide which failures need evaluators.
-last_verified: 2026-05-06
 ---
 
 # Error Analysis
 
 ## Primary Guide
 
-**Fetch and follow the guide at this URL before doing anything else:**
+**1. Fetch the guide in this blogpost**
 
-https://langfuse-docs-git-update-error-analysis-blogpost-langfuse.vercel.app/guides/cookbook/error-analysis-llm-applications.md
+https://langfuse-docs-git-update-error-analysis-blogpost-langfuse.vercel.app/guides/cookbook/error-analysis-llm-applications
 
-The blog is the single source of truth for the process. Read it in full and execute exactly as it describes — its phases, ordering, and decision rules win over anything in this file. This file only provides the Langfuse-specific mechanics the blog assumes you can already do.
+Read it in full. It defines the authoritative 5-step process (sample selection → open coding → clustering → labelling → deciding what to fix).
 
-Fallback: If the URL is not available, search for "langfuse error analysis guide".
+**2. Guide the user through this step by step**
 
-## Narration
+You as a coding agent and the user go through this together to perform a full error analysis with their data in langfuse. Do everything you can achieve via CLI (look up traces, create annotation queues, ...) for the user. Provide them with direct links to UI wherever their action is required. Be proactive and narrate what is going on for the user. 
 
-**At the very start, give one high-level overview** of what's about to happen — the goal (understand *how* the system fails before deciding what to fix) and the rough shape of the work. Keep it to a few sentences. Don't enumerate every phase upfront. Then move straight into exploration; don't ask the user permission to start.
+## Rules CRITICAL
+Use Langfuse CLI wherever possible
+Use charts where possible to display data
 
-**Reveal phases as you enter them**, not before. The phases come from the blog, not the skill. Don't number them like "Step 1, Step 2" (the blog owns sequencing; baked-in numbers go stale if the blog reorders).
+---
 
-**Within a phase, prefer recap + IDs/links + what's next** over long preambles. The user wants to see what you did, not what you're about to do. Don't stop after each phase waiting for permission — only stop when a human decision is genuinely required (see Operating mode).
+## Langfuse Implementation Notes
 
-## Operating mode
+The guide describes the process. These notes cover the Langfuse-specific API and CLI mechanics required to execute it.
 
-**Discover and execute in the same turn unless blocked.** Automation is the default. Run exploration and setup yourself, then narrate what you did and what's left. Don't hand steps back to the user — pause only when a human decision genuinely cannot be made any other way (subjective annotation, taxonomy approval, product/fix decisions, missing credentials or scopes).
-
-**Exploration mandate.** On the first message of an error-analysis request, immediately — in the same turn — do the following before asking the user to confirm anything:
-
-1. Load `.env` and verify Langfuse env vars (see Environment & credentials).
-2. Run the CLI discovery batch (see Discovery) to load command shapes.
-3. Hit Langfuse via CLI to learn the lay of the land: trace counts and names, environments/tags, latency/cost ranges, existing annotation queues, existing score configs.
-4. Inspect at least one trace's observation tree to confirm the GENERATION-vs-trace shape — don't ask the user "should I annotate the trace or the generation?"; figure it out and tell them what you found.
-
-Only after that do you orient the user — *with* findings, not as a question they need to answer first.
-
-**Split responsibilities — automation is the default:**
-
-| Agent (you) | User (only when needed) |
-|---|---|
-| Filter/list traces, pick a diverse sample | Subjective annotation: open coding (pass/fail + notes) |
-| Resolve GENERATION vs trace, attach observations | Approve / refine the taxonomy you proposed |
-| Create score configs & annotation queues via API where the API allows it | Decide which fixes to ship |
-| Pull aggregates, summarize distributions, compute failure rates | Provide secrets/access if blocked |
-| Propose taxonomy drafts from exported open-coding notes | |
-| Generate user-facing UI links with real IDs | |
-
-If the API supports it, do it. The user's role is the things automation genuinely cannot replace.
-
-**Use `Your turn: …` sparingly.** Reserve it for the human-only column above. After the user replies, continue automatically into the next phase. Never use it to ask permission for something you could just do.
-
-**No handwaving on setup.** Report IDs and clickable links built from `${LANGFUSE_HOST}` plus the actual project / queue / observation / trace IDs you touched. If a step is UI-only (e.g. Hobby-plan labelling), give click-by-click instructions with the direct link.
-
-**Blockers.** If you hit one (plan limits, missing scopes, ambiguous trace shape, persistent rate limits), say what's blocked in one sentence and offer the smallest workaround. Don't silently retry forever; don't pretend the obstacle isn't there.
-
-**Discover once, execute many.** Run the discovery batch below before any actions; after that, execute commands directly. Only re-check `--help` for a specific call if it fails with `unknown option`.
-
-**Cluster from the open-coding text, not from re-fetched trace I/O.** The user already distilled the observation when writing the note. Only fetch I/O for a specific trace when one note is genuinely ambiguous.
-
-**Prompt fixes.** When a category warrants one, offer two paths — (a) versioned prompt in Langfuse, (b) drafted text change for the user to apply manually.
-
-## Discovery (run once at the start)
-
-Before executing any actions, load the CLI shape for the resources you'll touch in a single batch — this is the only `--help` walking you should do. After this, the command shapes stay in your working memory and you don't need to look them up again.
+### Credentials
 
 ```bash
-npx langfuse-cli api score-configs --help
-npx langfuse-cli api score-configs create --help
-npx langfuse-cli api annotation-queues --help
-npx langfuse-cli api annotation-queues create --help
-npx langfuse-cli api scores list --help
-npx langfuse-cli api observations list --help
+echo $LANGFUSE_PUBLIC_KEY   # pk-lf-...
+echo $LANGFUSE_SECRET_KEY   # sk-lf-...
+echo $LANGFUSE_HOST         # https://cloud.langfuse.com (EU), https://us.cloud.langfuse.com (US), or self-hosted
 ```
 
-If any subcommand the blog assumes (e.g. a `delete` you need) is missing from a resource's `--help`, surface that to the user before proceeding.
-
-## Environment & credentials
-
-**Discover before asking.** At the start, check what's already available — only ask the user if everything below comes up empty.
-
-1. **Project root:** `git rev-parse --show-toplevel` if in a git repo, otherwise the current working directory. Knowing the root lets you find `.env`, the app being analyzed, and any project-level docs (`CLAUDE.md`, `README.md`) that may name the bot/use case.
-2. **Env vars:** check whether `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, and `LANGFUSE_HOST` are already exported.
-3. **`.env` fallback:** if any are unset, source them from `.env` (or `.env.local`) at the project root.
-4. **Host alias:** if the project uses `LANGFUSE_BASE_URL` instead of `LANGFUSE_HOST`, run `export LANGFUSE_HOST="$LANGFUSE_BASE_URL"`.
-
-For curl fallbacks: `AUTH=$(echo -n "$LANGFUSE_PUBLIC_KEY:$LANGFUSE_SECRET_KEY" | base64)`.
-
-User-facing queue link pattern: `${LANGFUSE_HOST}/project/<projectId>/annotation-queues/<queueId>` — never hardcode the host.
-
-## Non-discoverable gotchas
-
-These bite silently or in ways the CLI won't surface:
-
-- **Annotate the GENERATION observation, not the trace.** In OpenTelemetry-instrumented apps, trace-level `input`/`output` is null. Add items to queues with `objectType: OBSERVATION` pointing to the GENERATION observation ID. `objectType: TRACE` shows nothing in the UI.
-- **Score configs cannot be deleted.** List existing ones before creating.
-- **Annotation queues cannot be updated or deleted.** Decide score configs *before* creating the queue.
-- **Hobby plan caps queues at 1 per project.** A second `POST /api/public/annotation-queues` returns `405 "Maximum number of annotation queues reached on Hobby plan."`. When you need to add score configs after the queue already exists: create the configs at project level (they auto-appear in every trace's score panel) and tell the user to label from the **trace detail view** rather than the queue's side panel — that view surfaces all project-level configs.
-- **CLI 429s look like success.** Response is `{ok: true, status: 429, body: "429 - rate limit exceeded"}`. Check `.status`, not `.ok`.
-- **Sleep ≥1.5s between queue-item inserts** and retry on 429 with backoff. Lower values trigger 429s on EU Hobby.
-- **`score-configs create --json` returns a null body** even on `status: 200`. Treat 200 as success and re-list to get the new ID.
-- **`local status=...` is a reserved name** in macOS bash/zsh — use a different name (e.g. `code`).
-- **`observations` has no `get` subcommand.** For single-observation lookups use `npx langfuse-cli api legacy-observations-v1s get <obsId> --json`.
-
-## CLI gaps that force curl
-
-Two creation operations have no CLI equivalent. Re-check `--help` for each before falling back — these blocks self-expire once the flags appear.
-
-**CATEGORICAL score config** — `score-configs create` lacks `--categories`:
+If not set, check `.env` in the project root: `export $(grep -v '^#' .env | xargs)`. If `LANGFUSE_BASE_URL` is used instead of `LANGFUSE_HOST`, run `export LANGFUSE_HOST="$LANGFUSE_BASE_URL"`.
 
 ```bash
+AUTH=$(echo -n "${LANGFUSE_PUBLIC_KEY}:${LANGFUSE_SECRET_KEY}" | base64)
+```
+
+### Annotation target: OBSERVATION not TRACE
+
+> **CRITICAL:** In OpenTelemetry-instrumented apps, trace-level `input`/`output` is null — content lives in a GENERATION observation. Always add `objectType: OBSERVATION` pointing to the GENERATION observation ID to annotation queues. Adding `objectType: TRACE` shows nothing in the UI.
+
+Inspect the observation tree of a sample trace to confirm which observation to target:
+
+```bash
+npx langfuse-cli@latest api observations list \
+  --trace-id <traceId> --type GENERATION --fields core,basic,io --json 2>&1 \
+  | jq '.body.data[] | {id, name, type, input: (.input // "" | .[0:200]), output: (.output // "" | .[0:200])}'
+```
+
+### Score configs
+
+Check before creating — configs cannot be deleted:
+
+```bash
+curl -s -H "Authorization: Basic $AUTH" "${LANGFUSE_HOST}/api/public/score-configs" \
+  | jq '[.data[] | {name, dataType, description}]'
+```
+
+Create open-coding configs:
+
+```bash
+# open_coding (TEXT)
 curl -s -X POST -H "Authorization: Basic $AUTH" -H "Content-Type: application/json" \
   --data '{
-    "name": "<config_name>",
+    "name": "open_coding",
+    "dataType": "TEXT",
+    "description": "Describe what is happening in this trace and what (if anything) seems wrong. Focus on observable behaviour — do not diagnose root causes."
+  }' "${LANGFUSE_HOST}/api/public/score-configs"
+
+# pass_fail_assessment (CATEGORICAL) — use curl, not CLI (CLI lacks categories flag)
+curl -s -X POST -H "Authorization: Basic $AUTH" -H "Content-Type: application/json" \
+  --data '{
+    "name": "pass_fail_assessment",
     "dataType": "CATEGORICAL",
-    "description": "<one sentence>",
-    "categories": [{"label": "<labelA>", "value": 1}, {"label": "<labelB>", "value": 0}]
+    "description": "Overall judgement: did the assistant handle this interaction well?",
+    "categories": [{"label": "Pass", "value": 1}, {"label": "Fail", "value": 0}]
   }' "${LANGFUSE_HOST}/api/public/score-configs"
 ```
 
-**Annotation queue creation** — `annotation-queues create` lacks `--scoreConfigIds`:
+Create one `BOOLEAN` config per failure category (Step 4 of the guide):
 
 ```bash
 curl -s -X POST -H "Authorization: Basic $AUTH" -H "Content-Type: application/json" \
   --data '{
-    "name": "<descriptive name with date>",
-    "description": "<optional>",
+    "name": "<category_name>",
+    "dataType": "BOOLEAN",
+    "description": "<one sentence: what does true mean for this trace?>"
+  }' "${LANGFUSE_HOST}/api/public/score-configs"
+```
+
+### Annotation queues
+
+> **CRITICAL:** Queues cannot be updated or deleted after creation. Create score configs first, then the queue with all config IDs. To add new configs later, create a new queue.
+
+```bash
+curl -s -X POST -H "Authorization: Basic $AUTH" -H "Content-Type: application/json" \
+  --data '{
+    "name": "<YYYY-MM-DD> Open Coding - <Use Case>",
+    "description": "Error analysis sample: ~100 representative traces.",
     "scoreConfigIds": ["<id1>", "<id2>"]
   }' "${LANGFUSE_HOST}/api/public/annotation-queues" | jq '{id, name}'
 ```
+
+Add GENERATION observations (not traces) to the queue, with rate limiting:
+
+```bash
+while IFS= read -r traceId; do
+  obsId=$(npx langfuse-cli@latest api observations list \
+    --trace-id "$traceId" --type GENERATION --fields core --json 2>&1 \
+    | jq -r '.body.data[0].id // empty')
+  [ -z "$obsId" ] && continue
+  npx langfuse-cli@latest api annotation-queues post-create-queue-item "$QUEUE_ID" \
+    --objectId "$obsId" --objectType OBSERVATION --json 2>&1 | jq -r '.body.id'
+  sleep 0.4
+done < <(jq -r '.[].id' /tmp/sample_100.json)
+```
+
+**Always give the user a direct link immediately after creating a queue:**
+
+| Host | URL pattern |
+|------|-------------|
+| EU cloud | `https://cloud.langfuse.com/project/<projectId>/annotation-queues/<queueId>` |
+| US cloud | `https://us.cloud.langfuse.com/project/<projectId>/annotation-queues/<queueId>` |
+| Self-hosted | `<LANGFUSE_HOST>/project/<projectId>/annotation-queues/<queueId>` |
+
+Instruction to give: *"Please open code the first ~50 examples. For each trace, write what you observe in the `open_coding` field (describe behaviour, don't diagnose root causes), then set `pass_fail_assessment` to Pass or Fail."*
+
+### Pulling scores for clustering
+
+```bash
+curl -s -H "Authorization: Basic $AUTH" \
+  "${LANGFUSE_HOST}/api/public/scores?queueId=${QUEUE_ID}&limit=100&page=1" \
+  > /tmp/scores_p1.json
+
+jq -s '[.[].data[]] | group_by(.observationId) | map({
+  obsId: .[0].observationId,
+  verdict: (map(select(.name == "pass_fail_assessment")) | .[0].stringValue),
+  open_coding: (map(select(.name == "open_coding")) | .[0].stringValue)
+})' /tmp/scores_p1.json
+```
+
+### Failure rate computation
+
+```python
+import json
+from collections import defaultdict
+
+with open('/tmp/all_scores.json') as f:
+    scores = json.load(f)
+
+category_cols = ['<cat1>', '<cat2>']  # your category names
+
+labeled = defaultdict(dict)
+for s in scores:
+    if s['name'] in category_cols:
+        labeled[s['observationId']][s['name']] = (s['value'] == 1)
+
+fully_labeled = {k: v for k, v in labeled.items() if len(v) == len(category_cols)}
+n = len(fully_labeled)
+
+rates = {col: sum(1 for v in fully_labeled.values() if v.get(col)) / n
+         for col in category_cols}
+
+for name, rate in sorted(rates.items(), key=lambda x: -x[1]):
+    print(f"{name:<35} {rate:.0%}  {'█' * round(rate * 20)}")
+```
+
+### Prompt fixes
+
+When a category warrants a prompt fix, always offer the user two options:
+1. Create it as a versioned prompt in Langfuse (tracked, usable via the prompt API)
+2. Draft the specific text change for them to review and apply
+
+### Setup evaluators
+
+When a category warrants an evaluator setup, propose the type of evaluator and offer to set it up for user via CLI
+
+### Common gotchas
+
+| Mistake | Fix |
+|---------|-----|
+| `objectType: TRACE` in queue | Use `objectType: OBSERVATION` with GENERATION obs ID |
+| Creating score config without checking existing | `GET /api/public/score-configs` first; can't delete |
+| Queue created before score configs | Create configs → collect IDs → create queue |
+| `--limit` > 100 on traces list | API hard cap; paginate with `--page` |
+| No rate limiting on queue item creation | `sleep 0.4` between calls to avoid 429 |
