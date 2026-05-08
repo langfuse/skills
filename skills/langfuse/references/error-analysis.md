@@ -1,13 +1,6 @@
 ---
 name: langfuse-error-analysis
-description: Deep-dive error analysis of an LLM pipeline or AI application using Langfuse traces.
-  Use this skill whenever the user wants to understand why their AI system is producing
-  bad outputs, where their pipeline is failing, how to categorise or label failures,
-  what to prioritise fixing, or how to set up evaluators. Also trigger for: "review my
-  traces", "my outputs look wrong", "help me debug my LLM app", "I want to analyse
-  errors", "build a failure taxonomy", "what's going wrong with my pipeline", or any
-  request to systematically inspect, annotate, or score Langfuse traces. If the user
-  is trying to understand or improve the quality of an AI system's outputs, use this skill.
+description: Systematic error analysis of an LLM pipeline using Langfuse traces. Use when the user wants to understand how their system fails, build a failure category taxonomy, prioritise what to fix, and decide which failures need evaluators.
 ---
 
 # Error Analysis
@@ -16,9 +9,7 @@ description: Deep-dive error analysis of an LLM pipeline or AI application using
 
 **1. Fetch the guide in this blogpost**
 
-https://langfuse.com/guides/cookbook/error-analysis-llm-applications.md
-
-In case fetch fails, search for langfuse.com error analysis guide.
+https://langfuse-docs-git-update-error-analysis-blogpost-langfuse.vercel.app/guides/cookbook/error-analysis-llm-applications.md
 
 Read it in full. It defines the authoritative 5-step process (sample selection → open coding → clustering → labelling → deciding what to fix).
 
@@ -48,11 +39,19 @@ If not set, check `.env` in the project root: `export $(grep -v '^#' .env | xarg
 
 ```bash
 AUTH=$(echo -n "${LANGFUSE_PUBLIC_KEY}:${LANGFUSE_SECRET_KEY}" | base64)
+
+# Verify before proceeding
+STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+  -H "Authorization: Basic $AUTH" \
+  "${LANGFUSE_HOST}/api/public/projects")
+echo "Auth check: $STATUS"
 ```
+
+If status is not `200`, stop and ask the user to check their credentials and host before continuing.
 
 ### Annotation target: OBSERVATION not TRACE
 
-> **CRITICAL:** In OpenTelemetry-instrumented apps, trace-level `input`/`output` can be null — content lives in a GENERATION observation. Always add `objectType: OBSERVATION` pointing to the GENERATION observation ID to annotation queues. Adding `objectType: TRACE` shows nothing in the UI.
+> **CRITICAL:** In OpenTelemetry-instrumented apps, trace-level `input`/`output` is null — content lives in a GENERATION observation. Always add `objectType: OBSERVATION` pointing to the GENERATION observation ID to annotation queues. Adding `objectType: TRACE` shows nothing in the UI.
 
 ### Annotation queues
 
@@ -89,4 +88,4 @@ When a category warrants an evaluator setup, propose the type of evaluator and o
 | Creating score config without checking existing | `GET /api/public/score-configs` first; can't delete |
 | Queue created before score configs | Create configs → collect IDs → create queue |
 | `--limit` > 100 on traces list | API hard cap; paginate with `--page` |
-| No rate limiting on queue item creation on hobby plans| `sleep 0.4` between calls to avoid 429 |
+| No rate limiting on queue item creation | `sleep 0.4` between calls to avoid 429 |
