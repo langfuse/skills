@@ -1,6 +1,13 @@
 ---
 name: langfuse-error-analysis
-description: Systematic error analysis of an LLM pipeline using Langfuse traces. Use when the user wants to understand how their system fails, build a failure category taxonomy, prioritise what to fix, and decide which failures need evaluators.
+description: Deep-dive error analysis of an LLM pipeline or AI application using Langfuse traces.
+  Use this skill whenever the user wants to understand why their AI system is producing
+  bad outputs, where their pipeline is failing, how to categorise or label failures,
+  what to prioritise fixing, or how to set up evaluators. Also trigger for: "review my
+  traces", "my outputs look wrong", "help me debug my LLM app", "I want to analyse
+  errors", "build a failure taxonomy", "what's going wrong with my pipeline", or any
+  request to systematically inspect, annotate, or score Langfuse traces. If the user
+  is trying to understand or improve the quality of an AI system's outputs, use this skill.
 ---
 
 # Error Analysis
@@ -9,7 +16,9 @@ description: Systematic error analysis of an LLM pipeline using Langfuse traces.
 
 **1. Fetch the guide in this blogpost**
 
-https://langfuse-docs-git-update-error-analysis-blogpost-langfuse.vercel.app/guides/cookbook/error-analysis-llm-applications.md
+https://langfuse.com/guides/cookbook/error-analysis-llm-applications.md
+
+In case fetch fails, search for langfuse.com error analysis guide.
 
 Read it in full. It defines the authoritative 5-step process (sample selection → open coding → clustering → labelling → deciding what to fix).
 
