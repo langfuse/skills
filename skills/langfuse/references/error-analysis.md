@@ -58,9 +58,9 @@ echo "Auth check: $STATUS"
 
 If status is not `200`, stop and ask the user to check their credentials and host before continuing.
 
-### Annotation target: OBSERVATION not TRACE
+### Annotation target: OBSERVATION versus TRACE
 
-> **CRITICAL:** In OpenTelemetry-instrumented apps, trace-level `input`/`output` can be null — content lives in a GENERATION observation. Always add `objectType: OBSERVATION` pointing to the GENERATION observation ID to annotation queues. Adding `objectType: TRACE` shows nothing in the UI.
+> **CRITICAL:** In OpenTelemetry-instrumented apps, trace-level `input`/`output` can be null — content often lives in a GENERATION observation. Always consider if the right objectType to add is `objectType: OBSERVATION` pointing to the GENERATION observation ID to annotation queues. 
 
 ### Annotation queues
 
