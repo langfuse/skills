@@ -35,8 +35,12 @@ Follow these principles for ALL Langfuse work:
 - capturing user feedback (thumbs, ratings, implicit signals) as scores on traces: references/user-feedback.md
 - further tips on using the Langfuse CLI: references/cli.md
 - upgrading or migrating Langfuse SDKs to the latest version: references/sdk-upgrade.md
+- judge calibration (LLM-as-a-Judge reliability, usefulness, and metric ingestion for accuracy/precision/recall/F1): references/judge-calibration.md
 - systematic error analysis — reading traces, building failure taxonomy, deciding what to fix: references/error-analysis.md
 - submitting feedback about this skill: references/skill-feedback.md
+
+
+**Routing rule:** If a user asks whether their LLM-as-a-judge is helpful/reliable/doing what it should, or asks for judge metrics (accuracy, precision, recall, F1), always open and follow `references/judge-calibration.md` first.
 
 ## 1. Langfuse API via CLI
 
