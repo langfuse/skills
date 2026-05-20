@@ -1,6 +1,6 @@
 ---
 name: langfuse-judge-calibration
-description: Calibrate and validate LLM-as-a-Judge evaluators against human labels. Supports simple accuracy-only checks and advanced split-based validation with confusion matrices, Precision/Recall/F1, TPR/TNR, and Langfuse score ingestion.
+description: Calibrate and validate LLM-as-a-Judge evaluators against dataset ground truth. Runs the judge prompt as a Langfuse dataset experiment, compares judge outputs with dataset item expected outputs, and reports simple accuracy or advanced confusion-matrix metrics.
 ---
 
 # Judge Calibration (LLM-as-a-Judge)
@@ -21,6 +21,9 @@ Always use this flow when the request involves:
 
 Validate judge outputs against human labels using the smallest reliable workflow
 for the user's goal.
+
+Default to a **Langfuse dataset experiment** when the user has a Langfuse
+dataset or wants results in the Langfuse Experiments UI.
 
 Default to **simple calibration** unless the user asks for deeper metrics,
 split-based validation, thresholding, or production automation.
@@ -52,16 +55,155 @@ production monitoring, high-stakes automation, or train/test-style validation.
 
 ## 2) Primary workflow
 
-1. Confirm the judge task, human-label column, judge-output column, and label
-   vocabulary.
+1. Confirm the dataset name, ground-truth label location in `expectedOutput`,
+   judge prompt name/version, judge model, and label vocabulary.
 2. Choose simple or advanced mode. If ambiguous, use simple mode.
-3. Validate labels before computing metrics.
-4. Compute per-row results.
-5. If asked to ingest into Langfuse, create row-level scores with stable names
-   and run metadata.
-6. Return the matching report format from section 6.
+3. Run the judge prompt against each dataset item input as a Langfuse experiment.
+4. Compare the judge output to `item.expected_output` in evaluator functions.
+5. Return the matching report format from section 7.
 
-## 3) Label validation
+## 3) Langfuse experiment workflow
+
+Use the SDK experiment runner as the default implementation. A Langfuse-hosted
+dataset automatically creates a dataset run that can be inspected and compared
+in the Langfuse UI.
+
+```python
+from datetime import datetime, timezone
+from langfuse import Evaluation, get_client
+
+langfuse = get_client()
+dataset = langfuse.get_dataset("<dataset_name>")
+prompt = langfuse.get_prompt("eval_template.prompt", label="production")
+
+POSITIVE = "ESCALATE"
+NEGATIVE = "RESOLVE"
+ALLOWED = {POSITIVE, NEGATIVE}
+
+
+def normalize(label):
+    return str(label).strip().upper()
+
+
+def extract_ground_truth(expected_output):
+    # Adjust this to the dataset schema, e.g. expected_output["label"].
+    return normalize(expected_output)
+
+
+def compile_prompt(item_input):
+    if isinstance(item_input, dict):
+        return prompt.compile(**item_input)
+    return prompt.compile(input=item_input)
+
+
+def call_judge_model(messages_or_prompt):
+    # Call the LLM provider here. The response must be one strict label.
+    raise NotImplementedError
+
+
+def judge_task(*, item, **kwargs):
+    # Do not read item.expected_output here; the task is the judge under test.
+    compiled = compile_prompt(item.input)
+    return normalize(call_judge_model(compiled))
+
+
+def exact_match_evaluator(*, output, expected_output, **kwargs):
+    expected = extract_ground_truth(expected_output)
+    actual = normalize(output)
+    if expected not in ALLOWED or actual not in ALLOWED:
+        return Evaluation(
+            name="judge-exact-match",
+            value=0,
+            data_type="BOOLEAN",
+            metadata={
+                "valid": 0,
+                "expected_label": expected,
+                "actual_label": actual,
+            },
+        )
+    return Evaluation(
+        name="judge-exact-match",
+        value=int(actual == expected),
+        data_type="BOOLEAN",
+        metadata={
+            "valid": 1,
+            "expected_label": expected,
+            "actual_label": actual,
+        },
+    )
+
+
+def accuracy_run_evaluator(*, item_results, **kwargs):
+    matches = []
+    invalid = 0
+
+    for item_result in item_results:
+        for evaluation in item_result.evaluations:
+            if evaluation.name != "judge-exact-match":
+                continue
+            if evaluation.metadata and evaluation.metadata.get("valid") == 0:
+                invalid += 1
+                continue
+            matches.append(int(evaluation.value))
+
+    valid_rows = len(matches)
+    accuracy = sum(matches) / valid_rows if valid_rows else 0
+
+    return Evaluation(
+        name="judge-accuracy",
+        value=accuracy,
+        comment=(
+            f"{sum(matches)}/{valid_rows} exact matches"
+            if valid_rows
+            else "Undefined: no valid labels"
+        ),
+        metadata={
+            "valid_rows": valid_rows,
+            "invalid_labels": invalid,
+            "defined": int(valid_rows > 0),
+        },
+    )
+
+
+run_name = f"judge-calibration-{datetime.now(timezone.utc).isoformat()}"
+result = dataset.run_experiment(
+    name=run_name,
+    description="Calibrate eval_template.prompt against dataset expected outputs",
+    task=judge_task,
+    evaluators=[exact_match_evaluator],
+    run_evaluators=[accuracy_run_evaluator],
+    max_concurrency=5,
+    metadata={
+        "calibration_mode": "simple",
+        "judge_prompt": "eval_template.prompt",
+        "positive_label": POSITIVE,
+        "negative_label": NEGATIVE,
+    },
+)
+
+print(result.format())
+print(result.dataset_run_url)
+```
+
+For advanced calibration, add an evaluator that returns `Evaluation` objects for
+`judge-is-tp`,
+`judge-is-fp`, `judge-is-fn`, and `judge-is-tn`, plus a run evaluator that
+computes aggregate Precision/Recall/F1, TPR, and TNR from all item results.
+
+Rules:
+- Use a Langfuse-hosted dataset when the user wants a real Langfuse experiment.
+  Local SDK datasets create traces and scores, but not Langfuse dataset runs.
+- The dataset item `input` must contain everything needed to run the judge
+  prompt. The dataset item `expectedOutput` must contain the ground-truth label.
+- Never pass `expectedOutput` into the judge prompt or task. That would leak the
+  answer and invalidate calibration.
+- Return `Evaluation(...)` objects from item and run evaluators for stable SDK
+  formatting and score ingestion.
+- Store prompt name/version, judge model, label vocabulary, dataset version, and
+  calibration mode in run metadata.
+- Use a unique run name so the experiment appears as a separate dataset run.
+
+## 4) Label validation
 
 Never silently treat unknown labels as negative.
 
@@ -78,7 +220,7 @@ Example binary labels:
 - Positive: `ESCALATE`
 - Negative: `RESOLVE`
 
-## 4) Simple metrics
+## 5) Simple metrics
 
 For each valid row:
 
@@ -91,7 +233,7 @@ Aggregate:
 If `valid_rows == 0`, report that accuracy is undefined and ask for valid
 expected/actual labels.
 
-## 5) Advanced metrics
+## 6) Advanced metrics
 
 ### Dataset and split discipline
 
@@ -145,11 +287,12 @@ Before trusting the judge on production traffic:
 5. **Threshold**: target `TPR > 0.90` and `TNR > 0.90` before high-stakes
    automation.
 
-## 6) Report format
+## 7) Report format
 
 ### Simple report
 
 Return only:
+- dataset name and dataset run URL when available
 - valid rows / total rows
 - invalid-label count
 - accuracy
@@ -164,18 +307,20 @@ Add:
 - top failure direction: false positives or false negatives
 - recommendation: ship, iterate, collect more labels, or do not automate
 
-## 7) Langfuse implementation notes
+## 8) Langfuse implementation notes
 
-Store row-level calibration outputs as scores on the evaluated trace or
-observation. Use consistent score names across runs.
+Prefer SDK experiment evaluators for score creation. They attach item-level
+scores to the experiment traces and run-level scores to the dataset run.
 
-For score creation, use the public REST API or SDK. Do not use the current
+Use manual REST score creation only as a fallback when not using the SDK
+experiment runner, or for local smoke tests. Do not use the current
 `langfuse-cli` score-create wrapper unless `--help` shows a usable `value`
 argument; `langfuse-cli@0.0.10` exposes `legacy-score-v1s create` but cannot
 pass the required score `value`.
 
 Simple mode:
 - `judge-exact-match`
+- `judge-accuracy`
 
 Advanced mode:
 - `judge-exact-match`
@@ -212,7 +357,7 @@ curl -sS -X POST "$LANGFUSE_HOST/api/public/scores" \
   }'
 ```
 
-## 8) Minimal Python skeleton
+## 9) Minimal Python skeleton
 
 ```python
 POSITIVE = "ESCALATE"
@@ -249,16 +394,18 @@ def classify(expected: str, actual: str):
     }
 ```
 
-## 9) Common failure modes
+## 10) Common failure modes
 
 - label vocabulary not constrained (judge outputs free text instead of strict
   labels)
 - positive/negative label inversion between annotators and evaluator code
+- leaking `expectedOutput` into the judge task instead of only the evaluator
+- using local SDK data when the user expects a Langfuse dataset run in the UI
 - reporting only accuracy when classes are imbalanced and error direction matters
 - calculating F1 without explicit zero-denominator handling
 - using advanced validation claims without a held-out split
 
-## 10) What to do after calibration
+## 11) What to do after calibration
 
 - If simple accuracy is enough: report it and stop.
 - If metrics are weak and advanced validation is needed: iterate prompt and

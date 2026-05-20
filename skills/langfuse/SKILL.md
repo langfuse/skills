@@ -12,6 +12,7 @@ allowed-tools:
   - Bash(bunx langfuse-cli api * --help *)
   - Bash(bunx langfuse-cli api * list *)
   - Bash(bunx langfuse-cli api * get *)
+  - Bash(curl */api/public/dataset*)
   - Bash(curl */api/public/scores*)
 ---
 
