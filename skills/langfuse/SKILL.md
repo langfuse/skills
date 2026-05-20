@@ -1,6 +1,6 @@
 ---
 name: langfuse
-description: Interact with Langfuse and access its documentation. Use when needing to (1) query or modify Langfuse data programmatically via the CLI — traces, prompts, datasets, scores, sessions, and any other API resource, (2) look up Langfuse documentation, concepts, integration guides, or SDK usage, or (3) understand how any Langfuse feature works. This skill covers CLI-based API access (via npx) and multiple documentation retrieval methods.
+description: Interact with Langfuse and access its documentation. Use when needing to (1) query or modify Langfuse data programmatically via the CLI - traces, prompts, datasets, scores, sessions, and any other API resource, (2) look up Langfuse documentation, concepts, integration guides, or SDK usage, (3) understand how any Langfuse feature works, or (4) calibrate or validate LLM-as-a-judge evaluators against human labels, including accuracy, confusion matrices, precision, recall, F1, TPR, or TNR.
 allowed-tools:
   - WebFetch(domain:langfuse.com)
   - Bash(curl *langfuse.com/*)
@@ -8,10 +8,12 @@ allowed-tools:
   - Bash(npx langfuse-cli api * --help *)
   - Bash(npx langfuse-cli api * list *)
   - Bash(npx langfuse-cli api * get *)
+  - Bash(npx langfuse-cli api scores create *)
   - Bash(bunx langfuse-cli api __schema *)
   - Bash(bunx langfuse-cli api * --help *)
   - Bash(bunx langfuse-cli api * list *)
   - Bash(bunx langfuse-cli api * get *)
+  - Bash(bunx langfuse-cli api scores create *)
 ---
 
 # Langfuse
@@ -35,12 +37,12 @@ Follow these principles for ALL Langfuse work:
 - capturing user feedback (thumbs, ratings, implicit signals) as scores on traces: references/user-feedback.md
 - further tips on using the Langfuse CLI: references/cli.md
 - upgrading or migrating Langfuse SDKs to the latest version: references/sdk-upgrade.md
-- judge calibration (LLM-as-a-Judge reliability, usefulness, and metric ingestion for accuracy/precision/recall/F1): references/judge-calibration.md
+- judge calibration (LLM-as-a-Judge reliability, simple accuracy checks, advanced split-based validation, confusion matrices, and metric ingestion): references/judge-calibration.md
 - systematic error analysis — reading traces, building failure taxonomy, deciding what to fix: references/error-analysis.md
 - submitting feedback about this skill: references/skill-feedback.md
 
 
-**Routing rule:** If a user asks whether their LLM-as-a-judge is helpful/reliable/doing what it should, or asks for judge metrics (accuracy, precision, recall, F1), always open and follow `references/judge-calibration.md` first.
+**Routing rule:** If a user asks whether their LLM-as-a-judge is helpful/reliable/doing what it should, asks to calibrate or validate an evaluator, compares judge outputs with human labels, or asks for judge metrics (accuracy, confusion matrix, precision, recall, F1, TPR, TNR), always open and follow `references/judge-calibration.md` first.
 
 ## 1. Langfuse API via CLI
 
