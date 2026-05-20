@@ -169,6 +169,11 @@ Add:
 Store row-level calibration outputs as scores on the evaluated trace or
 observation. Use consistent score names across runs.
 
+For score creation, use the public REST API or SDK. Do not use the current
+`langfuse-cli` score-create wrapper unless `--help` shows a usable `value`
+argument; `langfuse-cli@0.0.10` exposes `legacy-score-v1s create` but cannot
+pass the required score `value`.
+
 Simple mode:
 - `judge-exact-match`
 
@@ -186,6 +191,26 @@ Recommended metadata:
 - evaluator prompt name+version
 - dataset/split version when used
 - run identifier
+
+Minimal REST example:
+
+```bash
+curl -sS -X POST "$LANGFUSE_HOST/api/public/scores" \
+  -u "$LANGFUSE_PUBLIC_KEY:$LANGFUSE_SECRET_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "traceId": "trace-id",
+    "name": "judge-exact-match",
+    "value": 1,
+    "dataType": "BOOLEAN",
+    "metadata": {
+      "calibration_mode": "simple",
+      "expected_label": "ESCALATE",
+      "actual_label": "ESCALATE",
+      "run_id": "calibration-2026-05-21"
+    }
+  }'
+```
 
 ## 8) Minimal Python skeleton
 

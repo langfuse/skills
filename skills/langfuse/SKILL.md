@@ -8,12 +8,11 @@ allowed-tools:
   - Bash(npx langfuse-cli api * --help *)
   - Bash(npx langfuse-cli api * list *)
   - Bash(npx langfuse-cli api * get *)
-  - Bash(npx langfuse-cli api scores create *)
   - Bash(bunx langfuse-cli api __schema *)
   - Bash(bunx langfuse-cli api * --help *)
   - Bash(bunx langfuse-cli api * list *)
   - Bash(bunx langfuse-cli api * get *)
-  - Bash(bunx langfuse-cli api scores create *)
+  - Bash(curl */api/public/scores*)
 ---
 
 # Langfuse
