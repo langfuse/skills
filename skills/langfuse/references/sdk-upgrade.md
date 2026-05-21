@@ -7,12 +7,6 @@ description: Upgrade Langfuse SDKs from older versions to the latest. Use when m
 
 Assist users in upgrading their Langfuse SDK to the latest version. The Python and JS/TS SDKs share the same architectural changes but differ in syntax.
 
-## When to Use
-
-- User asks to upgrade/migrate their Langfuse SDK
-- User is on an older SDK version and encounters deprecated APIs
-- User wants to adopt the latest Langfuse features
-
 ## Migration Docs
 
 Always fetch the latest migration guide before starting — these pages are the source of truth:

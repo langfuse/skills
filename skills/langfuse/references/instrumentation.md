@@ -7,12 +7,6 @@ description: Instrument LLM applications with Langfuse tracing. Use when setting
 
 Instrument LLM applications with Langfuse tracing, following best practices and tailored to your use case.
 
-## When to Use
-
-- Setting up Langfuse in a new project
-- Auditing existing Langfuse instrumentation
-- Adding observability to LLM calls
-
 ## Workflow
 
 ### 1. Assess Current State
