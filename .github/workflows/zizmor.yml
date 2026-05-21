@@ -16,9 +16,6 @@ permissions: {}
 jobs:
   zizmor:
     name: Check GitHub Actions security
-    if: >-
-      github.event_name != 'pull_request' ||
-      github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -31,4 +28,5 @@ jobs:
       - name: Run zizmor
         uses: zizmorcore/zizmor-action@b1d7e1fb5de872772f31590499237e7cce841e8e # v0.5.3
         with:
-          advanced-security: true
+          advanced-security: ${{ github.event_name == 'push' && 'true' || 'false' }}
+          min-severity: low
