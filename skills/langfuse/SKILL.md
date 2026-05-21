@@ -1,6 +1,6 @@
 ---
 name: langfuse
-description: Interact with Langfuse and access its documentation. Use when needing to (1) query or modify Langfuse data programmatically via the CLI - traces, prompts, datasets, scores, sessions, and any other API resource, (2) look up Langfuse documentation, concepts, integration guides, or SDK usage, (3) understand how any Langfuse feature works, or (4) calibrate or validate LLM-as-a-judge evaluators against human labels, including accuracy, confusion matrices, precision, recall, F1, TPR, or TNR.
+description: Interact with Langfuse and access its documentation. Use when needing to (1) query or modify Langfuse data programmatically via the CLI — traces, prompts, datasets, scores, sessions, and any other API resource, (2) look up Langfuse documentation, concepts, integration guides, or SDK usage, or (3) understand how any Langfuse feature works. This skill covers CLI-based API access (via npx) and multiple documentation retrieval methods.
 allowed-tools:
   - WebFetch(domain:langfuse.com)
   - Bash(curl *langfuse.com/*)
@@ -12,8 +12,6 @@ allowed-tools:
   - Bash(bunx langfuse-cli api * --help *)
   - Bash(bunx langfuse-cli api * list *)
   - Bash(bunx langfuse-cli api * get *)
-  - Bash(curl */api/public/dataset*)
-  - Bash(curl */api/public/scores*)
 ---
 
 # Langfuse
