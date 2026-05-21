@@ -1,21 +1,10 @@
 ---
 name: langfuse-judge-calibration
-description: Calibrate and validate LLM-as-a-Judge evaluators against dataset ground truth. Runs the judge prompt as a Langfuse dataset experiment, compares judge outputs with dataset item expected outputs, and reports simple accuracy or advanced confusion-matrix metrics.
+description: Calibrate and validate LLM-as-a-Judge evaluators against dataset ground truth. Runs the judge prompt as a Langfuse dataset experiment, compares judge outputs with dataset item expected outputs, and reports simple accuracy or advanced confusion-matrix metrics. Use this guide whenever a user asks if their LLM judge is actually useful,
+aligned with human judgment, or safe to trust for monitoring decisions.
 ---
 
 # Judge Calibration (LLM-as-a-Judge)
-
-Use this guide whenever a user asks if their LLM judge is actually useful,
-aligned with human judgment, or safe to trust for monitoring decisions.
-
-## When this guide is mandatory
-
-Always use this flow when the request involves:
-- "is my LLM judge helpful / reliable / doing the right thing?"
-- calibration of judge outputs against human labels
-- simple accuracy checks for judge outputs
-- confusion matrices, Accuracy, Precision, Recall, F1, TPR, or TNR
-- choosing thresholds or deciding whether to ship judge-based automation
 
 ## Goal
 
@@ -68,127 +57,43 @@ Use the SDK experiment runner as the default implementation. A Langfuse-hosted
 dataset automatically creates a dataset run that can be inspected and compared
 in the Langfuse UI.
 
-```python
-from datetime import datetime, timezone
-from langfuse import Evaluation, get_client
+Before implementing, you **must** retrieve the current experiment SDK
+documentation from the Langfuse docs — do not rely on memory, the SDK changes
+frequently. Fetch these pages (see SKILL.md section 2 for retrieval methods):
 
-langfuse = get_client()
-dataset = langfuse.get_dataset("<dataset_name>")
-prompt = langfuse.get_prompt("eval_template.prompt", label="production")
+- [Experiments via SDK](https://langfuse.com/docs/evaluation/experiments/experiments-via-sdk) — primary reference for `dataset.run_experiment`, task/evaluator signatures, and `Evaluation` return shape
+- [Datasets](https://langfuse.com/docs/evaluation/experiments/datasets) — dataset item structure (`input`, `expectedOutput`) and how to load a hosted dataset
+- [Experiments data model](https://langfuse.com/docs/evaluation/experiments/data-model) — how runs, items, and scores relate in the UI
 
-POSITIVE = "ESCALATE"
-NEGATIVE = "RESOLVE"
-ALLOWED = {POSITIVE, NEGATIVE}
+High-level shape of a simple-mode calibration experiment:
 
+```
+load dataset and judge prompt from Langfuse
+define POSITIVE / NEGATIVE label set
 
-def normalize(label):
-    return str(label).strip().upper()
+task(item):
+    compile judge prompt with item.input
+    call judge model
+    return normalized label
+    # never read item.expected_output here — that would leak the answer
 
+item_evaluator(output, expected_output):
+    if either label is outside the allowed set:
+        return invalid (excluded from accuracy denominator)
+    return exact_match score (0 or 1)
 
-def extract_ground_truth(expected_output):
-    # Adjust this to the dataset schema, e.g. expected_output["label"].
-    return normalize(expected_output)
+run_evaluator(item_results):
+    accuracy = matches / valid_rows
+    return aggregate score + invalid_label count
 
-
-def compile_prompt(item_input):
-    if isinstance(item_input, dict):
-        return prompt.compile(**item_input)
-    return prompt.compile(input=item_input)
-
-
-def call_judge_model(messages_or_prompt):
-    # Call the LLM provider here. The response must be one strict label.
-    raise NotImplementedError
-
-
-def judge_task(*, item, **kwargs):
-    # Do not read item.expected_output here; the task is the judge under test.
-    compiled = compile_prompt(item.input)
-    return normalize(call_judge_model(compiled))
-
-
-def exact_match_evaluator(*, output, expected_output, **kwargs):
-    expected = extract_ground_truth(expected_output)
-    actual = normalize(output)
-    if expected not in ALLOWED or actual not in ALLOWED:
-        return Evaluation(
-            name="judge-exact-match",
-            value=0,
-            data_type="BOOLEAN",
-            metadata={
-                "valid": 0,
-                "expected_label": expected,
-                "actual_label": actual,
-            },
-        )
-    return Evaluation(
-        name="judge-exact-match",
-        value=int(actual == expected),
-        data_type="BOOLEAN",
-        metadata={
-            "valid": 1,
-            "expected_label": expected,
-            "actual_label": actual,
-        },
-    )
-
-
-def accuracy_run_evaluator(*, item_results, **kwargs):
-    matches = []
-    invalid = 0
-
-    for item_result in item_results:
-        for evaluation in item_result.evaluations:
-            if evaluation.name != "judge-exact-match":
-                continue
-            if evaluation.metadata and evaluation.metadata.get("valid") == 0:
-                invalid += 1
-                continue
-            matches.append(int(evaluation.value))
-
-    valid_rows = len(matches)
-    accuracy = sum(matches) / valid_rows if valid_rows else 0
-
-    return Evaluation(
-        name="judge-accuracy",
-        value=accuracy,
-        comment=(
-            f"{sum(matches)}/{valid_rows} exact matches"
-            if valid_rows
-            else "Undefined: no valid labels"
-        ),
-        metadata={
-            "valid_rows": valid_rows,
-            "invalid_labels": invalid,
-            "defined": int(valid_rows > 0),
-        },
-    )
-
-
-run_name = f"judge-calibration-{datetime.now(timezone.utc).isoformat()}"
-result = dataset.run_experiment(
-    name=run_name,
-    description="Calibrate eval_template.prompt against dataset expected outputs",
-    task=judge_task,
-    evaluators=[exact_match_evaluator],
-    run_evaluators=[accuracy_run_evaluator],
-    max_concurrency=5,
-    metadata={
-        "calibration_mode": "simple",
-        "judge_prompt": "eval_template.prompt",
-        "positive_label": POSITIVE,
-        "negative_label": NEGATIVE,
-    },
-)
-
-print(result.format())
-print(result.dataset_run_url)
+dataset.run_experiment(task, [item_evaluator], [run_evaluator],
+                      metadata={calibration_mode, judge_prompt, labels})
 ```
 
-For advanced calibration, add an evaluator that returns `Evaluation` objects for
-`judge-is-tp`,
-`judge-is-fp`, `judge-is-fn`, and `judge-is-tn`, plus a run evaluator that
-computes aggregate Precision/Recall/F1, TPR, and TNR from all item results.
+For advanced calibration, the item evaluator emits one score per confusion-matrix
+cell (`judge-is-tp`, `judge-is-fp`, `judge-is-fn`, `judge-is-tn`), and the run
+evaluator aggregates them into Precision / Recall / F1 / TPR / TNR. See section
+6 for the metric definitions and zero-denominator guardrails.
 
 Rules:
 - Use a Langfuse-hosted dataset when the user wants a real Langfuse experiment.
@@ -313,10 +218,14 @@ Prefer SDK experiment evaluators for score creation. They attach item-level
 scores to the experiment traces and run-level scores to the dataset run.
 
 Use manual REST score creation only as a fallback when not using the SDK
-experiment runner, or for local smoke tests. Do not use the current
-`langfuse-cli` score-create wrapper unless `--help` shows a usable `value`
-argument; `langfuse-cli@0.0.10` exposes `legacy-score-v1s create` but cannot
-pass the required score `value`.
+experiment runner, or for local smoke tests. See
+[Scores via SDK](https://langfuse.com/docs/evaluation/evaluation-methods/scores-via-sdk)
+and the [Scores API reference](https://langfuse.com/docs/api) (`POST /api/public/scores`)
+for the current payload shape. Do not use the current `langfuse-cli` score-create
+wrapper unless `--help` shows a usable `value` argument; `langfuse-cli@0.0.10`
+exposes `legacy-score-v1s create` but cannot pass the required score `value`.
+
+Score names to emit:
 
 Simple mode:
 - `judge-exact-match`
@@ -337,61 +246,25 @@ Recommended metadata:
 - dataset/split version when used
 - run identifier
 
-Minimal REST example:
+## 9) Classification logic (pseudo-code)
 
-```bash
-curl -sS -X POST "$LANGFUSE_HOST/api/public/scores" \
-  -u "$LANGFUSE_PUBLIC_KEY:$LANGFUSE_SECRET_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "traceId": "trace-id",
-    "name": "judge-exact-match",
-    "value": 1,
-    "dataType": "BOOLEAN",
-    "metadata": {
-      "calibration_mode": "simple",
-      "expected_label": "ESCALATE",
-      "actual_label": "ESCALATE",
-      "run_id": "calibration-2026-05-21"
-    }
-  }'
+The per-row classification each evaluator must perform:
+
 ```
-
-## 9) Minimal Python skeleton
-
-```python
-POSITIVE = "ESCALATE"
-NEGATIVE = "RESOLVE"
+normalize(label) = strip whitespace, uppercase
 ALLOWED = {POSITIVE, NEGATIVE}
 
+classify(expected, actual):
+    expected, actual = normalize(expected), normalize(actual)
 
-def normalize(label: str) -> str:
-    return str(label).strip().upper()
+    if expected ∉ ALLOWED or actual ∉ ALLOWED:
+        mark row invalid → exclude from denominators
 
-
-def classify(expected: str, actual: str):
-    expected = normalize(expected)
-    actual = normalize(actual)
-
-    if expected not in ALLOWED or actual not in ALLOWED:
-        return {
-            "valid": 0,
-            "invalid": 1,
-            "expected_label": expected,
-            "actual_label": actual,
-        }
-
-    return {
-        "valid": 1,
-        "invalid": 0,
-        "exact_match": int(expected == actual),
-        "is_tp": int(expected == POSITIVE and actual == POSITIVE),
-        "is_fp": int(expected == NEGATIVE and actual == POSITIVE),
-        "is_fn": int(expected == POSITIVE and actual == NEGATIVE),
-        "is_tn": int(expected == NEGATIVE and actual == NEGATIVE),
-        "expected_label": expected,
-        "actual_label": actual,
-    }
+    exact_match = (expected == actual)
+    is_tp = (expected == POSITIVE and actual == POSITIVE)
+    is_fp = (expected == NEGATIVE and actual == POSITIVE)
+    is_fn = (expected == POSITIVE and actual == NEGATIVE)
+    is_tn = (expected == NEGATIVE and actual == NEGATIVE)
 ```
 
 ## 10) Common failure modes

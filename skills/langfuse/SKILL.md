@@ -42,8 +42,6 @@ Follow these principles for ALL Langfuse work:
 - submitting feedback about this skill: references/skill-feedback.md
 
 
-**Routing rule:** If a user asks whether their LLM-as-a-judge is helpful/reliable/doing what it should, asks to calibrate or validate an evaluator, compares judge outputs with human labels, or asks for judge metrics (accuracy, confusion matrix, precision, recall, F1, TPR, TNR), always open and follow `references/judge-calibration.md` first.
-
 ## 1. Langfuse API via CLI
 
 Use the `langfuse-cli` to interact with the full Langfuse REST API from the command line. Run via npx (no install required):
