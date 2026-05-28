@@ -46,6 +46,8 @@ export LANGFUSE_HOST=https://cloud.langfuse.com
 - Use `--curl` to preview the HTTP request without executing
 - Pagination: use `--limit` and `--page` on list endpoints
 - All list commands support filtering — check `<resource> <action> --help` for available options
-- Prefer `observations-v2s` over `observations` — the v2 endpoint returns richer data
-- Prefer `metrics-v2s` over `metrics` — the v2 endpoint returns richer data
-- Prefer `score-v2s` over `scores` — the v1 `scores` resource only supports create/delete; use `score-v2s` for list and get operations
+- Prefer `observations` over `legacy-observations-v1s` (the modern endpoint is exposed as `observations`; `legacy-observations-v1s` is the deprecated v1)
+- Prefer `metrics` over `legacy-metrics-v1s`
+- Prefer `scores` over `legacy-score-v1s` for list/get operations
+- The legacy `traces list` endpoint on Langfuse Cloud times out on broad queries — use `observations list` (with `--trace-id` if you need to traverse from a known trace) instead.
+  Server returns: *"This legacy endpoint can be slow. Please migrate to the high-performance Observations API v2."*
