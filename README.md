@@ -42,7 +42,7 @@ You need a Langfuse account ([cloud](https://cloud.langfuse.com) or [self-hosted
 ```bash
 export LANGFUSE_PUBLIC_KEY=pk-lf-...
 export LANGFUSE_SECRET_KEY=sk-lf-...
-export LANGFUSE_HOST=https://cloud.langfuse.com  # or https://us.cloud.langfuse.com, or self-hosted URL
+export LANGFUSE_BASE_URL=https://cloud.langfuse.com  # or https://us.cloud.langfuse.com, or self-hosted URL
 ```
 
 API keys are found in your Langfuse project under **Settings > API Keys**.
