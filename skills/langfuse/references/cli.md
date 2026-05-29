@@ -44,10 +44,9 @@ export LANGFUSE_HOST=https://cloud.langfuse.com
 
 - Use `--json` for machine-readable JSON output
 - Use `--curl` to preview the HTTP request without executing
-- Pagination: use `--limit` and `--page` on list endpoints
 - All list commands support filtering — check `<resource> <action> --help` for available options
-- Prefer `observations` over `legacy-observations-v1s` (the modern endpoint is exposed as `observations`; `legacy-observations-v1s` is the deprecated v1)
-- Prefer `metrics` over `legacy-metrics-v1s`
+- Prefer `observations` over `legacy-observations-v1s` — `observations` is the modern high-performance endpoint (cursor pagination, selective field groups); `legacy-observations-v1s` is the deprecated v1
+- Prefer `metrics` over `legacy-metrics-v1s` for the same reason
 - Prefer `scores` over `legacy-score-v1s` for list/get operations
-- The legacy `traces list` endpoint on Langfuse Cloud times out on broad queries — use `observations list` (with `--trace-id` if you need to traverse from a known trace) instead.
-  Server returns: *"This legacy endpoint can be slow. Please migrate to the high-performance Observations API v2."*
+- For broad trace queries, `traces list` can time out on Langfuse Cloud — use `observations list` (with `--trace-id` if you're traversing from a known trace) instead. See the [Observations API docs](https://langfuse.com/docs/api-and-data-platform/features/observations-api) for the v1 → v2 mapping.
+- Pagination: legacy v1 endpoints use `--limit` and `--page`; modern endpoints (`observations`, `metrics`, `scores`) use cursor-based pagination — pass `--limit`, then thread `meta.cursor` from the response into the next request's `--cursor`
