@@ -14,7 +14,7 @@ Verify credentials are set before starting. Check existence only — never print
 ```bash
 [ -n "$LANGFUSE_PUBLIC_KEY" ] && echo "LANGFUSE_PUBLIC_KEY: set" || echo "LANGFUSE_PUBLIC_KEY: missing"
 [ -n "$LANGFUSE_SECRET_KEY" ] && echo "LANGFUSE_SECRET_KEY: set" || echo "LANGFUSE_SECRET_KEY: missing"
-[ -n "$LANGFUSE_HOST" ]       && echo "LANGFUSE_HOST: $LANGFUSE_HOST" || echo "LANGFUSE_HOST: missing"
+[ -n "$LANGFUSE_BASE_URL" ]   && echo "LANGFUSE_BASE_URL: $LANGFUSE_BASE_URL" || echo "LANGFUSE_BASE_URL: missing"
 ```
 
 If not set, ask the user to configure them in their shell or a `.env` file. Do not ask them to paste keys into chat.

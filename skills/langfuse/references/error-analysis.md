@@ -41,10 +41,10 @@ The guide describes the process. These notes cover the Langfuse-specific API and
 ```bash
 echo $LANGFUSE_PUBLIC_KEY   # pk-lf-...
 echo $LANGFUSE_SECRET_KEY   # sk-lf-...
-echo $LANGFUSE_HOST         # https://cloud.langfuse.com (EU), https://us.cloud.langfuse.com (US), https://jp.cloud.langfuse.com (JP) or self-hosted
+echo $LANGFUSE_BASE_URL     # https://cloud.langfuse.com (EU), https://us.cloud.langfuse.com (US), https://jp.cloud.langfuse.com (JP) or self-hosted
 ```
 
-If not set, check `.env` in the project root: `export $(grep -v '^#' .env | xargs)`. If `LANGFUSE_BASE_URL` is used instead of `LANGFUSE_HOST`, run `export LANGFUSE_HOST="$LANGFUSE_BASE_URL"`.
+If not set, check `.env` in the project root: `export $(grep -v '^#' .env | xargs)`. If `LANGFUSE_HOST` is used instead of `LANGFUSE_BASE_URL`, run `export LANGFUSE_BASE_URL="$LANGFUSE_HOST"`.
 
 ```bash
 AUTH=$(echo -n "${LANGFUSE_PUBLIC_KEY}:${LANGFUSE_SECRET_KEY}" | base64)
@@ -52,7 +52,7 @@ AUTH=$(echo -n "${LANGFUSE_PUBLIC_KEY}:${LANGFUSE_SECRET_KEY}" | base64)
 # Verify before proceeding
 STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
   -H "Authorization: Basic $AUTH" \
-  "${LANGFUSE_HOST}/api/public/projects")
+  "${LANGFUSE_BASE_URL}/api/public/projects")
 echo "Auth check: $STATUS"
 ```
 
@@ -73,7 +73,7 @@ If status is not `200`, stop and ask the user to check their credentials and hos
 |------|-------------|
 | EU cloud | `https://cloud.langfuse.com/project/<projectId>/annotation-queues/<queueId>` |
 | US cloud | `https://us.cloud.langfuse.com/project/<projectId>/annotation-queues/<queueId>` |
-| Self-hosted | `<LANGFUSE_HOST>/project/<projectId>/annotation-queues/<queueId>` |
+| Self-hosted | `<LANGFUSE_BASE_URL>/project/<projectId>/annotation-queues/<queueId>` |
 
 Instruction to give: *"Please open code the first ~50 examples. For each trace, write what you observe in the `open_coding` field (describe behaviour, don't diagnose root causes), then set `pass_fail_assessment` to Pass or Fail."*
 
