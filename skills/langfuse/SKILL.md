@@ -10,12 +10,10 @@ allowed-tools:
   - Bash(npx langfuse-cli api * --help *)
   - Bash(npx langfuse-cli api * list *)
   - Bash(npx langfuse-cli api * get *)
-  - Bash(npx langfuse-cli api score-v2s get-scores *)
   - Bash(bunx langfuse-cli api __schema *)
   - Bash(bunx langfuse-cli api * --help *)
   - Bash(bunx langfuse-cli api * list *)
   - Bash(bunx langfuse-cli api * get *)
-  - Bash(bunx langfuse-cli api score-v2s get-scores *)
 ---
 
 # Langfuse
