@@ -5,8 +5,6 @@ description: Set up or extend agent regression checks / gating in GitHub Actions
 
 # Langfuse CI/CD
 
-Use this reference when setting up a Langfuse experiment gate in CI/CD to catch regressions before they reach production / main branch.
-
 ## Workflow
 
 ### 1. Confirm GitHub and the Target Repository
@@ -33,13 +31,7 @@ Never ask the user to paste secrets into chat.
 
 ### 3. Validate the Dataset and Design the Experiment
 
-First validate the dataset item shape with the Langfuse CLI so the task and evaluators match the actual `input`, `expected_output`, and metadata fields. Ensure `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, and non-default `LANGFUSE_HOST` are available before running it:
-
-```bash
-npx langfuse-cli api dataset-items list --dataset-name <dataset> --limit 5 --json
-```
-
-Use the returned items to confirm the script reads the right fields, handles missing expected outputs, and maps any item metadata needed by evaluators. `expected_output` may be an object such as `{"answer": "London"}` rather than a string; evaluators must extract the relevant field instead of comparing the full object.
+First inspect a few dataset items with the Langfuse CLI (see `references/cli.md`) so the task and evaluators match the actual `input`, `expected_output`, and metadata fields. Confirm the script reads the right fields, handles missing expected outputs, and maps any item metadata needed by evaluators. `expected_output` may be an object such as `{"answer": "London"}` rather than a string; evaluators must extract the relevant field instead of comparing the full object.
 
 Choose evaluator types deliberately:
 
@@ -51,10 +43,9 @@ Choose evaluator types deliberately:
 
 If the user already has a script, verify:
 
-- The path matches `experiment_path` and has a supported extension: `.py`, `.ts`, `.js`, `.mjs`, or `.cjs`.
-- The script defines `experiment(context)` in Python or exports `experiment(context)` in TypeScript/JavaScript.
-- The script uses the action-provided context via `context.run_experiment(...)` in Python or `context.runExperiment(...)` in TypeScript/JavaScript so dataset, dataset version, metadata, and the Langfuse client come from the workflow.
-- The script raises `RegressionError` with the experiment result when the user-defined regression condition is met.
+- The script path and file type match what the action expects (the action README's script contract lists supported extensions and the `experiment_path` input).
+- It exposes the `experiment(context)` entry point the action calls and runs the experiment through the action-provided context, so dataset, dataset version, metadata, and the Langfuse client come from the workflow rather than being hardcoded.
+- It signals a regression (raising `RegressionError` with the result, per the docs) when the user-defined condition is met.
 - Secrets are read from environment variables, not hardcoded.
 
 If creating a script, integrate with existing app code when available. If the app entry point is unclear, create the smallest useful skeleton with explicit TODOs at the task boundary and tell the user what they must connect.
@@ -69,12 +60,7 @@ For the recommended Python and TypeScript script shape, fetch and use the canoni
 
 - Do not set thresholds blindly. Run the experiment once against a known-good baseline, inspect the item-level and run-level scores, then set the threshold below the healthy baseline with enough slack for expected variance.
 - Small datasets have coarse score granularity. With 3 items, each item is worth 33 percentage points, so thresholds between `0.67` and `1.0` may be misleading or impossible to satisfy reliably.
-- To read back runs and scores with the CLI:
-    ```bash
-    npx langfuse-cli api datasets get-get-runs --dataset-name <dataset> --json  # find the dataset run ID
-    npx langfuse-cli api scores list --dataset-run-id <dataset-run-id> --json  # inspect score names/values for that run
-    npx langfuse-cli api scores --help  # inspect current score commands and filters if `scores list` is insufficient
-    ```
+- Read back the run and its scores with the Langfuse CLI (see `references/cli.md`) to inspect item-level and run-level score names and values before fixing a threshold.
 
 ### 6. Add or Update the GitHub Actions Workflow
 
@@ -85,7 +71,7 @@ The workflow and secrets sections below are GitHub Actions-specific. For GitLab,
 - Include only the runtime setup required by the experiment script:
     - Python scripts: add `actions/setup-python`.
     - TypeScript/JavaScript scripts: add `actions/setup-node`.
-    - The action can install Langfuse SDK defaults itself. The action README currently defaults to Python SDK `4.6.0` and JS SDK `5.3.0`; check current docs before overriding.
+    - The action can install Langfuse SDK defaults itself; check the action README for the current default SDK versions before overriding.
     - If the experiment needs project/provider dependencies, add the repo's normal dependency file such as `requirements.txt` or `package.json`, run the normal install command before the action, and set `should_skip_sdk_installation: "true"` only when that dependency file also includes the required Langfuse SDK dependencies.
 - For the recommended workflow shape and current action inputs, use the canonical examples instead of copying a stale workflow snippet:
     - CI/CD workflow guide: `https://langfuse.com/docs/evaluation/experiments/experiments-ci-cd#github-actions`
@@ -103,26 +89,7 @@ Required GitHub secrets:
     - `LANGFUSE_SECRET_KEY`
     - Optional secrets depend on the experiment task, for example `OPENAI_API_KEY` or `ANTHROPIC_API_KEY`. Add them under `env:` on the action step.
 
-If using `gh` to set secrets:
-
-1. Verify `gh auth status`.
-2. Prefer reading values from local environment variables, not chat.
-3. If the values are already exported locally, use `--body "$NAME"`:
-
-```bash
-gh secret set LANGFUSE_PUBLIC_KEY --repo OWNER/REPO --body "$LANGFUSE_PUBLIC_KEY"
-gh secret set LANGFUSE_SECRET_KEY --repo OWNER/REPO --body "$LANGFUSE_SECRET_KEY"
-gh secret set ANTHROPIC_API_KEY --repo OWNER/REPO --body "$ANTHROPIC_API_KEY"
-gh secret list --repo OWNER/REPO
-```
-
-If a value is not exported locally, tell the user to run the stdin form in their own terminal and paste the secret when prompted:
-
-```bash
-gh secret set ANTHROPIC_API_KEY --repo OWNER/REPO
-```
-
-The pasted value goes to `gh` via stdin. Do not ask the user to paste secret values into chat.
+If using `gh secret set` to configure them, verify `gh auth status` first, and source values from the local environment rather than chat. If a value is exported locally, pass it via `--body "$NAME"`; if not, have the user run the command in their own terminal and paste the secret at the stdin prompt. Never ask the user to paste secret values into chat.
 
 ### 8. Verification
 
@@ -146,4 +113,4 @@ Before finishing, prefer an end-to-end workflow run over local-only validation. 
 | Workflow secrets or action inputs are wrong | Verify `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, `langfuse_base_url`, and provider secrets exist in the target repo/environment and are passed to the action step. |
 | Forked PR cannot access secrets | GitHub restricts secret access for forked PRs. Document the limitation or choose a trusted trigger such as internal PR, trusted-branch `push`, or `workflow_dispatch`. |
 | No default/base branch exists | Create an initial empty commit on the intended default branch before trying to verify a PR-triggered workflow. |
-| Script fails reading dataset fields | Re-run `npx langfuse-cli api dataset-items list --dataset-name <dataset> --limit 5 --json`, inspect `input`, `expected_output`, and metadata, and extract fields from object-shaped outputs explicitly. |
+| Script fails reading dataset fields | Re-inspect the dataset items with the Langfuse CLI, check `input`, `expected_output`, and metadata, and extract fields from object-shaped outputs explicitly. |
