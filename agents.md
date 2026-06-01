@@ -1,5 +1,19 @@
 # Agent Instructions
 
+## Adding or Improving a Skill Use Case
+
+- **Only add a use case if it beats the docs.** If an agent can already serve the user by fetching the Langfuse docs, add nothing. Reserve new content for where docs fall short and the agent needs extra context. *Every addition is maintenance surface and dilutes the skill.*
+
+- **You should almost never touch the top-level frontmatter `description` in `SKILL.md`.** It only controls whether the skill is invoked, and a user asking about a use case already mentions Langfuse or evaluation — which triggers it. Keep it short; in-skill routing handles the rest.
+
+- **Put "when to use" guidance in exactly two places:** a one-line entry in the `## Use case specific references` list in `SKILL.md`, and the `description` in the reference file's frontmatter. Nowhere else — no prose routing section, no "when to use" section in the reference body. *A reference body is read only after the agent already chose to open it, so routing text there is dead weight.*
+
+- **In the reference file, less is more.** Add only what's useful or what an agent couldn't infer on its own.
+
+- **Never commit code.** Link to the relevant Langfuse docs page so the agent fetches current code; use pseudo-code only for logic-specific bits. *Committed code goes stale.*
+
+- **Be cautious with `allowed-tools`.** A tool not in the list still works — the user just grants permission the first time. Only auto-allow commands users would find a no-brainer (today: read-only langfuse-specific commands only). *A risky auto-allow can make people hesitate to install the skill at all.*
+
 ## Langfuse Skill Path Changes
 
 When changing the path to any Langfuse skill in this repo, you must also update the corresponding path reference in the [CLI repo](https://github.com/langfuse/langfuse-cli) so that it points to the new location. Failing to do so will break the CLI's ability to resolve the skill.
