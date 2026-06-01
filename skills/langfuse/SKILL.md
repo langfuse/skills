@@ -3,15 +3,19 @@ name: langfuse
 description: Interact with Langfuse and access its documentation. Use when needing to (1) query or modify Langfuse data programmatically via the CLI — traces, prompts, datasets, scores, sessions, and any other API resource, (2) look up Langfuse documentation, concepts, integration guides, or SDK usage, (3) set up Langfuse experiment CI/CD gates, or (4) understand how any Langfuse feature works. This skill covers CLI-based API access (via npx), CI/CD experiment setup, and multiple documentation retrieval methods.
 allowed-tools:
   - WebFetch(domain:langfuse.com)
+  - WebFetch(domain:github.com)
   - Bash(curl *langfuse.com/*)
+  - Bash(curl *github.com/langfuse/experiment-action*)
   - Bash(npx langfuse-cli api __schema *)
   - Bash(npx langfuse-cli api * --help *)
   - Bash(npx langfuse-cli api * list *)
   - Bash(npx langfuse-cli api * get *)
+  - Bash(npx langfuse-cli api score-v2s get-scores *)
   - Bash(bunx langfuse-cli api __schema *)
   - Bash(bunx langfuse-cli api * --help *)
   - Bash(bunx langfuse-cli api * list *)
   - Bash(bunx langfuse-cli api * get *)
+  - Bash(bunx langfuse-cli api score-v2s get-scores *)
 ---
 
 # Langfuse

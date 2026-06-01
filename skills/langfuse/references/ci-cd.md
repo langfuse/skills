@@ -73,7 +73,7 @@ For the recommended Python and TypeScript script shape, fetch and use the canoni
     ```bash
     npx langfuse-cli api datasets get-get-runs --dataset-name <dataset> --json  # find the dataset run ID
     npx langfuse-cli api scores list --dataset-run-id <dataset-run-id> --json  # inspect score names/values for that run
-    npx langfuse-cli api scores-v-2 --help  # use if the needed score data is not exposed by `scores list`
+    npx langfuse-cli api score-v2s get-scores --limit 20 --json  # use if the needed score data is not exposed by `scores list`
     ```
 
 ### 6. Add or Update the GitHub Actions Workflow
