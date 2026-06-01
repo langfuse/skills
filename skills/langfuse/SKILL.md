@@ -1,6 +1,6 @@
 ---
 name: langfuse
-description: Interact with Langfuse and access its documentation. Use when needing to (1) query or modify Langfuse data programmatically via the CLI — traces, prompts, datasets, scores, sessions, and any other API resource, (2) look up Langfuse documentation, concepts, integration guides, or SDK usage, or (3) understand how any Langfuse feature works. This skill covers CLI-based API access (via npx) and multiple documentation retrieval methods.
+description: Interact with Langfuse and access its documentation. Use when needing to (1) query or modify Langfuse data programmatically via the CLI — traces, prompts, datasets, scores, sessions, and any other API resource, (2) look up Langfuse documentation, concepts, integration guides, or SDK usage, (3) set up Langfuse experiment CI/CD gates, or (4) understand how any Langfuse feature works. This skill covers CLI-based API access (via npx), CI/CD experiment setup, and multiple documentation retrieval methods.
 allowed-tools:
   - WebFetch(domain:langfuse.com)
   - Bash(curl *langfuse.com/*)
@@ -37,6 +37,7 @@ Follow these principles for ALL Langfuse work:
 - upgrading or migrating Langfuse SDKs to the latest version: references/sdk-upgrade.md
 - judge calibration (LLM-as-a-Judge reliability, simple accuracy checks, advanced split-based validation, confusion matrices, and metric ingestion): references/judge-calibration.md
 - systematic error analysis — reading traces, building failure taxonomy, deciding what to fix: references/error-analysis.md
+- setting up CI/CD experiment gates with `langfuse/experiment-action`: references/ci-cd.md
 - submitting feedback about this skill: references/skill-feedback.md
 
 
