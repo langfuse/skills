@@ -1,3 +1,5 @@
+<img width="2400" height="600" alt="hero-b" src="https://github.com/user-attachments/assets/c177a82d-334b-495c-81cb-9df69c521123" />
+
 # Langfuse Skills
 
 [Agent Skills](https://github.com/anthropics/skills) that teach AI coding assistants (Claude Code, Cursor, etc.) how to work with [Langfuse](https://langfuse.com) — the open-source LLM engineering platform for tracing, prompt management, and evaluation.
