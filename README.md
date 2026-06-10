@@ -54,6 +54,7 @@ API keys are found in your Langfuse project under **Settings > API Keys**.
 Once installed, the agent will automatically use these skills when relevant — for example:
 
 - Setting up Langfuse tracing in a project
+- Setting up CI/CD experiment gates with `langfuse/experiment-action`
 - Auditing existing instrumentation
 - Migrating prompts to Langfuse prompt management
 - Querying traces, prompts, or datasets via the API
