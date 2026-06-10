@@ -1,0 +1,21 @@
+{
+  "name": "langfuse",
+  "description": "Skills for working with Langfuse, the open-source LLM engineering platform for tracing, prompt management, and evaluation",
+  "owner": {
+    "name": "Langfuse",
+    "url": "https://github.com/langfuse"
+  },
+  "plugins": [
+    {
+      "name": "langfuse",
+      "source": "./",
+      "description": "Skills for working with Langfuse — tracing, prompt management, and evaluation",
+      "version": "1.1.0",
+      "author": { "name": "Langfuse", "email": "support@langfuse.com" },
+      "homepage": "https://langfuse.com",
+      "license": "MIT",
+      "category": "development",
+      "keywords": ["langfuse", "llm", "observability", "tracing", "prompt-management", "evaluation"]
+    }
+  ]
+}
