@@ -70,6 +70,29 @@ export LANGFUSE_BASE_URL=https://cloud.langfuse.com # example for EU cloud. For 
 If `LANGFUSE_BASE_URL` is used instead of `LANGFUSE_HOST`, run `export LANGFUSE_HOST="$LANGFUSE_BASE_URL"`.
 If not set, ask the user to set them in their shell or a `.env` file (do not ask them to paste keys into chat for security reasons). Keys are found in Langfuse UI → Settings → API Keys.
 
+#### Credential discovery before declaring credentials unavailable
+
+Before saying Langfuse credentials are unavailable, check whether the user's shell startup files define Langfuse helper functions or scoped credential variables. Shell functions are not inherited by unrelated non-interactive shells, so a missing `LANGFUSE_*` variable in one `bash` command does not prove credentials are unavailable. Do this without printing secrets:
+
+```bash
+# Show only Langfuse-related lines, redacting key values.
+grep -n -i 'langfuse\|lf_' ~/.zshenv ~/.zprofile ~/.zshrc ~/.bash_profile ~/.bashrc 2>/dev/null \
+  | sed -E 's/(LANGFUSE_[A-Z0-9_]*(PUBLIC_KEY|SECRET_KEY|BASE_URL)[A-Z0-9_]*=).*/\1<redacted>/; s/(pk-lf-[A-Za-z0-9_-]+)/<redacted-public-key>/g; s/(sk-lf-[A-Za-z0-9_-]+)/<redacted-secret-key>/g'
+
+# List helper function names after loading the user's shell env.
+zsh -lc 'source ~/.zshenv >/dev/null 2>&1 || true; functions | grep -i "^[a-zA-Z0-9_-]*.*\(lf_\|langfuse\)" || true' \
+  | sed -E 's/(LANGFUSE_[A-Z0-9_]*(PUBLIC_KEY|SECRET_KEY|BASE_URL)[A-Z0-9_]*=).*/\1<redacted>/; s/(pk-lf-[A-Za-z0-9_-]+)/<redacted-public-key>/g; s/(sk-lf-[A-Za-z0-9_-]+)/<redacted-secret-key>/g'
+```
+
+If a helper function exists, prefer it for read-only CLI calls. Run the helper through the shell that defines it instead of retyping or printing the underlying env values. For zsh helpers in startup files, use `zsh -lc`:
+
+```bash
+zsh -lc '<helper-name> traces list --help'
+zsh -lc '<helper-name> traces get --trace-id <trace-id> --json'
+```
+
+Never print full `LANGFUSE_PUBLIC_KEY` or `LANGFUSE_SECRET_KEY` values. If no env vars and no helper functions are found, then ask the user to configure credentials.
+
 ### Detailed CLI Reference
 
 For common workflows, tips, and full usage patterns, see [references/cli.md](references/cli.md).
