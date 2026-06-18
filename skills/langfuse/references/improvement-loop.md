@@ -1,23 +1,25 @@
 ---
 name: langfuse-improvement-loop
-description: >
-  Close the loop on an LLM/agent app: go from a reported issue to a measured
-  improvement, grounded entirely in Langfuse data. Use when someone reports a
-  production symptom ("too many follow-ups", "quality dropped", "answers get
-  flagged", "users are confused") and wants it actually fixed and proven — not
-  just diagnosed. Self-contained cycle: root cause from traces → assess fix
-  options (prompt, code/implementation, retrieval, examples, model — NOT always
-  a prompt edit) → make the change behind a safe boundary → encode the failures
-  as dataset cases + an evaluator that captures the fix's intent → run the
-  experiment on a candidate vs. baseline and decide via a per-item regression
-  check. Uses `npx langfuse-cli` for all data access.
-  Requires LANGFUSE_PUBLIC_KEY, LANGFUSE_SECRET_KEY, and LANGFUSE_BASE_URL/HOST
-  (usually in the project `.env`).
+description: Close the loop on an LLM/agent app — go from a reported production symptom to a measured improvement, grounded entirely in Langfuse data. Use when someone reports a production symptom ("too many follow-ups", "quality dropped", "answers get flagged", "users are confused") and wants it actually fixed and proven, not just diagnosed.
 ---
 
-# Langfuse Improvement Loop
+# Improvement Loop
 
-The repeatable cycle for turning a vague production symptom into a change you can **prove** helped without regressing anything else. Self-contained and works on any Langfuse-traced app.
+## Table of contents
+
+- [Cycle overview](#cycle-overview)
+- [Setup](#setup)
+- [① Find the root cause](#-find-the-root-cause-from-traces-not-guesses)
+- [② Assess fix options](#-assess-the-fix-options--the-prompt-is-not-always-the-lever)
+- [③ Make the change behind a safe boundary](#-make-the-change-behind-a-safe-boundary)
+- [④ Encode failures as eval](#-encode-the-failures-as-dataset-cases--a-targeted-evaluator)
+- [⑤ Compare and decide](#-compare-versions-and-decide)
+- [Common mistakes](#common-mistakes)
+- [Compare & regression CLI recipes](#compare--regression--cli-recipes)
+
+The repeatable cycle for turning a vague production symptom into a change you can **prove** helped without regressing anything else. Works on any Langfuse-traced app.
+
+## Cycle overview
 
 ```
   ① ROOT CAUSE      → ② ASSESS OPTIONS → ③ CHANGE (safe)   → ④ ENCODE AS EVAL  → ⑤ COMPARE & DECIDE
@@ -27,22 +29,25 @@ The repeatable cycle for turning a vague production symptom into a change you ca
 
 The discipline that makes this worth doing: **every step is grounded in data, and the change is gated by a measurement, not a vibe.** Never jump from symptom to fix, and never promote a fix you only checked in aggregate.
 
-**Where the symptom comes from.** This loop starts from *one* reported symptom. If you don't have a specific one yet — or aren't sure which issue is worth fixing first — run the **`langfuse-trace-triage`** skill first; its ranked P0/P1 findings (each with a one-line symptom and example trace IDs) drop straight into Step ① below. To run the whole discover → fix → prove arc as one flow, the **`langfuse-production-loop`** skill orchestrates triage, this loop, and looping back across findings.
+This loop starts from *one* reported symptom. If you don't have a specific one yet — or aren't sure which issue is worth fixing first — run [issue-detection-triage.md](issue-detection-triage.md) first; its ranked P0/P1 findings (each with a one-line symptom and example trace IDs) drop straight into Step ① below.
 
 ## Setup
 
-This skill builds on the **`langfuse`** skill for CLI usage and credential discovery — read its CLI section (`references/cli.md`) first if the CLI isn't already set up. The loop-specific essentials: the CLI expects `LANGFUSE_HOST`, but projects usually store it as `LANGFUSE_BASE_URL`:
+Credentials and CLI basics: follow the **`langfuse` skill** CLI section and [cli.md](cli.md). Do not ask the user to paste keys into chat.
+
+The CLI reads `LANGFUSE_HOST`; projects often store the host as `LANGFUSE_BASE_URL`. Load project env if needed, map host, verify:
 
 ```bash
-set -a; . ./.env; set +a
+set -a; [ -f ./.env ] && . ./.env; set +a
 export LANGFUSE_HOST="${LANGFUSE_BASE_URL:-$LANGFUSE_HOST}"
-npx langfuse-cli api __schema          # discover resources
-npx langfuse-cli api <resource> --help # args for any call
+npx langfuse-cli api traces list --limit 1   # verify before proceeding
+npx langfuse-cli api __schema               # discover resources
+npx langfuse-cli api <resource> --help      # args for any call
 ```
 
 You also need a **Langfuse dataset** + an **experiment runner** that executes each dataset item through the app and attaches scores (commonly a `dataset:run` script). If none exists, you build one in Step ④.
 
-`references/compare-and-regression.md` holds copy-paste CLI recipes for Steps ③ and ⑤.
+[Compare & regression CLI recipes](#compare--regression--cli-recipes) holds copy-paste CLI recipes for Steps ③ and ⑤.
 
 ---
 
@@ -97,6 +102,7 @@ Choose on: *leverage* (hits the whole pattern?), *blast radius* (what else it to
 Isolate the change so the live system is untouched until Step ⑤ says ship.
 
 **Prompt change → publish to a NON-production label** (e.g. `candidate`), never straight to `production`:
+
 1. Edit the in-repo source of truth (often a `SYSTEM_PROMPT` constant), then `npm run typecheck`.
 2. Publish to a test label and confirm it landed there (not on `production`):
    ```bash
@@ -110,7 +116,8 @@ Isolate the change so the live system is untouched until Step ⑤ says ship.
 
 **Adding trace dimensions** (to enable slicing from Step ①) → propagate string `metadata` onto the trace (e.g. `{ difficulty }`) and have the traffic/runner pass it.
 
-**Get explicit confirmation before ever touching `production`.** Two traps that silently waste a run (full recovery in the reference file):
+**Get explicit confirmation before ever touching `production`.** Two traps that silently waste a run (full recovery in [Compare & regression CLI recipes](#compare--regression--cli-recipes)):
+
 - **dotenv `override: true`** makes `.env` clobber shell-exported vars, so `LABEL=candidate npm run …` still uses `.env`'s label. Set the label *in `.env`* for the run, or move labels via the API afterward.
 - If you accidentally publish to `production`, move the label back: `PATCH /api/public/v2/prompts/{name}/versions/{version}` with `{"newLabels":["production"]}` on the prior version, and `{"newLabels":["candidate"]}` on yours. (`latest` is auto-managed; the live app reads `production`.)
 
@@ -138,11 +145,11 @@ async ({ output }) => {
 Run the **same dataset** through the **baseline** (current `production`) and the **candidate** as two named runs, then judge. Make the run name carry the label so they're distinguishable, e.g. `dad-it-support-${label}-${ISO}`.
 
 ```bash
-# Baseline (.env label = production), then candidate (.env label = candidate). See reference file.
+# Baseline (.env label = production), then candidate (.env label = candidate). See CLI recipes section.
 npm run dataset:run
 ```
 
-- **Aggregate is necessary but not sufficient** — a higher average hides individual drops. Do a **per-item diff** across both runs for every score (recipe in the reference file).
+- **Aggregate is necessary but not sufficient** — a higher average hides individual drops. Do a **per-item diff** across both runs for every score (recipe in [Compare & regression CLI recipes](#compare--regression--cli-recipes)).
 - **Read the answer for every item that dipped** and classify each: (a) real regression → fix or reconsider; (b) measurement artifact (an `expectedKeywords` phrasing shift while correctness held); (c) LLM-judge noise (±0.05–0.1 on a single stochastic pass). Don't dismiss drops unread; don't panic over noise.
 - **Verdict rule:** ship only if the intent-evaluator rose on the **target slice** *and* the correctness/overlap guard didn't drop on any item beyond noise. Otherwise iterate (back to ② or ④).
 - **Name collateral behavior change** the dataset doesn't cover (e.g. a generalized rule making *easy* answers verbose) as a tradeoff, even if scores don't catch it.
@@ -164,3 +171,131 @@ Report: the comparison table (aggregate + target slice), the per-item regression
 - **Gaming `expectedKeywords`** with the fix's own words — keep them as an independent regression guard.
 - **Prompt/fallback drift** — update both the Langfuse-managed prompt and the in-repo fallback, matching the current variant so you only add your change.
 - **Forgetting the collateral tradeoff** — report behavior shifts the dataset doesn't score.
+
+---
+
+## Compare & regression — CLI recipes
+
+Concrete, copy-paste recipes for Steps ③ and ⑤. Assumes [Setup](#setup) is done (`LANGFUSE_HOST` exported). For prompt label recovery, raw `curl` uses `$LANGFUSE_HOST` — same host var as the CLI.
+
+### A. Publish a prompt to a `candidate` label (NOT production)
+
+The in-repo `SYSTEM_PROMPT` is usually the source of truth; the publish script reads it. The label normally comes from `LANGFUSE_PROMPT_LABEL`.
+
+**The trap:** many projects load env with dotenv `config({ override: true })`, which makes `.env` values *overwrite* anything you export in the shell. So this does **not** work:
+
+```bash
+LANGFUSE_PROMPT_LABEL=candidate npm run prompt:publish   # ❌ .env's "production" wins
+```
+
+**Reliable approach — set the label in `.env` for the run, then restore:**
+
+```bash
+# 1. edit .env: LANGFUSE_PROMPT_LABEL=candidate   (use the Edit tool, then:)
+npm run typecheck && npm run prompt:publish
+# 2. restore .env: LANGFUSE_PROMPT_LABEL=production
+```
+
+**Verify it landed on candidate, not production:**
+
+```bash
+npx langfuse-cli api prompts list --name <name>   # labels per version
+```
+
+### B. Recover if you published to `production` by accident
+
+Labels are unique pointers; publishing moves `production` to the new version. To undo, move it back and relabel yours. The CLI ignores `--prompt-version` on `get` in some versions, so use raw REST to inspect, and `PATCH` to set labels:
+
+```bash
+# inspect each version (raw newlines break strict JSON → strict=False)
+for v in 1 2 3 4; do
+  curl -s -u "$LANGFUSE_PUBLIC_KEY:$LANGFUSE_SECRET_KEY" \
+    "$LANGFUSE_HOST/api/public/v2/prompts/<name>?version=$v" > /tmp/v$v.json
+  python3 -c "import json;d=json.loads(open('/tmp/v$v.json').read(),strict=False);\
+print('v$v',d['labels'],len(d['prompt']))"
+done
+
+# move production back to the prior good version (e.g. 3)
+curl -s -X PATCH -u "$LANGFUSE_PUBLIC_KEY:$LANGFUSE_SECRET_KEY" \
+  -H "Content-Type: application/json" -d '{"newLabels":["production"]}' \
+  "$LANGFUSE_HOST/api/public/v2/prompts/<name>/versions/3"
+
+# put your new version (e.g. 4) on candidate
+curl -s -X PATCH -u "$LANGFUSE_PUBLIC_KEY:$LANGFUSE_SECRET_KEY" \
+  -H "Content-Type: application/json" -d '{"newLabels":["candidate"]}' \
+  "$LANGFUSE_HOST/api/public/v2/prompts/<name>/versions/4"
+```
+
+`latest` is auto-managed (always the highest version number) and is fine to leave on your new version — the live app fetches by the `production` label.
+
+### C. Run baseline + candidate over the same dataset
+
+Make the run name carry the label so the two runs are distinguishable in the UI (one-line change in the runner):
+
+```js
+const runName = `myapp-${env.langfusePromptLabel}-${new Date().toISOString()}`;
+```
+
+Then run twice, flipping the label in `.env` between runs (same dotenv trap as above). These are real LLM calls — they take minutes; run in the background and wait for completion.
+
+```bash
+# .env label = production
+npm run dataset:run        # → baseline run, prints avg scores + run URL
+# edit .env label = candidate
+npm run dataset:run        # → candidate run
+# restore .env label = production
+```
+
+Each run prints `Average Scores` and a Dataset Run URL. Note both run names.
+
+### D. Per-item regression diff (the part aggregates hide)
+
+Map `datasetItemId → traceId` for both runs, pull the scores in the window, and diff every score per item.
+
+```bash
+# 1. fetch both runs' items
+npx langfuse-cli api datasets get-get-run "<dataset>" "<baseline-run-name>"  > /tmp/run_base.json
+npx langfuse-cli api datasets get-get-run "<dataset>" "<candidate-run-name>" > /tmp/run_cand.json
+
+# 2. pull scores in the window (paginate; 100/page)
+for p in 1 2 3; do
+  npx langfuse-cli api scores list --from-timestamp <ISO> --limit 100 --page $p > /tmp/sc$p.json
+done
+```
+
+```python
+# 3. diff. python3 - <<'EOF'
+import json, glob, statistics as st
+base = {it['datasetItemId']: it['traceId'] for it in json.load(open('/tmp/run_base.json'))['datasetRunItems']}
+cand = {it['datasetItemId']: it['traceId'] for it in json.load(open('/tmp/run_cand.json'))['datasetRunItems']}
+scores = {}
+for f in glob.glob('/tmp/sc*.json'):
+    for s in json.load(open(f)).get('data', []):
+        scores.setdefault(s['traceId'], {})[s['name']] = s['value']
+items = sorted(set(base) & set(cand))
+names = sorted({n for t in scores.values() for n in t})
+def g(m, it, n): return scores.get(m.get(it), {}).get(n)
+regress = []
+for it in items:
+    row = []
+    for n in names:
+        a, b = g(base, it, n), g(cand, it, n)
+        if isinstance(a, (int, float)) and isinstance(b, (int, float)):
+            row.append(f"{n}:{a:.2f}->{b:.2f}")
+            if b < a - 0.001: regress.append((it, n, a, b))
+    print(it, '|', '  '.join(row))
+for n in names:
+    bv = [g(base, it, n) for it in items if isinstance(g(base, it, n), (int, float))]
+    cv = [g(cand, it, n) for it in items if isinstance(g(cand, it, n), (int, float))]
+    if bv and cv: print(f"AVG {n}: {st.mean(bv):.3f} -> {st.mean(cv):.3f}")
+print("REGRESSIONS:", regress or "NONE")
+# EOF
+```
+
+For every entry in `REGRESSIONS`, fetch the candidate answer and read it before judging:
+
+```bash
+npx langfuse-cli api traces get <candidate-traceId>   # inspect output.answer
+```
+
+Classify each: **real regression** (fix/reconsider) · **measurement artifact** (`expectedKeywords` phrasing shifted but correctness held) · **LLM-judge noise** (±0.05–0.1 single-pass). Ship only if the intent-evaluator rose on the target slice and no item's correctness guard dropped beyond noise.

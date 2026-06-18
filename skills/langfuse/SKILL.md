@@ -22,7 +22,7 @@ This skill helps you use Langfuse effectively across all common workflows: instr
 
 Follow these principles for ALL Langfuse work:
 
-1. **Documentation First**: NEVER implement based on memory. Always fetch current docs before writing code (Langfuse updates frequently) See the section below on how to access documentation.
+1. **Documentation First**: NEVER implement based on memory. Always fetch current docs before writing code (Langfuse updates frequently). See the section below on how to access documentation.
 2. **CLI for Data Access**: Use `langfuse-cli` when querying/modifying Langfuse data. See the section below on how to use the CLI. 
 3. **Best Practices by Use Case**: Check the relevant reference file below for use-case-specific guidelines before implementing
 4. **Use latest Langfuse versions**: Unless the user specified otherwise or there's a good reason, always use the latest version of Langfuse SDKs/APIs.
@@ -37,16 +37,16 @@ Follow these principles for ALL Langfuse work:
 - upgrading or migrating Langfuse SDKs to the latest version: references/sdk-upgrade.md
 - judge calibration (LLM-as-a-Judge reliability, simple accuracy checks, advanced split-based validation, confusion matrices, and metric ingestion): references/judge-calibration.md
 - systematic error analysis — reading traces, building failure taxonomy, deciding what to fix: references/error-analysis.md
+- issue detection triage — find production problems and rank them P0–P3: references/issue-detection-triage.md
+- closing the loop from a reported symptom to a measured, proven fix: references/improvement-loop.md
 - setting up CI/CD experiment gates with `langfuse/experiment-action`: references/ci-cd.md
 - submitting feedback about this skill: references/skill-feedback.md
 
-## Related skills
+## Typical production-quality workflow
 
-These are separate, more specialized skills that build on this one for CLI access and credentials. Hand off to them when the task matches:
+Issue detection triage and the improvement loop are often run back to back: use [issue-detection-triage.md](references/issue-detection-triage.md) to find and rank problems, pick a finding, then run [improvement-loop.md](references/improvement-loop.md) on that symptom to root-cause, change, and prove the fix. Loop until the backlog the user cares about is clear.
 
-- **`langfuse-trace-triage`** — sweep a project's recent production traffic for issues across every dimension (failed tools, cost, latency, bad scores, retrieval quality, user friction) and report them ranked P0–P3. Use for "find what's going wrong / audit / health-check".
-- **`langfuse-improvement-loop`** — take one reported symptom from production to a *measured, proven* fix: root-cause from traces → pick the right lever → change behind a safe boundary → encode as a dataset + evaluator → decide via a baseline-vs-candidate experiment. The natural follow-up after trace-triage surfaces an issue worth fixing.
-- **`langfuse-production-loop`** — the umbrella that runs the whole arc end to end (discover → prioritize → fix → prove), orchestrating the two skills above. Use when someone wants to "improve my app" broadly rather than run a single phase.
+The improvement loop also stands alone — use it directly when the user already has a concrete symptom to fix ("too many follow-ups", "quality dropped") without running a full triage first.
 
 ## 1. Langfuse API via CLI
 
@@ -79,7 +79,7 @@ If not set, ask the user to set them in their shell or a `.env` file (do not ask
 
 ### Detailed CLI Reference
 
-For common workflows, tips, and full usage patterns, see [references/cli.md](references/cli.md).
+For common workflows, tips, pagination, and endpoint preferences, see [references/cli.md](references/cli.md). Use-case-specific CLI recipes live in the relevant reference file. 
 
 ## 2. Langfuse Documentation
 
