@@ -40,6 +40,12 @@ Follow these principles for ALL Langfuse work:
 - setting up CI/CD experiment gates with `langfuse/experiment-action`: references/ci-cd.md
 - submitting feedback about this skill: references/skill-feedback.md
 
+## Related skills
+
+These are separate, more specialized skills that build on this one for CLI access and credentials. Hand off to them when the task matches:
+
+- **`langfuse-trace-triage`** — sweep a project's recent production traffic for issues across every dimension (failed tools, cost, latency, bad scores, retrieval quality, user friction) and report them ranked P0–P3. Use for "find what's going wrong / audit / health-check".
+- **`langfuse-improvement-loop`** — take one reported symptom from production to a *measured, proven* fix: root-cause from traces → pick the right lever → change behind a safe boundary → encode as a dataset + evaluator → decide via a baseline-vs-candidate experiment. The natural follow-up after trace-triage surfaces an issue worth fixing.
 
 ## 1. Langfuse API via CLI
 
