@@ -27,7 +27,7 @@ The repeatable cycle for turning a vague production symptom into a change you ca
 
 The discipline that makes this worth doing: **every step is grounded in data, and the change is gated by a measurement, not a vibe.** Never jump from symptom to fix, and never promote a fix you only checked in aggregate.
 
-**Where the symptom comes from.** This loop starts from *one* reported symptom. If you don't have a specific one yet — or aren't sure which issue is worth fixing first — run the **`langfuse-trace-triage`** skill first; its ranked P0/P1 findings (each with a one-line symptom and example trace IDs) drop straight into Step ① below.
+**Where the symptom comes from.** This loop starts from *one* reported symptom. If you don't have a specific one yet — or aren't sure which issue is worth fixing first — run the **`langfuse-trace-triage`** skill first; its ranked P0/P1 findings (each with a one-line symptom and example trace IDs) drop straight into Step ① below. To run the whole discover → fix → prove arc as one flow, the **`langfuse-production-loop`** skill orchestrates triage, this loop, and looping back across findings.
 
 ## Setup
 

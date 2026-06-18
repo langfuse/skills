@@ -49,3 +49,5 @@ Produce a markdown report with: method (window, what was included/excluded, coun
 
 ## Next step: fix what you found
 Triage stops at a ranked list of problems — it diagnoses, it doesn't fix. To actually resolve a finding and **prove** the fix worked, hand it to the **`langfuse-improvement-loop`** skill. A P0/P1 finding from this report — its one-line symptom plus the example trace IDs — is exactly the input that skill's Step ① expects: it root-causes from those traces, picks the right lever (prompt, code, retrieval, model — not always a prompt edit), makes the change behind a safe boundary, and gates it on a baseline-vs-candidate experiment. Offer this as the follow-up once the user picks an issue to act on.
+
+If you're running the full discover → fix → prove arc rather than a standalone audit, the **`langfuse-production-loop`** skill orchestrates that handoff (and looping back here after fixes) for you.
