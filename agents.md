@@ -8,6 +8,12 @@
 
 - **Put "when to use" guidance in exactly two places:** a one-line entry in the `## Use case specific references` list in `SKILL.md`, and the `description` in the reference file's frontmatter. Nowhere else — no prose routing section, no "when to use" section in the reference body. *A reference body is read only after the agent already chose to open it, so routing text there is dead weight.*
 
+- **Every reference file's frontmatter must declare a `metadata.required_access` list** — the kinds of access an agent needs to execute that reference. Use only these tokens, and reuse them consistently across files:
+  - `CODEBASE` — reads or edits the user's source code
+  - `LANGFUSE_PROJECT_INTERFACE` — reaches the Langfuse project via CLI / API / MCP commands
+  - `LANGFUSE_PROJECT_SCRIPT` — runs SDK code that connects to the Langfuse backend (needs network)
+  - `GITHUB` — operates on GitHub via the `gh` CLI
+
 - **In the reference file, less is more.** Add only what's useful or what an agent couldn't infer on its own.
 
 - **Never commit code.** Link to the relevant Langfuse docs page so the agent fetches current code; use pseudo-code only for logic-specific bits. *Committed code goes stale.*
