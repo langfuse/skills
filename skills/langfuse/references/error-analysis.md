@@ -8,6 +8,9 @@ description: Deep-dive error analysis of an LLM pipeline or AI application using
   errors", "build a failure taxonomy", "what's going wrong with my pipeline", or any
   request to systematically inspect, annotate, or score Langfuse traces. If the user
   is trying to understand or improve the quality of an AI system's outputs, use this skill.
+metadata:
+  required_access:
+    - LANGFUSE_PROJECT_INTERFACE
 ---
 
 # Error Analysis
