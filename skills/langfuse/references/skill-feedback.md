@@ -1,6 +1,9 @@
 ---
 name: langfuse-skill-feedback
 description: Submit feedback about the Langfuse skill to its maintainers via GitHub Discussions. Use when the user indicates the skill gave incorrect guidance, is missing information, or could be improved.
+metadata:
+  required_access:
+    - GITHUB
 ---
 
 # Skill Feedback

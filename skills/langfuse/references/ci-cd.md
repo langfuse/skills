@@ -1,6 +1,12 @@
 ---
 name: langfuse-ci-cd
 description: Set up or extend agent regression checks / gating in GitHub Actions CI/CD using `langfuse/experiment-action`.
+metadata:
+  required_access:
+    - CODEBASE
+    - LANGFUSE_PROJECT_INTERFACE
+    - LANGFUSE_PROJECT_SCRIPT
+    - GITHUB
 ---
 
 # Langfuse CI/CD

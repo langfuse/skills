@@ -1,6 +1,10 @@
 ---
 name: langfuse-user-feedback
 description: Wires up user feedback (thumbs up/down, ratings, comments) from an application's frontend to Langfuse scores. Use when user wants to capture end-user feedback, add ratings to traces, or connect user complaints to Langfuse.
+metadata:
+  required_access:
+    - CODEBASE
+    - LANGFUSE_PROJECT_SCRIPT
 ---
 
 # User Feedback

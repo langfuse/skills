@@ -1,6 +1,10 @@
 ---
 name: langfuse-prompt-migration
 description: Migrate hardcoded prompts to Langfuse for version control and deployment-free iteration. Use when user wants to externalize prompts, move prompts to Langfuse, or set up prompt management.
+metadata:
+  required_access:
+    - CODEBASE
+    - LANGFUSE_PROJECT_SCRIPT
 ---
 
 # Langfuse Prompt Migration

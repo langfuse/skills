@@ -1,6 +1,10 @@
 ---
 name: langfuse-sdk-upgrade
 description: Upgrade Langfuse SDKs from older versions to the latest. Use when migrating Python SDK v2/v3 to v4, or JS/TS SDK v3/v4 to v5.
+metadata:
+  required_access:
+    - CODEBASE
+    - LANGFUSE_PROJECT_SCRIPT
 ---
 
 # Langfuse SDK Upgrade Guide
