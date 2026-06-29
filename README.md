@@ -9,6 +9,9 @@
 | Skill                                                           | Description                                                                                        |
 | --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
 | [langfuse](./skills/langfuse)                                   | Main skill to work with Langfuse. Query and manage traces, prompts, datasets, and scores via the Langfuse API; look up documentation; do things with best practices in mind. |
+| [langfuse-improvement-loop](./skills/langfuse-improvement-loop) | Close the loop from a reported production symptom to a measured improvement, grounded in Langfuse data: root-cause from traces, assess fix options, make the change behind a safe boundary, encode failures as dataset cases + an evaluator, and decide via a candidate-vs-baseline experiment. |
+| [langfuse-trace-triage](./skills/langfuse-trace-triage)         | Triage a Langfuse project's recent production traffic for issues and report them ranked by severity. Identifies the real application traces, sweeps a fixed set of dimensions (failed tool calls, cost spikes, latency, bad scores, user friction, retrieval quality, etc.), ranks findings P0–P3, and offers to save a markdown report. |
+| [langfuse-production-loop](./skills/langfuse-production-loop)   | Umbrella skill that runs the full production-quality loop end to end — discover → prioritize → fix → prove — orchestrating `langfuse-trace-triage` and `langfuse-improvement-loop`. Use when you want to improve an app broadly rather than run a single phase. |
 
 ## Installation
 
