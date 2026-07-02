@@ -1,7 +1,6 @@
 ---
 name: langfuse-judge-calibration
-description: Calibrate and validate LLM-as-a-Judge evaluators against dataset ground truth. Runs the judge prompt as a Langfuse dataset experiment, compares judge outputs with dataset item expected outputs, and reports simple accuracy or advanced confusion-matrix metrics. Use this guide whenever a user asks if their LLM judge is actually useful,
-aligned with human judgment, or safe to trust for monitoring decisions.
+description: Calibrate and validate LLM-as-a-Judge evaluators against dataset ground truth. Runs the judge prompt as a Langfuse dataset experiment, compares judge outputs with dataset item expected outputs, and reports simple accuracy or advanced confusion-matrix metrics. Use this guide whenever a user asks if their LLM judge is actually useful, aligned with human judgment, or safe to trust for monitoring decisions.
 metadata:
   required_access:
     - CODEBASE
