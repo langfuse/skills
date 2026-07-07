@@ -37,6 +37,7 @@ Follow these principles for ALL Langfuse work:
 - upgrading or migrating Langfuse SDKs to the latest version: references/sdk-upgrade.md
 - judge calibration (LLM-as-a-Judge reliability, simple accuracy checks, advanced split-based validation, confusion matrices, and metric ingestion): references/judge-calibration.md
 - systematic error analysis — reading traces, building failure taxonomy, deciding what to fix: references/error-analysis.md
+- release-planning-agents PR review run reports from saved traces or artifacts: references/release-planning-pr-review-run-report.md
 - setting up CI/CD experiment gates with `langfuse/experiment-action`: references/ci-cd.md
 - submitting feedback about this skill: references/skill-feedback.md
 
