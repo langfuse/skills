@@ -1,0 +1,41 @@
+{
+  "name": "langfuse",
+  "version": "1.1.1",
+  "description": "Skills for working with Langfuse, the open-source LLM engineering platform for tracing, prompt management, and evaluation.",
+  "author": {
+    "name": "Langfuse",
+    "email": "support@langfuse.com",
+    "url": "https://langfuse.com"
+  },
+  "homepage": "https://langfuse.com",
+  "repository": "https://github.com/langfuse/skills",
+  "license": "MIT",
+  "keywords": [
+    "langfuse",
+    "llm",
+    "observability",
+    "tracing",
+    "prompt-management",
+    "evaluation"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Langfuse",
+    "shortDescription": "Work with Langfuse tracing, prompts, datasets, scores, and docs.",
+    "longDescription": "Reusable workflows for instrumenting applications, querying Langfuse traces, managing prompts, running evaluations, and using Langfuse documentation from ChatGPT or Codex.",
+    "developerName": "Langfuse",
+    "category": "Developer Tools",
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Set up Langfuse tracing in this app.",
+      "Inspect Langfuse traces for recent failures.",
+      "Migrate prompts into Langfuse."
+    ],
+    "websiteURL": "https://langfuse.com",
+    "brandColor": "#F97316",
+    "logo": "./assets/logo.png"
+  }
+}
