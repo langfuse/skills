@@ -35,6 +35,8 @@
       "Migrate prompts into Langfuse."
     ],
     "websiteURL": "https://langfuse.com",
+    "privacyPolicyURL": "https://langfuse.com/privacy",
+    "termsOfServiceURL": "https://langfuse.com/terms",
     "brandColor": "#F97316",
     "logo": "./assets/logo.png"
   }
