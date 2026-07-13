@@ -32,6 +32,7 @@ Follow these principles for ALL Langfuse work:
 
 - instrumenting an existing function/application: references/instrumentation.md
 - migrating prompts from a codebase into Langfuse: references/prompt-migration.md
+- creating a prompt or changing any part of an existing prompt, including small edits and debugging/tuning: references/prompt-engineering.md
 - capturing user feedback (thumbs, ratings, implicit signals) as scores on traces: references/user-feedback.md
 - further tips on using the Langfuse CLI: references/cli.md
 - upgrading or migrating Langfuse SDKs to the latest version: references/sdk-upgrade.md
