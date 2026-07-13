@@ -94,8 +94,8 @@ One row per distinct issue, ordered by priority (P0 first). Columns, in order:
 | 5 | **Description** | Concrete: the observable symptom + supporting evidence (counts, %, quoted output). |
 | 6 | **Root-cause hypothesis** | Best explanation of *why*, stated as a hypothesis (not asserted fact). |
 | 7 | **Example traces** | 1–3 links, `<host>/project/<projectId>/traces/<traceId>`, built from the **actual `LANGFUSE_HOST`** so the region is correct (e.g. `https://us.cloud.langfuse.com/...` for US cloud, `https://cloud.langfuse.com/...` for EU, or the self-hosted host). |
-| 8 | **Proposed fix** | The lever (prompt / retrieval / code / model / eval / instrumentation) and the concrete change. |
-| 9 | **Agent prompt** | A ready-to-paste prompt for a coding agent — enough context to fix it without re-triaging: the failing behavior, 1–2 concrete examples (trace link or quoted I/O), the root-cause hypothesis, and the specific prompt / tool name / file suspected to be at fault. Write it as an instruction to a colleague LLM. |
+| 8 | **Fix direction** | The lever(s) most likely at fault (prompt / retrieval / code / model / eval / instrumentation) and one or more plausible ways to address it — offered as options, not a mandate. Say what you'd try and why, but leave the final call to whoever implements it. |
+| 9 | **Agent prompt** | A ready-to-paste prompt for a coding agent — enough context to fix it without re-triaging: the failing behavior, 1–2 concrete examples (trace link or quoted I/O), the root-cause hypothesis, and the specific prompt / tool name / file suspected to be at fault. Frame it as "here is the issue, here are examples, here are some ways it could be fixed — you decide the right fix," **not** a prescriptive step-by-step. Give the implementing agent the context and latitude to choose the fix, and write it as an instruction to a colleague LLM you trust to make the call. |
 
 Long-form cells (5, 8, 9) can hold multiple sentences; keep the agent-prompt self-contained so it survives copy-paste out of the table.
 
@@ -156,7 +156,7 @@ The dimensions are grouped. The first group is what naive triage usually covers;
 
 16. **Score distributions** — after validity is confirmed, per score (using its defined negative-signal direction): rate of negative values, value histogram. Which dimensions are failing and how often. Treat user-feedback negatives (thumbs-down, low ratings) as first-class P0/P1 candidates — they are ground-truth dissatisfaction, not a proxy.
 17. **Dead / non-discriminating evaluators** — an evaluator stuck at a single constant value (100% True or 100% False). Distinguish the causes via the comments (validity note above): **legitimately quiet** (data never triggers it → P3, flag for a known-positive sanity check) vs **mis-wired** (comments show it can't see the field it grades → broken, rank per Rank).
-18. **Missing scores** — real traces with no scores attached (not being evaluated at all) → blind spots in monitoring.
+18. **Missing scores & monitoring coverage** — real traces with no scores attached (not being evaluated at all); the % of traffic carrying scores/evals; environments present; anything un-instrumented. All of these are blind spots in monitoring.
 19. **Score regressions** — pass rate dropping vs an earlier window or a previous release/version.
 
 ### F. User friction & conversation quality
@@ -181,20 +181,14 @@ The dimensions are grouped. The first group is what naive triage usually covers;
 29. **Malformed / adversarial inputs** — empty messages, garbage, injection attempts, extreme length. Does the agent **degrade gracefully** (safe refusal / sane fallback) rather than crash, comply, or get hijacked?
 30. **Language / generation mismatch** — user writes in language X, agent answers in Y.
 
-### I. Segmentation & regressions (don't conclude from aggregates)
+### I. Segmentation & regressions (a lens on every dimension above, not a separate check)
 
-31. **By version / release** — slice every metric by `version`/`release`. A deploy may have regressed one slice while the aggregate looks fine. Compare before/after a release tag.
-32. **By user / session segment** — is a problem concentrated in a few users or sessions?
-33. **By prompt version** — correlate `promptName`/`promptVersion` with scores, latency, cost — did a prompt change regress quality?
-34. **By model / config** — multiple models in use? fallback model firing unexpectedly? model version drift? temperature/params anomalies?
-35. **By tool / environment / tag** — concentration of issues in one tool, environment, or tag.
+This is not one more box to tick — it is how you keep A–H honest. Before marking **any** dimension clean, re-run its signal sliced by `version`/`release` (did a deploy regress one slice while the aggregate looks fine? compare before/after a release tag), `promptName`/`promptVersion` (did a prompt change regress scores/latency/cost?), `model`/config (multiple models, an unexpected fallback firing, version drift, temperature/param anomalies?), top `userId`s / `sessionId`s (is the problem concentrated in a few?), and `tool`/`environment`/`tag` (issues clustered in one?). A clean aggregate routinely hides one broken slice.
 
 ### J. Volume & coverage meta
 
-36. **Traffic volume** — spike or drop vs expected; new vs returning users.
-37. **Monitoring coverage** — % of traffic with scores/evals; environments present; anything un-instrumented.
-38. **Usage drift from purpose** — cluster/topic the actual requests over the window and compare against (a) the product's *intended* purpose and (b) what the **eval dataset / evaluators actually cover**. Flag when real usage has moved: a new dominant intent, a rising share of a category the agent wasn't built for, or a use case that grew without anyone updating the system prompt, tools, or eval set. The silent failure: **evals stay green because they still test the old distribution** while live traffic has moved on, so quality on the *new* majority use case is unmeasured. Signals: a topic cluster with no matching eval case; out-of-scope requests (H28) increasingly *served* rather than declined; scores flat while user-friction (F) rises on one specific new intent.
-39. **What you did NOT cover** — be explicit about sampling caps, pagination limits, or dimensions you couldn't evaluate (e.g. faithfulness without ground truth). Silent truncation of analysis reads as "all clear" when it isn't.
+31. **Traffic volume** — spike or drop vs expected; new vs returning users.
+32. **Usage drift from purpose** — cluster/topic the actual requests over the window and compare against (a) the product's *intended* purpose and (b) what the **eval dataset / evaluators actually cover**. Flag when real usage has moved: a new dominant intent, a rising share of a category the agent wasn't built for, or a use case that grew without anyone updating the system prompt, tools, or eval set. The silent failure: **evals stay green because they still test the old distribution** while live traffic has moved on, so quality on the *new* majority use case is unmeasured. Signals: a topic cluster with no matching eval case; out-of-scope requests (H28) increasingly *served* rather than declined; scores flat while user-friction (F) rises on one specific new intent.
 
 ---
 
@@ -236,8 +230,6 @@ Save every raw pull to `/tmp` so you can re-analyze without re-fetching.
 - **Session loops:** group traces by `input.sessionId`, sort by timestamp, print each turn's last user message + which scores fired. Look for "where is that?" / repeated questions.
 - **Segmentation:** before concluding a dimension is clean, recompute it grouped by `version`, `release`, `promptVersion`, `model`, and top `userId`s.
 
-### Useful columns for `--filter`
+### Columns for `--filter`
 
-Traces: `timestamp, environment, name, userId, sessionId, tags, version, release, latency, totalCost, totalTokens, inputTokens, outputTokens, metadata`.
-
-Observations: `type, name, level, statusMessage, startTime, latency, timeToFirstToken, totalCost, inputTokens, outputTokens, model, promptName, promptVersion, traceName, traceTags, metadata`.
+The filterable columns are whatever `<resource> <action> --help` lists — check there rather than trusting a copied list, which drifts. The ones this workflow leans on most: for traces `timestamp, environment, name` (scoping) and `version, release, userId, sessionId` (segmentation); for observations `type, level, name, model, promptVersion` plus the latency/cost/token metrics. Filter `metadata` by key.
