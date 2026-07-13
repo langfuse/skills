@@ -57,4 +57,4 @@ export LANGFUSE_BASE_URL=https://cloud.langfuse.com
 - Prefer `metrics` over `legacy-metrics-v1s` for the same reason
 - Prefer `scores` over `legacy-score-v1s` for list/get operations
 - For broad trace queries, `traces list` can time out on Langfuse Cloud — use `observations list` (with `--trace-id` if you're traversing from a known trace) instead. See the [Observations API docs](https://langfuse.com/docs/api-and-data-platform/features/observations-api) for the v1 → v2 mapping.
-- Pagination: legacy v1 endpoints use `--limit` and `--page`; modern endpoints (`observations`, `metrics`, `scores`) use cursor-based pagination — pass `--limit`, then thread `meta.cursor` from the response into the next request's `--cursor`
+- Pagination: `traces` and `scores` use `--limit` + `--page` (starts at 1; `meta.totalPages` tells you how many pages). `observations` uses cursor-based pagination — pass `--limit`, then thread `meta.cursor` (NOT `meta.nextCursor`) from the response into the next request's `--cursor`. `metrics` takes a query object and has no pagination flags.
