@@ -22,7 +22,7 @@ This skill helps you use Langfuse effectively across all common workflows: instr
 
 Follow these principles for ALL Langfuse work:
 
-1. **Documentation First**: NEVER implement based on memory. Always fetch current docs before writing code (Langfuse updates frequently) See the section below on how to access documentation.
+1. **Documentation First**: NEVER implement based on memory. Always fetch current docs before writing code (Langfuse updates frequently). See the section below on how to access documentation.
 2. **CLI for Data Access**: Use `langfuse-cli` when querying/modifying Langfuse data. See the section below on how to use the CLI. 
 3. **Best Practices by Use Case**: Check the relevant reference file below for use-case-specific guidelines before implementing
 4. **Use latest Langfuse versions**: Unless the user specified otherwise or there's a good reason, always use the latest version of Langfuse SDKs/APIs. Even if you're only creating a plan for another agent to execute, be explicit about the exact version to use.
@@ -38,6 +38,7 @@ Follow these principles for ALL Langfuse work:
 - upgrading or migrating Langfuse SDKs to the latest version: references/sdk-upgrade.md
 - judge calibration (LLM-as-a-Judge reliability, simple accuracy checks, advanced split-based validation, confusion matrices, and metric ingestion): references/judge-calibration.md
 - systematic error analysis — reading traces, building failure taxonomy, deciding what to fix: references/error-analysis.md
+- issue detection triage — find production problems and rank them P0–P3: references/issue-detection-triage.md
 - setting up CI/CD experiment gates with `langfuse/experiment-action`: references/ci-cd.md
 - submitting feedback about this skill: references/skill-feedback.md
 
@@ -73,7 +74,7 @@ If not set, ask the user to set them in their shell or a `.env` file (do not ask
 
 ### Detailed CLI Reference
 
-For common workflows, tips, and full usage patterns, see [references/cli.md](references/cli.md).
+For common workflows, tips, pagination, and endpoint preferences, see [references/cli.md](references/cli.md). Use-case-specific CLI recipes live in the relevant reference file.
 
 ## 2. Langfuse Documentation
 
