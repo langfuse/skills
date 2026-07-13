@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Issue-Detection Triage — langfuse-in-app-agent</title>
+<style>
+  :root{
+    /* surfaces + ink (dataviz reference palette, dark) */
+    --plane:#0d0d0d;
+    --surface:#1a1a19;
+    --surface-2:#201f1e;
+    --ink:#ffffff;
+    --ink-2:#c3c2b7;
+    --muted:#898781;
+    --hair:rgba(255,255,255,.10);
+    --hair-2:rgba(255,255,255,.06);
+    /* status (fixed, never themed) */
+    --p0:#d03b3b;   /* critical */
+    --p1:#ec835a;   /* serious  */
+    --p2:#fab219;   /* warning  */
+    --p3:#898781;   /* muted    */
+    --good:#0ca30c;
+    --accent:#3987e5;
+    --violet:#9085e9;
+    --radius:16px;
+    --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+    --sans:system-ui,-apple-system,"Segoe UI",sans-serif;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;background:var(--plane);color:var(--ink);
+    font-family:var(--sans);line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:0 20px 80px}
+  a{color:var(--accent);text-decoration:none}
+  code,.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+  /* ---------- header ---------- */
+  header.hero{
+    position:relative;overflow:hidden;
+    background:
+      radial-gradient(1200px 400px at 15% -20%,rgba(144,133,233,.28),transparent 60%),
+      radial-gradient(900px 380px at 90% -10%,rgba(57,135,229,.22),transparent 55%),
+      linear-gradient(180deg,#141326 0%,#0d0d0d 100%);
+    border-bottom:1px solid var(--hair);
+  }
+  .hero-inner{max-width:1080px;margin:0 auto;padding:46px 20px 34px}
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:8px;
+    font-size:12px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--ink-2);background:rgba(255,255,255,.05);
+    border:1px solid var(--hair);border-radius:999px;padding:6px 12px;
+  }
+  h1.title{
+    font-size:clamp(30px,5vw,50px);line-height:1.03;margin:16px 0 6px;
+    font-weight:800;letter-spacing:-.02em;
+    background:linear-gradient(180deg,#fff 0%,#c8c6ff 120%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .subtitle{color:var(--ink-2);font-size:16px;max-width:60ch}
+  .meta-row{display:flex;flex-wrap:wrap;gap:8px 10px;margin-top:20px}
+  .chip{
+    display:inline-flex;align-items:center;gap:7px;
+    font-size:12.5px;color:var(--ink-2);
+    background:rgba(255,255,255,.04);border:1px solid var(--hair);
+    border-radius:999px;padding:6px 11px;
+  }
+  .chip b{color:var(--ink);font-weight:600}
+  .chip .dot{width:7px;height:7px;border-radius:50%;background:var(--accent)}
+
+  /* ---------- P0 banner ---------- */
+  .alert{
+    display:flex;gap:14px;align-items:flex-start;margin:26px 0 6px;
+    background:linear-gradient(90deg,rgba(208,59,59,.16),rgba(208,59,59,.04));
+    border:1px solid rgba(208,59,59,.45);border-left:4px solid var(--p0);
+    border-radius:12px;padding:16px 18px;
+  }
+  .alert .ico{font-size:20px;line-height:1.2}
+  .alert h3{margin:0 0 3px;font-size:15px}
+  .alert p{margin:0;color:var(--ink-2);font-size:14px}
+
+  section{margin-top:44px}
+  h2.sec{
+    font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);
+    margin:0 0 16px;padding-bottom:10px;border-bottom:1px solid var(--hair);
+    display:flex;align-items:center;gap:10px;
+  }
+  h2.sec .num{color:var(--accent);font-weight:700}
+
+  /* ---------- KPI tiles ---------- */
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(158px,1fr));gap:12px}
+  .tile{
+    background:var(--surface);border:1px solid var(--hair);border-radius:var(--radius);
+    padding:16px 16px 14px;position:relative;overflow:hidden;
+  }
+  .tile .lab{font-size:12px;color:var(--muted);letter-spacing:.02em}
+  .tile .val{font-size:29px;font-weight:750;margin-top:6px;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+  .tile .val small{font-size:15px;font-weight:600;color:var(--ink-2);margin-left:2px}
+  .tile .sub{font-size:11.5px;color:var(--muted);margin-top:3px}
+  .tile.flag .val{color:var(--p2)}
+  .tile.bad .val{color:var(--p0)}
+  .tile::after{content:"";position:absolute;inset:0 auto 0 0;width:3px;background:var(--accent);opacity:.0}
+  .tile.flag::after{background:var(--p2);opacity:.9}
+  .tile.bad::after{background:var(--p0);opacity:.9}
+
+  /* ---------- latency bars ---------- */
+  .latency{background:var(--surface);border:1px solid var(--hair);border-radius:var(--radius);padding:20px 22px}
+  .latency h4{margin:0 0 2px;font-size:14px}
+  .latency .cap{color:var(--muted);font-size:12.5px;margin:0 0 18px}
+  .bar-row{display:grid;grid-template-columns:46px 1fr 64px;align-items:center;gap:12px;margin:9px 0}
+  .bar-row .k{font-size:12.5px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+  .track{height:12px;background:rgba(255,255,255,.05);border-radius:6px;overflow:hidden}
+  .fill{height:100%;border-radius:6px;background:var(--accent)}
+  .bar-row .v{font-size:12.5px;text-align:right;color:var(--ink);font-variant-numeric:tabular-nums}
+  .bar-row.hot .fill{background:var(--p1)}
+
+  /* ---------- priority legend ---------- */
+  .legend{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+  .badge{
+    display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:600;
+    border-radius:999px;padding:5px 11px;border:1px solid var(--hair);
+    background:var(--surface);color:var(--ink-2);
+  }
+  .badge .sq{width:9px;height:9px;border-radius:2.5px}
+  .b-p0 .sq{background:var(--p0)} .b-p1 .sq{background:var(--p1)}
+  .b-p2 .sq{background:var(--p2)} .b-p3 .sq{background:var(--p3)}
+
+  /* ---------- finding cards ---------- */
+  .finding{
+    background:var(--surface);border:1px solid var(--hair);border-radius:var(--radius);
+    padding:20px 22px;margin-bottom:14px;position:relative;
+  }
+  .finding{border-left:4px solid var(--muted)}
+  .finding.p0{border-left-color:var(--p0)}
+  .finding.p1{border-left-color:var(--p1)}
+  .finding.p2{border-left-color:var(--p2)}
+  .finding.p3{border-left-color:var(--p3)}
+  .f-head{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:4px}
+  .f-num{font-size:12px;color:var(--muted);font-weight:700;font-variant-numeric:tabular-nums}
+  .f-title{font-size:18px;font-weight:700;margin:0;flex:1 1 240px;letter-spacing:-.01em}
+  .pri{
+    display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;
+    padding:4px 9px;border-radius:7px;letter-spacing:.03em;
+  }
+  .pri .g{width:8px;height:8px;border-radius:50%}
+  .pri.p0{background:rgba(208,59,59,.16);color:#ff8a8a} .pri.p0 .g{background:var(--p0)}
+  .pri.p1{background:rgba(236,131,90,.15);color:#ffb694} .pri.p1 .g{background:var(--p1)}
+  .pri.p2{background:rgba(250,178,25,.14);color:#ffcf6b} .pri.p2 .g{background:var(--p2)}
+  .pri.p3{background:rgba(137,135,129,.16);color:#c3c2b7} .pri.p3 .g{background:var(--p3)}
+  .cat{font-size:11.5px;color:var(--ink-2);background:rgba(255,255,255,.05);border:1px solid var(--hair);border-radius:6px;padding:4px 9px}
+  .affected{font-size:12px;color:var(--muted);margin-left:auto;font-variant-numeric:tabular-nums}
+  .affected b{color:var(--ink)}
+  .f-desc{color:var(--ink-2);font-size:14.5px;margin:12px 0 0}
+  .f-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+  @media(max-width:640px){.f-grid{grid-template-columns:1fr}}
+  .f-box{background:var(--surface-2);border:1px solid var(--hair-2);border-radius:10px;padding:12px 13px}
+  .f-box .h{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:5px;display:flex;align-items:center;gap:6px}
+  .f-box p{margin:0;font-size:13.5px;color:var(--ink-2)}
+  .f-box.fix{border-color:rgba(12,163,12,.3)}
+  .f-box.fix .h{color:#57c957}
+  .traces{margin-top:12px;display:flex;flex-wrap:wrap;gap:7px}
+  .traces .t{font-family:var(--mono);font-size:11px;color:var(--ink-2);background:rgba(57,135,229,.1);border:1px solid rgba(57,135,229,.28);border-radius:6px;padding:3px 8px}
+  details.agent{margin-top:12px;border-top:1px dashed var(--hair);padding-top:10px}
+  details.agent summary{cursor:pointer;font-size:12.5px;color:var(--accent);font-weight:600;list-style:none;display:flex;align-items:center;gap:7px}
+  details.agent summary::-webkit-details-marker{display:none}
+  details.agent summary::before{content:"▸";transition:transform .15s}
+  details.agent[open] summary::before{transform:rotate(90deg)}
+  details.agent .prompt{margin-top:10px;background:#111;border:1px solid var(--hair);border-radius:10px;padding:13px 14px;font-family:var(--mono);font-size:12px;color:var(--ink-2);white-space:pre-wrap;line-height:1.5}
+
+  /* ---------- lists ---------- */
+  .clean li,.action li{margin:9px 0;color:var(--ink-2);font-size:14px}
+  .clean{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:1fr 1fr;gap:4px 22px}
+  @media(max-width:640px){.clean{grid-template-columns:1fr}}
+  .clean li{display:flex;gap:9px;align-items:flex-start}
+  .clean li .ck{color:var(--good);flex:0 0 auto;font-weight:700}
+  .clean li b{color:var(--ink);font-weight:600}
+  ol.action{padding-left:0;counter-reset:s;list-style:none;margin:0}
+  ol.action li{counter-increment:s;position:relative;padding:12px 14px 12px 46px;background:var(--surface);border:1px solid var(--hair);border-radius:10px;margin-bottom:9px;color:var(--ink-2);font-size:14px}
+  ol.action li::before{content:counter(s);position:absolute;left:12px;top:11px;width:22px;height:22px;border-radius:50%;background:var(--accent);color:#001;font-weight:800;font-size:12px;display:grid;place-items:center}
+  ol.action li b{color:var(--ink)}
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:720px){.two-col{grid-template-columns:1fr}}
+  .panel{background:var(--surface);border:1px solid var(--hair);border-radius:var(--radius);padding:18px 20px}
+  .panel h4{margin:0 0 10px;font-size:13px;color:var(--ink)}
+  .panel ul{margin:0;padding-left:18px}
+  .panel li{color:var(--ink-2);font-size:13.5px;margin:7px 0}
+  footer{margin-top:50px;padding-top:22px;border-top:1px solid var(--hair);color:var(--muted);font-size:12.5px;text-align:center}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow">◆ Langfuse · Issue-Detection Triage</span>
+    <h1 class="title">langfuse-in-app-agent</h1>
+    <p class="subtitle">Full production triage of the in-app observability assistant — every dimension swept, ranked by severity × prevalence × silence.</p>
+    <div class="meta-row">
+      <span class="chip"><span class="dot"></span>Project <b>cmfzimu6801jbad079856b07r</b></span>
+      <span class="chip">Region <b>EU · cloud.langfuse.com</b></span>
+      <span class="chip">Window <b>2026-07-01 → 07-08 UTC</b> (7d)</span>
+      <span class="chip">Examined <b>254 traces · 865 obs · 330 tools</b></span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="alert">
+    <span class="ico">🚨</span>
+    <div>
+      <h3>P0 — Quality evaluators are dark on 100% of current traffic</h3>
+      <p>The main generation was renamed <code>agent-run → agent-turn</code> on 2026-07-03, but both eval-rule filters still target <code>name="agent-run"</code> — so they now match zero live turns. The evaluators are correctly wired (verified by reading their comments); it's a pure filter/naming bug. Your primary automated quality signal has been invisible since the rename.</p>
+    </div>
+  </div>
+
+  <!-- ============ HEADLINE ============ -->
+  <section>
+    <h2 class="sec"><span class="num">01</span> Headline metrics <span style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0">· interactive <code>agent-turn</code>, n=79</span></h2>
+    <div class="kpis">
+      <div class="tile"><div class="lab">Interactive turns</div><div class="val">79</div><div class="sub">34 sessions · 25 users</div></div>
+      <div class="tile"><div class="lab">Latency p50</div><div class="val">13.9<small>s</small></div><div class="sub">felt on most turns</div></div>
+      <div class="tile flag"><div class="lab">Latency p99</div><div class="val">82.2<small>s</small></div><div class="sub">max 100.0s</div></div>
+      <div class="tile bad"><div class="lab">Eval coverage</div><div class="val">0.8<small>%</small></div><div class="sub">2 scores, both manual 👍</div></div>
+      <div class="tile bad"><div class="lab">Agent cost logged</div><div class="val">$0</div><div class="sub">main agent uninstrumented</div></div>
+      <div class="tile flag"><div class="lab">No-final-answer turns</div><div class="val">5.1<small>%</small></div><div class="sub">4 / 79</div></div>
+    </div>
+  </section>
+
+  <!-- ============ LATENCY ============ -->
+  <section>
+    <h2 class="sec"><span class="num">02</span> Turn latency distribution</h2>
+    <div class="latency">
+      <h4>End-to-end <code>agent-turn</code> latency</h4>
+      <p class="cap">Interactive chat product — a ~14s median is already felt; the tail runs to 100s. One user comment: <em>"nice worked but was slow."</em></p>
+      <div class="bar-row"><span class="k">p50</span><div class="track"><div class="fill" style="width:13.9%"></div></div><span class="v">13.9 s</span></div>
+      <div class="bar-row"><span class="k">p90</span><div class="track"><div class="fill" style="width:55.1%"></div></div><span class="v">55.1 s</span></div>
+      <div class="bar-row hot"><span class="k">p99</span><div class="track"><div class="fill" style="width:82.2%"></div></div><span class="v">82.2 s</span></div>
+      <div class="bar-row hot"><span class="k">max</span><div class="track"><div class="fill" style="width:100%"></div></div><span class="v">100.0 s</span></div>
+    </div>
+  </section>
+
+  <!-- ============ FINDINGS ============ -->
+  <section>
+    <h2 class="sec"><span class="num">03</span> Findings <span style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0">· 1× P0 · 2× P1 · 3× P2 · 1× P3</span></h2>
+    <div class="legend">
+      <span class="badge b-p0"><span class="sq"></span>P0 broken / harmful</span>
+      <span class="badge b-p1"><span class="sq"></span>P1 clear degradation</span>
+      <span class="badge b-p2"><span class="sq"></span>P2 lower impact</span>
+      <span class="badge b-p3"><span class="sq"></span>P3 hygiene</span>
+    </div>
+
+    <!-- F1 -->
+    <article class="finding p0">
+      <div class="f-head">
+        <span class="f-num">#1</span>
+        <h3 class="f-title">Quality evaluators dark</h3>
+        <span class="pri p0"><span class="g"></span>P0</span>
+        <span class="cat">Scores / Evals</span>
+        <span class="affected"><b>0 / 79</b> scored</span>
+      </div>
+      <p class="f-desc">Both LLM-as-judge evaluators — <code>in-app-agent-usable-answer</code> and <code>in-app-agent-mcp-incorrect-call</code> — produced <b>0 scores in the window</b>. All historical scores date to a single 06-26 backfill burst. The only live signal is 2 user thumbs-up. The evaluators <b>work</b> (their comments reason about the real assistant response; the backfill found ~15% of answers ≤0.5 and 7% bad tool calls) — they're just pointed at a name that no longer exists.</p>
+      <div class="f-grid">
+        <div class="f-box"><div class="h">◆ Root cause</div><p>Eval rules are <code>enabled, sampling:1</code> but filter <code>name="agent-run"</code>. The generation was renamed to <code>agent-turn</code> on 2026-07-03, so the filter matches zero current traffic.</p></div>
+        <div class="f-box fix"><div class="h">✓ Proposed fix</div><p>Re-point both rule filters (<code>cmqv1js9l00…</code>, <code>cmqv1jpru00…</code>) to <code>name ∈ ["agent-turn","agent-run"]</code>, backfill the window, and add a known-positive canary so a future rename fails loudly.</p></div>
+      </div>
+      <div class="traces"><span class="t">arun_f0mwsa9a66y2acarvqrjuo4m-trace</span><span class="t">rule cmqv1js9l00gkad0d5r7ssjva</span><span class="t">rule cmqv1jpru00imad0clt0ivf60</span></div>
+      <details class="agent"><summary>Copy prompt for coding agent</summary>
+        <div class="prompt">The two Langfuse LLM-as-judge evaluators `in-app-agent-usable-answer` and `in-app-agent-mcp-incorrect-call` (project cmfzimu6801jbad079856b07r) stopped scoring on 2026-07-03 because the target generation was renamed from `agent-run` to `agent-turn` while the eval-rule filter still says name="agent-run". Update rule IDs cmqv1js9l00gkad0d5r7ssjva and cmqv1jpru00imad0clt0ivf60 to match `agent-turn`, re-run over the last 7 days, and add a synthetic known-positive trace so the rules can't silently match nothing again. Confirm scores appear on new `agent-turn` observations.</div>
+      </details>
+    </article>
+
+    <!-- F2 -->
+    <article class="finding p1">
+      <div class="f-head">
+        <span class="f-num">#2</span>
+        <h3 class="f-title">Slow interactive turns</h3>
+        <span class="pri p1"><span class="g"></span>P1</span>
+        <span class="cat">Latency</span>
+        <span class="affected">high p50 across all <b>79</b></span>
+      </div>
+      <p class="f-desc">Median turn <b>13.9s</b>, p90 <b>55s</b>, p99/max <b>~82–100s</b> — felt on most turns of a chat assistant. Corroborated: the one in-window comment is <em>"nice worked but was slow,"</em> and 5/34 sessions show identical consecutive re-asks (users re-sending because nothing came back).</p>
+      <div class="f-grid">
+        <div class="f-box"><div class="h">◆ Root cause</div><p>Multi-step loop: sequential tool calls (listObservations / queryMetrics / getObservation) plus opus-4-8 reasoning, with no streaming/progress — so slow turns read as hung.</p></div>
+        <div class="f-box fix"><div class="h">✓ Proposed fix</div><p>Stream tokens / show tool-progress; parallelize independent tool calls; cap tool-result sizes; consider haiku for simple turns.</p></div>
+      </div>
+      <div class="traces"><span class="t">arun_twv32urios0djamn0ut8efkg-trace · 100s</span><span class="t">session aconv_eezdndyapxhrbllb8ubktqzp · re-asked 4×</span></div>
+      <details class="agent"><summary>Copy prompt for coding agent</summary>
+        <div class="prompt">The in-app agent (project cmfzimu6801jbad079856b07r) has p50 13.9s / p90 55s / p99 82s per turn and users complain it is slow and re-send the same message. Investigate the `agent-turn` loop: are tool calls sequential when they could be parallel? Is there any streaming/progress to the client? Reduce per-turn wall time and surface intermediate progress. See slow trace arun_twv32urios0djamn0ut8efkg-trace and re-ask session aconv_eezdndyapxhrbllb8ubktqzp.</div>
+      </details>
+    </article>
+
+    <!-- F3 -->
+    <article class="finding p1">
+      <div class="f-head">
+        <span class="f-num">#3</span>
+        <h3 class="f-title">Context-overflow turn failure</h3>
+        <span class="pri p1"><span class="g"></span>P1</span>
+        <span class="cat">Reliability</span>
+        <span class="affected"><b>≥2 / 79</b> · 2.5%</span>
+      </div>
+      <p class="f-desc">One turn hard-errored: <code>AI_APICallError: prompt is too long: 1,371,258 tokens &gt; 1,000,000</code> — a <code>listObservations</code> result was fed back and blew past the 1M limit; the user got no answer. A second turn ("create 1 dataset based on production data") returned <code>&lt;truncated due to size exceeding limit&gt;</code> — same oversized-payload mode.</p>
+      <div class="f-grid">
+        <div class="f-box"><div class="h">◆ Root cause</div><p>Tool results (esp. <code>listObservations</code>/<code>getObservation</code> with full io) are re-injected un-capped; a large query balloons context until the model call fails.</p></div>
+        <div class="f-box fix"><div class="h">✓ Proposed fix</div><p>Cap/paginate tool outputs (row limit + per-field truncation); enforce a token budget before the model call; on overflow, summarize or ask to narrow rather than error.</p></div>
+      </div>
+      <div class="traces"><span class="t">arun_k18etm6x5d5bedxno83tbmwg-trace · 1.37M tok</span><span class="t">arun_k6kjd87uunn29gwt43yqp7t5-trace · truncated</span></div>
+      <details class="agent"><summary>Copy prompt for coding agent</summary>
+        <div class="prompt">In the in-app agent, `langfuse_listObservations`/`langfuse_getObservation` can return payloads large enough to push the prompt over 1,000,000 tokens, causing AI_APICallError: prompt is too long. Add hard caps on tool-result size (row limit + per-field truncation) and a pre-call token budget check that summarizes or re-prompts instead of failing. Repro: trace arun_k18etm6x5d5bedxno83tbmwg-trace.</div>
+      </details>
+    </article>
+
+    <!-- F4 -->
+    <article class="finding p2">
+      <div class="f-head">
+        <span class="f-num">#4</span>
+        <h3 class="f-title">Core agent cost / tokens blind</h3>
+        <span class="pri p2"><span class="g"></span>P2</span>
+        <span class="cat">Coverage / Cost</span>
+        <span class="affected"><b>131 / 131</b> core gens</span>
+      </div>
+      <p class="f-desc">Every <code>agent-turn</code> (79) and <code>agent-run</code> (52) generation records <b>no model, $0 cost, 0 tokens</b>. Only the auxiliary title & search-bar-filter gens are instrumented, so the reported $1.52 total <b>excludes the entire agent</b> — you can't see the cost of your own product or segment by model.</p>
+      <div class="f-grid">
+        <div class="f-box"><div class="h">◆ Root cause</div><p>The agent's LLM calls are logged as generations without <code>usageDetails</code>/<code>model</code> populated (usage/model not passed through for the main call).</p></div>
+        <div class="f-box fix"><div class="h">✓ Proposed fix</div><p>Populate <code>model</code> + <code>usageDetails</code> (input/output tokens) on the <code>agent-turn</code> generation so cost is computed; confirm model attribution per turn.</p></div>
+      </div>
+      <div class="traces"><span class="t">arun_twv32urios0djamn0ut8efkg-trace · empty usage</span></div>
+      <details class="agent"><summary>Copy prompt for coding agent</summary>
+        <div class="prompt">The in-app agent's `agent-turn`/`agent-run` generations in project cmfzimu6801jbad079856b07r log no model and no token usage, so cost is $0 and un-monitorable. Ensure the tracing wrapper passes `model` and `usage` (input/output tokens) for the main agent LLM call so Langfuse computes cost. Verify on a new `agent-turn` trace.</div>
+      </details>
+    </article>
+
+    <!-- F5 -->
+    <article class="finding p2">
+      <div class="f-head">
+        <span class="f-num">#5</span>
+        <h3 class="f-title">Malformed tool arguments</h3>
+        <span class="pri p2"><span class="g"></span>P2</span>
+        <span class="cat">Tool / Agent</span>
+        <span class="affected"><b>3 / 79</b> · 5 calls</span>
+      </div>
+      <p class="f-desc">5 ERROR-level tool calls, all model-generated input-validation failures: <code>listScores</code> with <code>operator:"&amp;lt;"</code> (an HTML-escaped <code>&lt;</code> leaking into args), and <code>getObservationFilterValues</code>/<code>listObservations</code> sending disallowed props → "must NOT have additional properties." The agent retries and recovers, but each wastes a round-trip.</p>
+      <div class="f-grid">
+        <div class="f-box"><div class="h">◆ Root cause</div><p>(a) HTML-entity encoding of <code>&lt;</code>/<code>&gt;</code> in the tool-arg serialization path; (b) tool schemas/prompt don't enumerate allowed operators or forbid extra keys, so the model guesses.</p></div>
+        <div class="f-box fix"><div class="h">✓ Proposed fix</div><p>Fix HTML-escaping in the tool-arg path; tighten tool descriptions to list allowed <code>operator</code> enums and set <code>additionalProperties:false</code> with clear error hints.</p></div>
+      </div>
+      <div class="traces"><span class="t">arun_twv32urios0djamn0ut8efkg-trace · &amp;lt;</span><span class="t">arun_vhj5xlowigc87satggpv8u9x-trace · extra props</span></div>
+      <details class="agent"><summary>Copy prompt for coding agent</summary>
+        <div class="prompt">The in-app agent emits malformed tool args: `langfuse_listScores` received operator:"&lt;" (HTML entity instead of "<"), and `langfuse_getObservationFilterValues`/`langfuse_listObservations` were called with properties their schema forbids. Find where tool arguments are serialized and stop HTML-escaping operator values; update the tool prompts/schemas to enumerate valid operators and reject unknown fields with actionable messages. See traces arun_twv32urios0djamn0ut8efkg-trace and arun_vhj5xlowigc87satggpv8u9x-trace.</div>
+      </details>
+    </article>
+
+    <!-- F6 -->
+    <article class="finding p2">
+      <div class="f-head">
+        <span class="f-num">#6</span>
+        <h3 class="f-title">Turns that end on a tool action, no closing text</h3>
+        <span class="pri p2"><span class="g"></span>P2</span>
+        <span class="cat">Output quality</span>
+        <span class="affected"><b>4 / 79</b> · 5%</span>
+      </div>
+      <p class="f-desc">4 turns produced no final natural-language answer. 2 are the oversized-output failures (#3). The other 2 ("create a dataset with 1 random trace"; an Italian widget request) <b>end on a successful tool call</b> (<code>upsertDataset</code>, <code>createDashboardWidget</code>) with no confirming message — the user may see the action but gets no "done / here's what I did."</p>
+      <div class="f-grid">
+        <div class="f-box"><div class="h">◆ Root cause</div><p>The loop terminates after a terminal tool call without a required summarizing turn — or the final assistant text isn't captured in the trace output.</p></div>
+        <div class="f-box fix"><div class="h">✓ Proposed fix</div><p>Require a closing natural-language turn after action tools (confirm what was created + link); verify the final assistant message is persisted to trace output.</p></div>
+      </div>
+      <div class="traces"><span class="t">arun_yep4kltbrhejvfru4nouohym-trace</span><span class="t">arun_ng3rpcns3pr7e0iqv7z3mxjr-trace</span></div>
+      <details class="agent"><summary>Copy prompt for coding agent</summary>
+        <div class="prompt">Some in-app agent turns finish immediately after a write tool (upsertDataset, createDashboardWidget) with no closing message to the user. Add a final summarization step confirming the action and linking the created resource, and confirm the final assistant text is written to the trace output. Examples: arun_yep4kltbrhejvfru4nouohym-trace, arun_ng3rpcns3pr7e0iqv7z3mxjr-trace.</div>
+      </details>
+    </article>
+
+    <!-- F7 -->
+    <article class="finding p3">
+      <div class="f-head">
+        <span class="f-num">#7</span>
+        <h3 class="f-title">Expensive model for NL search-filter</h3>
+        <span class="pri p3"><span class="g"></span>P3</span>
+        <span class="cat">Cost</span>
+        <span class="affected"><b>32 / 32</b> adjacent</span>
+      </div>
+      <p class="f-desc">The <code>search-bar-filter</code> feature (env <code>langfuse-natural-language-filter</code>) uses <b>opus-4-8</b> at <b>$0.041/call, ~7.8k tokens/call</b> ($1.32 total) to translate a search-bar query into a filter — a comparatively simple task.</p>
+      <div class="f-grid">
+        <div class="f-box"><div class="h">◆ Root cause</div><p>Default model = opus for a task a cheaper/faster model likely handles.</p></div>
+        <div class="f-box fix"><div class="h">✓ Proposed fix</div><p>A/B a smaller model (haiku) for filter translation; measure accuracy vs the opus baseline.</p></div>
+      </div>
+      <div class="traces"><span class="t">env langfuse-natural-language-filter</span></div>
+      <details class="agent"><summary>Copy prompt for coding agent</summary>
+        <div class="prompt">The search-bar-filter / natural-language-filter feature uses claude-opus-4-8 at ~7.8k tokens and $0.041 per call for NL→filter translation. Trial claude-haiku for this task and compare filter-correctness; opus is likely overkill for the bulk of these.</div>
+      </details>
+    </article>
+  </section>
+
+  <!-- ============ ORDER OF ACTION ============ -->
+  <section>
+    <h2 class="sec"><span class="num">04</span> Suggested order of action</h2>
+    <ol class="action">
+      <li><b>#1 (P0)</b> — Re-point the eval-rule filters to <code>agent-turn</code> and backfill. Restore the quality signal first; everything else is easier to see once it's on.</li>
+      <li><b>#3 (P1)</b> — Cap tool-result size. Stops user-facing hard failures.</li>
+      <li><b>#2 (P1)</b> — Latency + progress UX. The most-felt friction.</li>
+      <li><b>#4 (P2)</b> — Instrument agent cost / tokens / model.</li>
+      <li><b>#5–#7</b> — Tool-arg hygiene, closing-message guarantee, model right-sizing.</li>
+    </ol>
+  </section>
+
+  <!-- ============ VERIFIED CLEAN ============ -->
+  <section>
+    <h2 class="sec"><span class="num">05</span> Verified non-issues <span style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0">· checked, held up</span></h2>
+    <ul class="clean">
+      <li><span class="ck">✓</span><span><b>Input distribution</b> — 65/79 distinct questions, no canned/CI flood; rates trustworthy.</span></li>
+      <li><span class="ck">✓</span><span><b>Machinery contamination</b> — no LLM-judge/dataset/playground traces in the product env.</span></li>
+      <li><span class="ck">✓</span><span><b>Tool <code>ok:false</code></b> — the "error/504/failure" strings are the user's own trace data (this agent analyzes failures), not tool failures.</span></li>
+      <li><span class="ck">✓</span><span><b>Retrieval relevance</b> — docs search returns on-topic pages; no same-doc-for-everything pattern.</span></li>
+      <li><span class="ck">✓</span><span><b>Safety / PII / injection</b> — no leaks; agent correctly declined cross-project access.</span></li>
+      <li><span class="ck">✓</span><span><b>Language matching</b> — Italian in → Italian out; no mismatch in sample.</span></li>
+      <li><span class="ck">✓</span><span><b>Refusals</b> — the few "can't" replies were honest capability limits, not deflection.</span></li>
+      <li><span class="ck">✓</span><span><b>Out-of-scope</b> — requests are on-domain; the one edge case was a legit docs question.</span></li>
+    </ul>
+  </section>
+
+  <!-- ============ QUESTIONS / LIMITS ============ -->
+  <section>
+    <h2 class="sec"><span class="num">06</span> Open questions &amp; coverage gaps</h2>
+    <div class="two-col">
+      <div class="panel">
+        <h4>Open questions</h4>
+        <ul>
+          <li>Was the <code>agent-run→agent-turn</code> rename intentional — and are other filters/dashboards/monitors also pinned to the old name?</li>
+          <li>Are the 4 "no final text" turns truly answer-less, or is the final message dropped from the trace (instrumentation)? Confirm against the live UI.</li>
+          <li>Is tool output being <code>[redacted]</code> by design? It appears in 8/330 outputs and limits answer-faithfulness checks.</li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h4>Not covered</h4>
+        <ul>
+          <li><b>Faithfulness / hallucination</b> — not verifiable without ground truth; compounded by redacted tool output.</li>
+          <li><b>Regression vs prior window</b> — only 7 days pulled; the 06-26 eval backfill is the sole historical baseline.</li>
+          <li><b>Full transcript read</b> — ~15 conversations read end-to-end + all 79 outputs programmatically; not all 79 in full.</li>
+          <li><b>Session container spans</b> (~99 min max) treated as wall-clock, not per-turn latency.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    Langfuse issue-detection triage · run #1 of 5 · generated 2026-07-08 · <code>langfuse-issue-detection-triage</code> skill<br>
+    All findings carry example trace IDs and a copy-paste agent prompt. Priorities: severity × prevalence × silence.
+  </footer>
+
+</div>
+</body>
+</html>

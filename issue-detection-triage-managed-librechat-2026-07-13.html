@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Issue Detection Triage — Managed LibreChat Production</title>
+<style>
+  :root {
+    --bg: #ffffff; --fg: #1a1a1a; --muted: #6b7280; --border: #e5e7eb;
+    --card: #f7f8fa; --accent: #2563eb;
+    --p0: #b91c1c; --p1: #c2410c; --p2: #b45309; --p3: #4b5563;
+    --p0bg: #fef2f2; --p1bg: #fff7ed; --p2bg: #fffbeb; --p3bg: #f3f4f6;
+    --good: #15803d; --goodbg: #f0fdf4;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d1117; --fg: #e6edf3; --muted: #9198a1; --border: #30363d;
+      --card: #161b22; --accent: #58a6ff;
+      --p0: #ff7b72; --p1: #ffa657; --p2: #e3b341; --p3: #9198a1;
+      --p0bg: #2d1416; --p1bg: #2a1c10; --p2bg: #281f0e; --p3bg: #1c1f24;
+      --good: #3fb950; --goodbg: #12261a;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg); color: var(--fg); max-width: 1200px; margin: 0 auto;
+    padding: 2rem 1.5rem 5rem;
+    font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  h1 { font-size: 1.7rem; margin: 0 0 .25rem; }
+  h2 { font-size: 1.25rem; margin: 2.4rem 0 .8rem; padding-bottom: .3rem; border-bottom: 1px solid var(--border); }
+  h3 { font-size: 1rem; margin: 1.6rem 0 .5rem; }
+  .subtitle { color: var(--muted); margin-bottom: 1.5rem; }
+  code, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .86em; }
+  code { background: var(--card); border: 1px solid var(--border); border-radius: 4px; padding: .05em .35em; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  p { margin: .6rem 0; }
+
+  .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: .8rem; margin: 1.2rem 0; }
+  .metric { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: .9rem 1rem; }
+  .metric .v { font-size: 1.35rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .metric .v.warn { color: var(--p1); }
+  .metric .v.bad { color: var(--p0); }
+  .metric .l { color: var(--muted); font-size: .82rem; margin-top: .2rem; }
+
+  table { border-collapse: collapse; width: 100%; margin: .8rem 0; font-size: .9rem; }
+  th, td { text-align: left; padding: .55rem .6rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: .78rem; text-transform: uppercase; letter-spacing: .03em; }
+  tbody tr:hover { background: var(--card); }
+  td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+  .findings td { font-size: .88rem; }
+  .findings .desc { min-width: 260px; }
+
+  .pill { display: inline-block; font-weight: 700; font-size: .78rem; padding: .1em .5em; border-radius: 6px; white-space: nowrap; }
+  .P0 { color: var(--p0); background: var(--p0bg); }
+  .P1 { color: var(--p1); background: var(--p1bg); }
+  .P2 { color: var(--p2); background: var(--p2bg); }
+  .P3 { color: var(--p3); background: var(--p3bg); }
+
+  .note { background: var(--card); border: 1px solid var(--border); border-left: 3px solid var(--accent);
+    border-radius: 6px; padding: .8rem 1rem; margin: 1rem 0; font-size: .93rem; }
+  .good { border-left-color: var(--good); }
+  details { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: .5rem .8rem; margin: .5rem 0; }
+  summary { cursor: pointer; font-weight: 600; font-size: .86rem; }
+  details .prompt { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .8rem;
+    white-space: pre-wrap; margin-top: .6rem; color: var(--fg); }
+  ul { margin: .5rem 0; padding-left: 1.3rem; }
+  li { margin: .35rem 0; }
+  .cat { color: var(--muted); font-size: .82rem; }
+</style>
+</head>
+<body>
+
+<h1>Issue Detection Triage — Managed LibreChat Production</h1>
+<div class="subtitle">
+  ClickHouse SQL Assistant Agent · Project <code>cmo09hyuk01ttad079ljvue6w</code> · host <code>cloud.langfuse.com</code> (EU) · <b>2026-07-13</b>
+</div>
+
+<h2>Overall stats</h2>
+<ul>
+  <li><b>Window:</b> 2026-07-06T00:00Z → 2026-07-13T11:35Z (UTC), ~7.5 days. Data present across the whole window.</li>
+  <li><b>Volume examined:</b> 3,005 traces (all pulled), 87,568 observations (all pulled), <b>0 scores</b>. Read full I/O for a targeted 34-trace sample (every error category ×3, 4 costliest, 4 slowest, mid-latency baseline).</li>
+  <li><b>Product:</b> a single product — a ClickHouse SQL assistant agent inside LibreChat, all <code>environment=default</code>. Trace names <code>AgentRun</code> (2,995) and <code>TitleRun</code> (10). No evaluator/dataset machinery to exclude.</li>
+  <li><b>Traffic character:</b> genuine production — <b>324 users across ~80 tenants</b>, multilingual (EN/PT/DE/FA/ZH/TR), 635 sessions. Real data analysis: pasted SQL/schemas/docs, live ClickHouse queries, a code interpreter (<code>bash_tool</code>, <code>edit_file</code>) plus MCP tools. <b>Not synthetic.</b></li>
+  <li><b>Models:</b> <code>claude-sonnet-5</code> (2,244 turns, dominant), <code>claude-sonnet-4-6</code> (259), ~490 custom-agent turns; titles on <code>claude-haiku-4-5</code>.</li>
+</ul>
+
+<div class="metrics">
+  <div class="metric"><div class="v">2,995</div><div class="l">AgentRun turns</div></div>
+  <div class="metric"><div class="v warn">3.9%</div><div class="l">turns with ≥1 ERROR (2.6% abort · 1.3% hard)</div></div>
+  <div class="metric"><div class="v bad">28 min</div><div class="l">max turn latency (p90 233s · p99 738s · p50 54s)</div></div>
+  <div class="metric"><div class="v bad">$2,606</div><div class="l">weekly cost ($0.89/turn · $23.89 max)</div></div>
+  <div class="metric"><div class="v bad">12.5M</div><div class="l">max tokens/turn (single gen max 2.2M)</div></div>
+  <div class="metric"><div class="v bad">0</div><div class="l">scores &amp; evaluators (0% monitored)</div></div>
+</div>
+
+<h2>Findings</h2>
+<table class="findings">
+  <thead><tr>
+    <th>#</th><th>Issue</th><th>Priority</th><th>Affected</th><th class="desc">Description</th><th>Root-cause hypothesis</th><th>Example</th><th>Fix &amp; agent prompt</th>
+  </tr></thead>
+  <tbody>
+  <tr>
+    <td class="num">1</td>
+    <td><b>No monitoring coverage</b><br><span class="cat">Scores/Evals</span></td>
+    <td><span class="pill P1">P1</span></td>
+    <td class="num">2,995 / 2,995</td>
+    <td class="desc">Zero scores and zero score configs across the entire project history (<code>totalItems=0</code> all-time). A production agent handling real customer data at ~400 turns/day and $2.6k/week has <b>no quality signal at all</b> — no correctness/faithfulness eval, no user thumbs, no SQL-validity check. Any regression is invisible.</td>
+    <td>Tracing was set up but the evaluation/feedback layer never was. No online evaluators; no client-side score ingestion.</td>
+    <td>— (project-wide)</td>
+    <td>Add online LLM-as-judge evaluators over <code>AgentRun</code> (helpfulness, SQL validity, faithfulness), an empty-output flag, and wire LibreChat 👍/👎 as scores.
+      <details><summary>Agent prompt</summary><div class="prompt">This Langfuse project (cmo09hyuk01ttad079ljvue6w) is a production ClickHouse SQL assistant with ~400 turns/day and no scores or evaluators at all. Stand up monitoring: (1) an online LLM-as-judge evaluator on AgentRun traces sampling for answer helpfulness and faithfulness to tool output, (2) a deterministic check that flags turns whose final assistant message is empty/None, (3) client-side score ingestion for LibreChat 👍/👎. Trace input/output is null today (see finding 8) so evaluators must read the child generation I/O — fix that mapping first.</div></details>
+    </td>
+  </tr>
+  <tr>
+    <td class="num">2</td>
+    <td><b>Extreme latency; users abort</b><br><span class="cat">Latency</span></td>
+    <td><span class="pill P1">P1</span></td>
+    <td class="num">~300 &gt;233s; 79 aborted</td>
+    <td class="desc">End-to-end p90 <b>233s</b>, p99 <b>738s</b>, max <b>1,711s (28 min)</b> on an interactive product. Single LLM generations run up to <b>18 min</b>. Aborted turns skew slow (p90 762s vs 233s) — <b>users cancel hung-looking turns</b> (79 turns, 2.6%, end in client AbortError).</td>
+    <td>Long sequential loops (up to 74 tool / 38 LLM calls per turn) over massive prompts (finding 3), with no streamed progress — multi-minute turns look hung.</td>
+    <td><a href="https://cloud.langfuse.com/project/cmo09hyuk01ttad079ljvue6w/traces/eb2f32811b253965266fbec98e04b114">eb2f3281</a> (1,207s)<br><a href="https://cloud.langfuse.com/project/cmo09hyuk01ttad079ljvue6w/traces/aaa5070d0fa8aacce098e33af1e88f63">aaa5070d</a> (aborted)</td>
+    <td>Stream step-progress to the UI; per-turn latency/step budget; cut redundant work (findings 3, 5, 6).
+      <details><summary>Agent prompt</summary><div class="prompt">The ClickHouse Agent in LibreChat has p90 turn latency 233s and a 28-min max, and 2.6% of turns end in client AbortError — abort latency (p90 762s) is far above the median, so users are cancelling hung-looking turns (e.g. Langfuse trace eb2f32811b253965266fbec98e04b114 ran 1,207s). Add streamed intermediate progress events to the LibreChat UI during long agent runs, enforce a per-turn step/time budget, and reduce the sequential tool/LLM-call count.</div></details>
+    </td>
+  </tr>
+  <tr>
+    <td class="num">3</td>
+    <td><b>Token &amp; cost bloat</b><br><span class="cat">Cost</span></td>
+    <td><span class="pill P1">P1</span></td>
+    <td class="num">≥300 &gt;1.3M tok</td>
+    <td class="desc">$2,605/week, mean <b>$0.89/turn</b>, up to <b>$23.89</b>. Per-turn tokens reach <b>12.5M</b>; single generations hit <b>2.20M</b> — at/beyond the context ceiling (directly causes the "prompt too long" failures in finding 4). Cost concentrates in <code>claude-sonnet-5</code> ($2,217).</td>
+    <td>No context management: full history + large pasted docs + accumulated tool outputs re-sent on every one of up to 38 LLM calls/turn, compounded by duplicate tool calls (finding 5).</td>
+    <td><a href="https://cloud.langfuse.com/project/cmo09hyuk01ttad079ljvue6w/traces/73a2cd686a835314be8d573114ecd03f">73a2cd68</a> ($23.89)<br><a href="https://cloud.langfuse.com/project/cmo09hyuk01ttad079ljvue6w/traces/eb2f32811b253965266fbec98e04b114">eb2f3281</a> ($21.33)</td>
+    <td>Context compaction: summarize prior turns, truncate/paginate large tool outputs, per-turn token budget with graceful degradation.
+      <details><summary>Agent prompt</summary><div class="prompt">The ClickHouse Agent sends up to 2.2M tokens in a single generation and 12.5M tokens per turn, costing up to $23.89/turn (Langfuse traces 73a2cd686a835314be8d573114ecd03f, eb2f32811b253965266fbec98e04b114). Implement context compaction: summarize older turns, truncate/paginate large tool outputs (query results, pasted files) before re-injecting, and enforce a token budget per LLM call so requests never reach the context ceiling.</div></details>
+    </td>
+  </tr>
+  <tr>
+    <td class="num">4</td>
+    <td><b>Hard failures return no answer</b><br><span class="cat">Reliability</span></td>
+    <td><span class="pill P1">P1</span></td>
+    <td class="num">39 / 2,995 (1.3%)</td>
+    <td class="desc">Non-abort errors leave the user with <b>no answer</b> (final output <code>None</code>). Over the window: <code>prompt too long</code> 9, <code>&gt;5 documents</code> 8, <code>InvalidCharacterError</code> 5, <code>Bedrock ServiceUnavailable</code> 11, <code>image/png unsupported</code> 1, <code>GraphRecursionError</code> 1. InvalidCharacter is <b>reproducible</b> — same Chinese question failed identically 3× (30 error obs) → encoding bug, not user error.</td>
+    <td>(a) no schema/doc-size guard → context &amp; 5-doc limits; (b) input-encoding bug on non-ASCII/attachments; (c) images unsupported by Bedrock path; (d) Bedrock throttling not retried.</td>
+    <td><a href="https://cloud.langfuse.com/project/cmo09hyuk01ttad079ljvue6w/traces/7bf55da8a9852620413eae099f21025f">7bf55da8</a> (5-docs)<br><a href="https://cloud.langfuse.com/project/cmo09hyuk01ttad079ljvue6w/traces/e468d41db1f2c89cc3b1705f18139769">e468d41d</a> (InvalidChar)<br><a href="https://cloud.langfuse.com/project/cmo09hyuk01ttad079ljvue6w/traces/5a49d15726ddf68b6be3777dab029f52">5a49d157</a> (image)</td>
+    <td>Pre-flight token/doc guard; fix encoding bug; accept/convert or cleanly refuse images; retry Bedrock with backoff.
+      <details><summary>Agent prompt</summary><div class="prompt">Several ClickHouse Agent turns fail with no answer returned. Fix each: (1) prompt-too-long and >5-documents — add a pre-flight guard that compacts/limits documents and tokens before the Bedrock call (traces 7bf55da8a9852620413eae099f21025f, 9352920862501c2598f90f2891c14fa1); (2) InvalidCharacterError reproduces on the same non-ASCII input across 3 traces (e468d41db1f2c89cc3b1705f18139769, 1e113f543d2910d3dd2c5824f47bd213, 437422380be72f6ca0e45146d92050fb) — trace the base64/encoding path handling user text; (3) Unsupported MIME image/png (5a49d15726ddf68b6be3777dab029f52) — convert or gracefully refuse image uploads; (4) retry ServiceUnavailableException: Bedrock with exponential backoff.</div></details>
+    </td>
+  </tr>
+  <tr>
+    <td class="num">5</td>
+    <td><b>Redundant duplicate tool calls</b><br><span class="cat">Tool/Agent</span></td>
+    <td><span class="pill P2">P2</span></td>
+    <td class="num">22 / 34 sampled</td>
+    <td class="desc">65% of sampled turns issued <b>≥3 byte-identical tool calls</b> (same tool, same args) within one turn — usually re-running the same <code>run_select_query</code>/<code>list_tables</code>. Pure token + latency + cost waste, compounds findings 2 &amp; 3.</td>
+    <td>Each agent-loop iteration re-issues info-gathering calls whose results are already in context; no per-turn memoization of idempotent tools.</td>
+    <td><a href="https://cloud.langfuse.com/project/cmo09hyuk01ttad079ljvue6w/traces/aaa5070d0fa8aacce098e33af1e88f63">aaa5070d</a></td>
+    <td>Memoize idempotent tools per turn; instruct the agent not to refetch results already in context.
+      <details><summary>Agent prompt</summary><div class="prompt">The ClickHouse Agent re-issues byte-identical tool calls (same run_select_query/list_tables args) 3+ times within a single turn in ~65% of sampled turns (e.g. Langfuse trace aaa5070d0fa8aacce098e33af1e88f63). Add per-turn memoization for idempotent tools returning a cached result, and instruct the agent in its system prompt that previously-fetched schema/query results remain in context and should not be re-requested.</div></details>
+    </td>
+  </tr>
+  <tr>
+    <td class="num">6</td>
+    <td><b>Agent recursion runaway</b><br><span class="cat">Tool/Agent</span></td>
+    <td><span class="pill P2">P2</span></td>
+    <td class="num">1 / 2,995</td>
+    <td class="desc">One turn hit <code>GraphRecursionError: Recursion limit of 75</code> — looped 75 steps without converging, and was among the costliest ($21.33) and slowest (20 min). Rare but expensive and fully wasted.</td>
+    <td>The agent can enter a no-progress loop with no loop-detection guard below the hard recursion limit.</td>
+    <td><a href="https://cloud.langfuse.com/project/cmo09hyuk01ttad079ljvue6w/traces/e2144be91eb6c1a86b0adb2b07fc0e35">e2144be9</a></td>
+    <td>No-progress / repeated-state detection to break loops early with a partial answer.
+      <details><summary>Agent prompt</summary><div class="prompt">A ClickHouse Agent turn hit LangGraph's 75-step recursion limit and returned nothing after ~20 min and $21 (Langfuse trace e2144be91eb6c1a86b0adb2b07fc0e35). Add loop detection: track repeated tool-call/state signatures and, on N repeats without progress, stop and return the best partial answer with an explanation instead of spinning to the recursion limit.</div></details>
+    </td>
+  </tr>
+  <tr>
+    <td class="num">7</td>
+    <td><b>Silent <code>[object Object]</code> errors</b><br><span class="cat">Coverage</span></td>
+    <td><span class="pill P3">P3</span></td>
+    <td class="num">≥4 (24 obs)</td>
+    <td class="desc">24 ERROR observations have <code>statusMessage = "[object Object]"</code> — an error object stringified without serialization. Logged but <b>undiagnosable</b>; you can't tell what failed or who was affected.</td>
+    <td>Error handling does <code>String(err)</code> / template-interpolates a non-Error object instead of extracting <code>.message</code>/<code>.stack</code>.</td>
+    <td><a href="https://cloud.langfuse.com/project/cmo09hyuk01ttad079ljvue6w/traces/2d7246a93c5c9357894aac949eb785af">2d7246a9</a></td>
+    <td>Serialize errors properly at the span-error boundary.
+      <details><summary>Agent prompt</summary><div class="prompt">ClickHouse Agent traces log ERROR observations with statusMessage "[object Object]" (e.g. Langfuse trace 2d7246a93c5c9357894aac949eb785af) — the error object is being coerced to string without serialization. Find where span errors/statusMessage are set and record err.message and err.stack (or a JSON-serialized error) so these failures are diagnosable.</div></details>
+    </td>
+  </tr>
+  <tr>
+    <td class="num">8</td>
+    <td><b>Observability gaps</b><br><span class="cat">Coverage</span></td>
+    <td><span class="pill P3">P3</span></td>
+    <td class="num">2,995 / 2,995</td>
+    <td class="desc">(a) <b>All trace-level input/output is null</b> — nothing searchable in the traces UI. (b) <b>Tool outputs are redacted</b> (<code>[tool output redacted]</code>) — retrieval/query-result relevance <b>cannot be audited</b> from Langfuse. (c) No <code>release</code>/<code>version</code> — regressions can't be segmented by deploy.</td>
+    <td>Root span never sets trace I/O; a redaction policy strips tool outputs; deploy metadata not passed to the SDK.</td>
+    <td><a href="https://cloud.langfuse.com/project/cmo09hyuk01ttad079ljvue6w/traces/aaa5070d0fa8aacce098e33af1e88f63">aaa5070d</a></td>
+    <td>Set trace-level I/O on the root span; pass <code>release</code>; scope tool-output redaction so retrieval is auditable.
+      <details><summary>Agent prompt</summary><div class="prompt">In the ClickHouse Agent's Langfuse tracing: (1) set trace-level input (user message) and output (final assistant answer) on the root AgentRun span so traces are searchable and evaluators can read them; (2) pass release/version from the deployment git SHA; (3) the redaction that replaces tool outputs with [tool output redacted] blocks retrieval-quality auditing — scope it to sensitive fields only or make it configurable.</div></details>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+<h2>Verified non-issues</h2>
+<div class="note good">
+<ul>
+  <li><b>Answer quality when turns complete:</b> sampled successful conversations show substantive, well-grounded analysis (e.g. a detailed month-over-month cost breakdown in <a href="https://cloud.langfuse.com/project/cmo09hyuk01ttad079ljvue6w/traces/a53c2db19d320ba64733907861e5ff05">a53c2db1</a>). No hallucination/refusal seen in the sample — but unmeasured at scale (finding 1).</li>
+  <li><b>SQL execution reliability:</b> <code>run_select_query_mcp_ClickHouse</code> (~20k calls in sample) shows no execution-failure signatures; the ClickHouse MCP path looks healthy.</li>
+  <li><b>Custom user-defined agents:</b> faster (p90 99s) and cheaper (mean $0.28) than the default agent — no concentrated problem.</li>
+  <li><b>Language matching:</b> the agent replied in the user's language across PT/DE/FA/ZH/TR — no mismatch observed.</li>
+</ul>
+</div>
+
+<h2>Suggested order of action</h2>
+<ol>
+  <li><b>Finding 1 (monitoring)</b> — you're flying blind; stand up evaluators + user feedback first so every fix below is measurable.</li>
+  <li><b>Findings 2 + 3 + 5 (latency / cost / duplicate calls)</b> — one root cluster (unbounded context + redundant loops); context compaction + tool memoization address all three, and the cost is material ($2.6k/week).</li>
+  <li><b>Finding 4 (hard failures)</b> — pre-flight guards + the InvalidCharacter encoding bug; these leave real users with no answer.</li>
+  <li><b>Findings 6, 7, 8 (loops, error serialization, observability)</b> — hygiene that makes the above durable and diagnosable.</li>
+</ol>
+
+<h2>Open questions</h2>
+<ul>
+  <li>Is <code>default</code> environment intentional, or should production be tagged (<code>environment=production</code>, <code>release=&lt;sha&gt;</code>)?</li>
+  <li>Is tool-output redaction a hard compliance requirement? It currently blocks retrieval-relevance auditing.</li>
+  <li>Expected turn-latency SLO? p90 of 233s is very high for interactive chat but may be acceptable for deep data-analysis sessions.</li>
+</ul>
+
+<h2>Not covered</h2>
+<ul>
+  <li><b>Retrieval / SQL-result relevance:</b> tool outputs are redacted, so I could not verify returned content — only that calls succeeded. Needs finding 8(b) fixed, or an in-app eval.</li>
+  <li><b>Faithfulness / correctness at scale:</b> no ground truth, no scores (this is finding 1).</li>
+  <li><b>PII/safety:</b> users paste real customer data (marketing spend, auth logs, org/brand IDs); no guardrail or PII scan in place, and no dedicated safety sweep was run — worth a follow-up given the data sensitivity.</li>
+  <li>Content-level analysis was a <b>34-trace sample</b>; error-category counts and all aggregate metrics are full-window (3,005 traces / 87,568 observations).</li>
+</ul>
+
+</body>
+</html>

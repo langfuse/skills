@@ -1,0 +1,83 @@
+# Langfuse Issue-Detection Triage — Run #3
+
+**Project:** `cmfzimu6801jbad079856b07r` ("langfuse-in-app-agent" — an in-product Langfuse assistant)
+**Host / region:** `https://cloud.langfuse.com` (EU cloud)
+**Run:** independent full triage, run #3 of 5.
+
+---
+
+## Overall stats
+
+### Window & scope
+- **Window analyzed:** `2026-07-01T19:07:50Z` → `2026-07-08T19:07:50Z` (last 7 days, UTC).
+- **Environment(s) included (the product):** `langfuse-in-app-agent` — **221 traces**, comprising:
+  - `agent-turn` — **79** (the interactive conversational turns; this is *the product* for latency/quality/answer analysis).
+  - `in-app-agent-conversation-title` — **117** (a small support LLM call that auto-titles conversations).
+  - `in-app-agent` — **25** (session/conversation container traces; null I/O by design).
+- **Excluded:** `langfuse-natural-language-filter` — **33 traces** (`search-bar-filter` 32, `natural-language-filter` 1). This is a *separate feature* (NL → filter-JSON), not the in-app agent. Spot-checked and clean (see Verified non-issues). **No** evaluator (`langfuse-llm-as-a-judge`) runs, dataset/experiment runs, or playground traffic were present in this window, so none needed exclusion on that basis.
+
+### Volume examined
+- **254 traces** total in window; **221 product traces** pulled with `core,io,metrics` (all 3 pages).
+- **801 unique product observations** pulled (`core,basic,usage,model,metrics`); of these **330 TOOL** observations re-pulled **with `io`** for content inspection, and **249 GENERATION** observations analyzed for tokens/cost/latency.
+- **2 scores** total in window (all product) — pulled separately and joined on `traceId`.
+- Raw pulls saved under `/tmp/traces_p*.json`, `/tmp/all_obs.json`, `/tmp/all_tools.json`, `/tmp/scores_p1.json`.
+
+### Input distribution (checked first)
+Healthy and **not synthetic-dominated**: 65 distinct user inputs across 79 turns. Top repeat is "Where should I start with setting up Langfuse?" (4×) — light onboarding/demo, not skewing. Traffic is genuinely diverse and **multilingual** (English + Italian), and the agent matches the user's language. All rates below are therefore reported on real traffic without a synthetic caveat.
+
+### Headline metrics (agent-turn = the interactive product turn)
+| Metric | Value |
+|---|---|
+| Turns / sessions | 79 turns across 34 sessions |
+| End-to-end latency (root turn) | **p50 13.9s · p90 55.1s · p99 82.2s · max 100.0s** |
+| ERROR-level observations (product) | 6 (5 tool-arg validation + 1 context overflow) |
+| Turns with **no final text answer** captured | **9 / 79 (11.4%)** |
+| Total cost reported | **$0.184 — 100% from title-gen**; main agent = $0 (uninstrumented) |
+| Score coverage | **2 / 79 turns (2.5%)**, both positive user feedback |
+| LLM-judge / automated quality scores on product | **0** |
+
+---
+
+## Findings
+
+| # | Issue | Category | Priority | Traces affected | Description | Root-cause hypothesis | Example traces | Proposed fix | Agent prompt |
+|---|-------|----------|----------|-----------------|-------------|-----------------------|----------------|--------------|--------------|
+| 1 | No final answer on turn | Output quality/Safety | **P0** | **9 / 79 (11.4%)** | 11% of agent turns have a trace `output` that ends on an assistant message with **empty content + a pending tool call**, and the child observations show **no subsequent generation** producing a final text answer. In the 11-turn session `aconv_eezdndyapxhrbllb8ubktqzp` the user re-sends the *identical* Italian request 4 consecutive times — strong evidence the agent silently stopped after a tool call and the user got nothing. | The agent loop terminates (step cap, or the turn is traced/streamed) after issuing a tool call without a final synthesis step; the final assistant text is either never produced or never captured. Either way the user experiences a no-answer turn. | `https://cloud.langfuse.com/project/cmfzimu6801jbad079856b07r/traces/arun_hap69biwi1bx0ij1rb25mjv5-trace` · `.../arun_ng3rpcns3pr7e0iqv7z3mxjr-trace` · `.../arun_ahg7mxy3dhpomwsxo75mijjd-trace` | Ensure the agent loop always emits a final natural-language turn after the last tool result (raise/soften the max-step cap, add a "must summarize" terminal step). Separately, fix tracing so the final streamed answer is persisted to trace `output`. | The in-app-agent ends ~11% of turns on a tool call with no final text answer to the user (e.g. trace arun_hap69biwi1bx0ij1rb25mjv5-trace: user asked "create a dataset with 1 random trace", the last recorded action is a `langfuse_listObservations` tool call, no confirmation text). In session aconv_eezdndyapxhrbllb8ubktqzp the user re-sent the same message 4× because no answer came back. Determine whether the agent's tool loop is hitting a max-step cap or whether the final streamed assistant message is simply not being written to the trace `output`. Fix so every turn ends with a synthesized answer AND that answer is captured in the trace. |
+| 2 | Main-agent cost & tokens uninstrumented | Coverage | **P1** | 131 / 131 agent generations | All `agent-turn` / `agent-run` GENERATION observations (131) report empty `model`, `inputUsage`/`outputUsage` = 0, and `totalCost` = 0. The entire reported cost ($0.184) comes solely from `in-app-agent-conversation-title` (haiku/opus). The main Opus agent — which runs multi-tool turns with very large contexts (one hit 1.37M tokens) — shows **$0**. The agent itself even explains this to a user ("this trace contains only span observations, no generations — which is why tokens/cost came back as zero"). | The agent's LLM calls are traced as generations without model/usage/cost fields populated (usage not forwarded from the Bedrock/Anthropic response into the span). Cost monitoring on the primary product is blind. | `https://cloud.langfuse.com/project/cmfzimu6801jbad079856b07r/traces/arun_cr61ph157ss05fket516y511-trace` | Populate `model`, `usageDetails` (input/output tokens), and `costDetails` on the agent-turn/agent-run generations from the model response metadata so per-turn cost and token spend become visible. | The in-app-agent's main LLM generations (observation names `agent-turn`, `agent-run`) are logged with no model, zero input/output tokens, and zero cost, so all cost dashboards for this product read $0 even though it runs Opus over large contexts. Only the `in-app-agent-conversation-title` call is instrumented. Find where the agent creates its generation spans and forward the model id and token/cost usage from the provider response into the Langfuse generation. |
+| 3 | High turn latency | Latency | **P1** | interactive product, all 79 turns | End-to-end turn latency is p50 **13.9s**, p90 **55.1s**, p99 **82.2s**, max **100s** on an interactive in-app assistant. The single user-feedback comment we have literally says "nice worked but was **slow**". The slowest turn (82.2s) was immediately followed by the user re-asking the same question 3×. | Sequential multi-tool agent loop (many `langfuse_*` calls per turn) plus large-context Opus calls; no parallelism / early-response streaming, so median wait is already ~14s and the tail is minutes. | `https://cloud.langfuse.com/project/cmfzimu6801jbad079856b07r/traces/arun_ticku0052pi9atgctp1ztato-trace` (31.5s) · `.../aconv_eezdndyapxhrbllb8ubktqzp` session (82.2s turn) | Stream partial answers / tool-progress to the user; parallelize independent tool calls; cap per-turn tool rounds; consider a faster model for simple turns. | The in-app-agent's turn latency is p50 ~14s, p90 ~55s, up to 100s, and a user has complained it's slow. Turns chain many sequential `langfuse_*` tool calls before answering. Investigate parallelizing independent tool calls and streaming interim status/partial answers so the user isn't staring at a blank screen for tens of seconds. Start from trace arun_ticku0052pi9atgctp1ztato-trace. |
+| 4 | Automated quality evals not firing on production | Scores/Evals | **P1** | 77 / 79 turns unscored | Only **2 scores** exist across 79 turns (both `in_app_agent_feedback`, ANNOTATION, value=1). Evaluators referenced in the project (`in-app-agent-usable-answer`, `in-app-agent-mcp-incorrect-call`, `compliance_llmaj`) produced **zero** scores on production traffic in the window. A user even asked the agent "Why is my eval not running in production traces". So there is **no automated signal** that would reveal the product degrading (e.g. the 11% no-answer rate in finding #1 is invisible to any dashboard). | Evaluators are configured but not wired to run on the `langfuse-in-app-agent` production environment (mapping / sampling / environment filter), so quality is effectively unmonitored. Not diagnosable as "noisy judge" — it's *no output at all*. | (window-wide; e.g. `https://cloud.langfuse.com/project/cmfzimu6801jbad079856b07r/traces/arun_hnmu9d9g3avzvzbewhgdi0vj-trace` — user asking why evals don't run) | Attach `in-app-agent-usable-answer` (and mcp-incorrect-call) to the production environment with a sane sampling rate; verify with a known-positive that a score appears. Then dashboard the negative rate. | The `in-app-agent-usable-answer` evaluator (and mcp-incorrect-call) are configured but produced 0 scores on langfuse-in-app-agent production traces in the last 7 days; a user has explicitly reported evals aren't running. Check the evaluation rule's environment/target-filter and sampling config so it fires on production `agent-turn` traces, confirm a score lands, and make sure the evaluator reads the trace `output` (which for ~11% of turns is currently empty — see the no-final-answer bug). |
+| 5 | Context-length overflow crash | Reliability | **P1** | 1 / 79 (1.3%) | On the follow-up "give me last month, too", the agent loaded so much trace data that the prompt hit **1,371,258 tokens > 1,000,000 max** → hard `AI_APICallError`; the trace output is `<truncated due to size exceeding limit>`. User received no useful answer. | No guard on how much retrieved trace/observation data is stitched into context; a broadening query ("last month too") multiplies rows fed to the model with no pagination/summarization cap. | `https://cloud.langfuse.com/project/cmfzimu6801jbad079856b07r/traces/arun_k18etm6x5d5bedxno83tbmwg-trace` | Cap tool result sizes fed into context (row limits + summarize/paginate); detect approaching context limit and degrade gracefully (sample + tell the user) instead of erroring. | The in-app-agent crashed with "prompt is too long: 1371258 tokens > 1000000 maximum" on trace arun_k18etm6x5d5bedxno83tbmwg-trace after the user said "give me last month, too". The agent fed unbounded query results into context. Add a guard that limits/summarizes tool output before it enters the prompt and handles the near-limit case gracefully rather than throwing. |
+| 6 | Malformed tool arguments | Tool/Agent | **P2** | 3 / 79 (3.8%) | 6 tool calls failed input validation: (a) `langfuse_listScores` sent `operator: "&lt;"` — an **HTML-entity-encoded `<`** leaking into the tool arg; (b) `langfuse_getObservationFilterValues` / `langfuse_listObservations` sent schema-disallowed properties (`environment`, `observationType`) → "must NOT have additional properties". The agent generally retries and recovers, so no user-facing break confirmed. | (a) HTML escaping applied somewhere in the tool-arg serialization path; (b) the model's tool schema in the prompt drifted from the actual MCP tool schema (hallucinated/renamed params). Isolated (1 trace for the `&lt;` bug). | `https://cloud.langfuse.com/project/cmfzimu6801jbad079856b07r/traces/arun_twv32urios0djamn0ut8efkg-trace` (`&lt;`) · `.../arun_vhj5xlowigc87satggpv8u9x-trace` (extra props) | (a) Stop HTML-escaping tool-call argument values before dispatch. (b) Regenerate the tool schemas exposed to the model from the live MCP definitions so allowed operators/params match. | Two tool-arg bugs in the in-app-agent: on trace arun_twv32urios0djamn0ut8efkg-trace the agent passed operator "&lt;" (HTML-escaped "<") to langfuse_listScores and it was rejected; on arun_vhj5xlowigc87satggpv8u9x-trace it passed properties the schema forbids ("must NOT have additional properties"). Find where tool arguments are serialized (fix the HTML escaping) and re-sync the tool JSON schemas shown to the model with the real MCP schemas. |
+| 7 | Long-lived session spans | Coverage/Latency | **P3** | container traces | `in-app-agent` session-container traces show durations up to **5,942s (99 min)**, p90 ~44 min. This is **session duration, not per-turn latency**, but the very long open spans are worth confirming they close correctly rather than leaking. | Session/conversation span kept open across the user's whole session; expected, but verify no never-closed spans inflate metrics. | `https://cloud.langfuse.com/project/cmfzimu6801jbad079856b07r/traces/aconv_stmao6fs831q4l2v95mq51tk` | Confirm session spans close on conversation end; exclude session-duration from any per-turn latency dashboards to avoid confusion. | The `in-app-agent` container traces have durations up to ~99 minutes. Confirm these are intentional session-length spans that close properly (not leaked/never-closed spans) and ensure they're excluded from per-turn latency metrics. |
+
+---
+
+## Verified non-issues (checked and clean)
+
+- **Retrieval / RAG relevance (D14):** Inspected `io` of the search/data tools (`langfuseDocs_searchLangfuseDocs`, `langfuse_listObservations`, `langfuse_getObservation`, `langfuse_queryMetrics`, etc.). They return **real, query-relevant** data — distinct results per query, no "same-few-docs-for-everything" pattern. The 107→59 keyword "failure" hits were **all false positives** (trace-ID digits matching `5xx`, docs literally titled "Error Analysis", prompt text containing "exception:"). No broken retrieval.
+- **Silent tool failures (A1/A2):** Scanned all 330 TOOL outputs for `ok:false` / error envelopes. **Zero** silent `ok:false`; the only genuine tool failures are the 6 ERROR-level arg-validation ones in finding #6. Error count by content == error count by level here.
+- **Output quality on completed turns (F/G):** Read a random sample of full conversations — answers are substantive, correctly cited (web-search sources), and on-topic. Good.
+- **Language matching (H30):** Italian questions → Italian answers, English → English. No mismatch.
+- **User frustration (F21):** Only 3 turns had friction-ish phrasing, all legitimate questions ("Why is my eval not running"), no profanity/anger/all-caps.
+- **Out-of-scope / adversarial inputs (H28/H29):** All sampled inputs are within the product domain (Langfuse observability tasks). No injection/garbage inputs observed in the sample.
+- **Truncation by length (A4):** No `finish_reason: length` truncation on normal turns (distinct from the context-overflow crash, finding #5).
+- **Excluded `langfuse-natural-language-filter` feature:** spot-checked — 33 traces, **0 empty outputs**, latency p50 2.0s / max 7.3s, produces valid filter-JSON. Clean (but out of scope for this product triage).
+
+---
+
+## Suggested order of action
+1. **#1 no-final-answer** (P0) — 11% of turns give users nothing; fix the loop/tracing.
+2. **#4 evals not firing** (P1) — restore the automated quality signal so #1-type regressions are caught automatically.
+3. **#2 cost/token instrumentation** (P1) — you are currently blind to the product's real spend.
+4. **#3 latency** (P1) — stream/parallelize; directly tied to the one user complaint and the re-ask behavior.
+5. **#5 context overflow** (P1) then **#6 tool args** (P2), **#7 session spans** (P3).
+
+## Open questions
+- **#1:** Is the missing final answer a genuine no-answer to the user, or only a trace-capture gap (answer streamed but not persisted)? The re-ask evidence points to genuine no-answer, but confirm with product/session replay. This determines whether #1 stays P0.
+- **#4:** Are `in-app-agent-usable-answer` / `mcp-incorrect-call` disabled, environment-filtered, or scheduled outside this window? Confirms root cause.
+
+## Not covered / limitations
+- **Faithfulness / hallucination (D26):** cannot verify factual grounding without ground truth; only sampled a handful of transcripts.
+- **Safety / PII (G27):** only a sample was read end-to-end; no systematic PII/secret scan of all I/O.
+- **Cost analysis (C9–C11):** impossible to quantify for the main agent because tokens/cost are uninstrumented (finding #2) — the $0.184 total covers title-gen only.
+- **Observation set:** 801 unique product observations examined; a small number of pages hit HTTP 429 rate limits and were retried with backoff — coverage is believed complete for the window, but not independently reconciled against a server-side count.

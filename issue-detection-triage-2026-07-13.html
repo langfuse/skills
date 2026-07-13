@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Issue Detection Triage — CH Control Pane (staging) — 2026-07-13</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --fg: #1a1d23;
+    --muted: #5b616e;
+    --border: #e2e5ea;
+    --card: #f7f8fa;
+    --accent: #2c5ef6;
+    --p0: #c62828; --p0-bg: #fdecea;
+    --p1: #b3541e; --p1-bg: #fdf1e7;
+    --p2: #8a6d00; --p2-bg: #fbf6e3;
+    --p3: #55606e; --p3-bg: #eef1f4;
+    --ok: #1e7b45; --ok-bg: #e9f5ee;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #14161a;
+      --fg: #e6e8ec;
+      --muted: #9aa1ac;
+      --border: #2b2f36;
+      --card: #1c1f25;
+      --accent: #7da2ff;
+      --p0: #ff8a80; --p0-bg: #3a1f1d;
+      --p1: #ffb47a; --p1-bg: #37281c;
+      --p2: #e8d178; --p2-bg: #332e1a;
+      --p3: #aab4c0; --p3-bg: #232830;
+      --ok: #7fd6a4; --ok-bg: #1b2f24;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 2rem 1rem 4rem;
+    background: var(--bg); color: var(--fg);
+    font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  main { max-width: 900px; margin: 0 auto; }
+  h1 { font-size: 1.6rem; margin: 0 0 .25rem; }
+  h2 { font-size: 1.2rem; margin: 2.2rem 0 .8rem; padding-bottom: .3rem; border-bottom: 1px solid var(--border); }
+  .subtitle { color: var(--muted); margin-bottom: 1.5rem; }
+  code, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .88em; }
+  code { background: var(--card); border: 1px solid var(--border); border-radius: 4px; padding: .05em .35em; }
+  a { color: var(--accent); }
+  table { border-collapse: collapse; width: 100%; margin: .8rem 0; font-size: .95rem; }
+  th, td { text-align: left; padding: .45rem .7rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: .85rem; text-transform: uppercase; letter-spacing: .03em; }
+  td.num { font-variant-numeric: tabular-nums; }
+  ul { padding-left: 1.3rem; }
+  li { margin: .3rem 0; }
+  .note {
+    background: var(--card); border: 1px solid var(--border); border-left: 3px solid var(--accent);
+    border-radius: 6px; padding: .8rem 1rem; margin: 1rem 0; font-size: .95rem;
+  }
+  .finding {
+    background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+    padding: 1.1rem 1.3rem; margin: 1rem 0;
+  }
+  .finding-head { display: flex; align-items: baseline; gap: .6rem; flex-wrap: wrap; margin-bottom: .5rem; }
+  .finding-head h3 { margin: 0; font-size: 1.05rem; }
+  .badge {
+    display: inline-block; font-size: .75rem; font-weight: 700; letter-spacing: .04em;
+    border-radius: 999px; padding: .12rem .6rem; white-space: nowrap;
+  }
+  .badge.P0 { color: var(--p0); background: var(--p0-bg); }
+  .badge.P1 { color: var(--p1); background: var(--p1-bg); }
+  .badge.P2 { color: var(--p2); background: var(--p2-bg); }
+  .badge.P3 { color: var(--p3); background: var(--p3-bg); }
+  .tag { font-size: .78rem; color: var(--muted); border: 1px solid var(--border); border-radius: 999px; padding: .1rem .55rem; white-space: nowrap; }
+  .affected { font-size: .85rem; color: var(--muted); margin-left: auto; white-space: nowrap; }
+  .finding dl { margin: .5rem 0 0; display: grid; grid-template-columns: 9.5rem 1fr; row-gap: .45rem; column-gap: .8rem; }
+  .finding dt { color: var(--muted); font-size: .82rem; font-weight: 600; text-transform: uppercase; letter-spacing: .03em; padding-top: .1rem; }
+  .finding dd { margin: 0; font-size: .95rem; }
+  details { margin-top: .7rem; }
+  summary { cursor: pointer; color: var(--accent); font-size: .9rem; font-weight: 600; }
+  details pre {
+    white-space: pre-wrap; background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
+    padding: .8rem 1rem; font-size: .85rem; line-height: 1.5; margin: .5rem 0 0;
+  }
+  .clean li::marker { color: var(--ok); }
+  footer { margin-top: 3rem; color: var(--muted); font-size: .85rem; border-top: 1px solid var(--border); padding-top: 1rem; }
+  @media (max-width: 640px) {
+    .finding dl { grid-template-columns: 1fr; }
+    .finding dt { padding-top: .4rem; }
+    .affected { margin-left: 0; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1>Issue Detection Triage — CH Control Pane (staging)</h1>
+  <p class="subtitle">2026-07-13 · Langfuse project <span class="mono">cmli1jekq0bewad07cu6o92zg</span> · cloud.langfuse.com</p>
+
+  <h2>Overall stats</h2>
+  <ul>
+    <li><strong>Window:</strong> 2026-07-04T00:00Z → 2026-07-13 (data present 2026-07-06 06:30Z → 2026-07-11 08:44Z, UTC).</li>
+    <li><strong>Volume examined:</strong> 252 traces (all pulled), 2,654 observations (all pulled), 265 scores (all pulled). Full conversation content read for all 37 <code>chat_agent</code> traces + 11 sampled traces of the other surfaces.</li>
+    <li><strong>Included as “the product”:</strong> <code>staging</code> env — 132 traces (<code>saved_query_title_suggestion</code> 41, <code>chat_agent</code> 37, <code>inline_code_completion</code> 35, <code>chat_docs_search</code> 10, <code>query_construction</code> 6, <code>chart_config_sql_console</code> 2, <code>query_correction</code> 1).</li>
+    <li><strong>Excluded:</strong> <code>default</code> env — 119 traces (ChatBedrockConverse, deployment, adversarial-agent, planner-agent — dev/experiment machinery, swept lightly); 1 <code>langfuse-code-eval</code> test trace.</li>
+  </ul>
+  <div class="note"><strong>Traffic character:</strong> effectively <strong>100% scripted QA/synthetic traffic</strong> — templated “Analyze @table(…)” and schema-advisor scripts, plus a 9-message gibberish stress-test burst on Jul 11. Expected for staging, but every rate below is conditioned on this distribution, not real users.</div>
+
+  <table>
+    <thead><tr><th>Metric (staging)</th><th>Value</th></tr></thead>
+    <tbody>
+      <tr><td>Traces</td><td class="num">132</td></tr>
+      <tr><td>Traces with ERROR observations</td><td class="num">7 (5.3%)</td></tr>
+      <tr><td>Latency p50 / p90 / p99 (all surfaces)</td><td class="num">3.1s / 68s / 370s</td></tr>
+      <tr><td><code>chat_agent</code> latency p50 / p90 / max</td><td class="num">50s / 252s / 426s</td></tr>
+      <tr><td>Total / mean cost</td><td class="num">$5.11 / $0.039 per trace</td></tr>
+      <tr><td>Traces with any score</td><td class="num">11 / 132 (8.3%)</td></tr>
+      <tr><td>User feedback scores</td><td class="num">7, <strong>all positive</strong> (query-success / accepted)</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Findings</h2>
+
+  <div class="finding">
+    <div class="finding-head"><span class="badge P0">P0</span><h3>1 · Prompt blows context limit</h3><span class="tag">Reliability</span><span class="affected">≥4 / 35 completions (11%)</span></div>
+    <dl>
+      <dt>Description</dt><dd><code>inline_code_completion</code> fails with <code>ValidationException: prompt is too long</code> — 290k–342k input tokens per request. The completion feature is hard-broken for services with large schemas. Same pattern inflates <code>query_construction</code>/<code>query_correction</code> to ~645k total tokens (mostly cache reads, so cost is masked at ~$0.0015, but it sits at the context ceiling).</dd>
+      <dt>Root cause</dt><dd>The <strong>entire database schema</strong> is inlined into the prompt (<code>&lt;schema&gt;</code> block). Prompt size scales with customer schema size, unbounded, so any big-schema service exceeds the model’s context window.</dd>
+      <dt>Examples</dt><dd><a href="https://cloud.langfuse.com/project/cmli1jekq0bewad07cu6o92zg/traces/ee8391beba6d7c981dd6c63ef103888f">ee8391be</a> · <a href="https://cloud.langfuse.com/project/cmli1jekq0bewad07cu6o92zg/traces/5d3701f85a98aca0e07ac9da4e8815e4">5d3701f8</a></dd>
+      <dt>Proposed fix</dt><dd>Code: cap/prune the schema block (relevant tables only via embedding or FK/usage heuristics, truncate column lists, hard token budget with graceful degradation instead of erroring).</dd>
+    </dl>
+    <details><summary>Agent prompt (copy-paste)</summary><pre>The `inline_code_completion` prompt (and `query_construction`/`query_correction`) inlines the full ClickHouse schema in a &lt;schema&gt; block. On services with large schemas this reaches 342k input tokens and Bedrock rejects it with `ValidationException: prompt is too long` — the completion returns nothing (Langfuse traces ee8391beba6d7c981dd6c63ef103888f, 5d3701f85a98aca0e07ac9da4e8815e4, staging env). Add a token budget for the schema section: select only tables relevant to the current query context, truncate column lists past a limit, and fall back to schema-less completion rather than failing. Verify with a service whose schema serializes to &gt;300k tokens.</pre></details>
+  </div>
+
+  <div class="finding">
+    <div class="finding-head"><span class="badge P1">P1</span><h3>2 · Invalid execution plans</h3><span class="tag">Tool/Agent</span><span class="affected">4 / 5 scored in-window (floor); 56% False on Jun backfill</span></div>
+    <dl>
+      <dt>Description</dt><dd>The <code>Valid Plan Schema</code> evaluator fails plans frequently — e.g. “step 7 sql has multiple statements (must be one)”. In-window, 4 of 5 scored <code>chat_agent</code> planner traces emitted ≥1 invalid plan before a valid one. Likely drives the retry/re-read loops and long latencies (finding 4).</dd>
+      <dt>Root cause</dt><dd>Planner prompt doesn’t state (or model ignores) hard schema constraints — one statement per step, ExecutionPlan shape — so first attempts fail validation and get regenerated.</dd>
+      <dt>Examples</dt><dd><a href="https://cloud.langfuse.com/project/cmli1jekq0bewad07cu6o92zg/traces/513bb5782d8c18bf7c3e9ff2ccd9b694">513bb578</a> · <a href="https://cloud.langfuse.com/project/cmli1jekq0bewad07cu6o92zg/traces/0c53ba8835230692eed1a3ab27a2331b">0c53ba88</a></dd>
+      <dt>Proposed fix</dt><dd>Prompt: enumerate the plan-schema constraints explicitly (with a one-statement-per-step example); or code: use structured output/tool schema enforcement for plan generation.</dd>
+    </dl>
+    <details><summary>Agent prompt (copy-paste)</summary><pre>The planner-agent inside `chat_agent` emits ExecutionPlans that fail schema validation ~half the time (Langfuse score "Valid Plan Schema": 56% False; sample failure comment: "step 7 sql has multiple statements (must be one)"; traces 513bb5782d8c18bf7c3e9ff2ccd9b694, 0c53ba8835230692eed1a3ab27a2331b). Find the plan-generation prompt, add explicit constraints (exactly one SQL statement per step, required fields of ExecutionPlan) with a compliant example, or enforce via structured-output schema. Success = Valid Plan Schema first-attempt pass rate materially up on re-run.</pre></details>
+  </div>
+
+  <div class="finding">
+    <div class="finding-head"><span class="badge P1">P1</span><h3>3 · Schema-advisor internal errors (mostly silent)</h3><span class="tag">Reliability</span><span class="affected">≥3 / 12 advisor flows</span></div>
+    <dl>
+      <dt>Description</dt><dd>Deployments stuck in <code>waiting_for_repair</code> at the schema-validation step (“internal error”, 2 flows: <code>default.orders</code>, <code>default.server_metrics</code>); <code>action="plan"</code> returned an internal error twice in another flow. Only the missing-table case surfaced at ERROR level — the <code>waiting_for_repair</code> failures are level=DEFAULT, invisible to error monitoring.</dd>
+      <dt>Root cause</dt><dd>Bug in the schema-advisor workflow service (validation/audit step), distinct from the agent; errors are swallowed into tool output bodies instead of ERROR-level observations.</dd>
+      <dt>Examples</dt><dd><a href="https://cloud.langfuse.com/project/cmli1jekq0bewad07cu6o92zg/traces/92a0a2fe1d8151b1fc280f4825b8768e">92a0a2fe</a> · <a href="https://cloud.langfuse.com/project/cmli1jekq0bewad07cu6o92zg/traces/77776cb0dc806602a69cb0840260f262">77776cb0</a> · <a href="https://cloud.langfuse.com/project/cmli1jekq0bewad07cu6o92zg/traces/52840bdbfac935ed95c5184d29c8d735">52840bdb</a></dd>
+      <dt>Proposed fix</dt><dd>Code: fix the validation-step failure in the schema-advisor workflow; instrumentation: log tool-level failures as ERROR-level observations so they’re countable.</dd>
+    </dl>
+    <details><summary>Agent prompt (copy-paste)</summary><pre>Schema-advisor deployments in staging hit `waiting_for_repair` at step 6 (schema validation) with an internal error — Langfuse traces 92a0a2fe1d8151b1fc280f4825b8768e (default.orders) and 77776cb0dc806602a69cb0840260f262 (default.server_metrics); separately `action="plan"` returned internal errors twice in 52840bdbfac935ed95c5184d29c8d735. Investigate the schema-advisor workflow service's validation/audit step for these runs (workflowIds in tool outputs), fix the internal error, and make the tool wrapper emit ERROR-level Langfuse observations on non-success workflow states.</pre></details>
+  </div>
+
+  <div class="finding">
+    <div class="finding-head"><span class="badge P1">P1</span><h3>4 · Chat latency + abort/retry friction</h3><span class="tag">Latency</span><span class="affected">~15 / 37 chat turns &gt;60s; 2 aborted</span></div>
+    <dl>
+      <dt>Description</dt><dd><code>chat_agent</code> p50 50s, p90 252s, max 426s (7 min). Schema-advisor planning turns run 4–7 minutes. Correlated friction: one user asked the identical Lyuba1 question 3× in 10 minutes, with 2 of the runs carrying <code>Error: Aborted</code> spans (client cancelled/disconnected).</dd>
+      <dt>Root cause</dt><dd>Long sequential agent loops: repeated reference reads + plan-generation retries (findings 2, 6) with no streamed progress; users give up and retry.</dd>
+      <dt>Examples</dt><dd><a href="https://cloud.langfuse.com/project/cmli1jekq0bewad07cu6o92zg/traces/513bb5782d8c18bf7c3e9ff2ccd9b694">513bb578</a> (426s) · <a href="https://cloud.langfuse.com/project/cmli1jekq0bewad07cu6o92zg/traces/79ee8924035fe575d56eb987ca7ed76c">79ee8924</a> (aborted)</dd>
+      <dt>Proposed fix</dt><dd>Code/UX: cut retry loops (fix #2), cache reference reads (fix #6), stream intermediate progress to the client; set a latency budget per turn.</dd>
+    </dl>
+    <details><summary>Agent prompt (copy-paste)</summary><pre>`chat_agent` turns that invoke the planner/schema-advisor take 4–7 minutes (Langfuse: p90 252s, max 426s, e.g. trace 513bb5782d8c18bf7c3e9ff2ccd9b694), and users abort and re-ask (traces 79ee8924035fe575d56eb987ca7ed76c, 1c37379ca0de25651c74564cfd441c7c show `Error: Aborted`). Profile where time goes in these traces (repeated read_reference calls and plan regeneration dominate), cache reference-doc reads within a run, reduce plan retries, and stream step-progress events to the UI so long runs don't look hung.</pre></details>
+  </div>
+
+  <div class="finding">
+    <div class="finding-head"><span class="badge P1">P1</span><h3>5 · 92% of traffic unmonitored</h3><span class="tag">Coverage</span><span class="affected">121 / 132</span></div>
+    <dl>
+      <dt>Description</dt><dd>Only 11/132 staging traces carry any score. The only evaluator (<code>Valid Plan Schema</code>) checks plan shape only; nothing measures chat answer quality, docs-search relevance, completion acceptance, or SQL correctness. User feedback exists but only on <code>query_construction</code>/<code>query_correction</code> (7 scores). Quality regressions on the main chat product are currently invisible.</dd>
+      <dt>Root cause</dt><dd>No online evaluators configured for the main surfaces; feedback wiring only built for the SQL-console flows.</dd>
+      <dt>Examples</dt><dd>—</dd>
+      <dt>Proposed fix</dt><dd>Evals: add online evaluators (chat answer quality/faithfulness, docs-search relevance) sampled over staging traffic, and wire thumbs-up/down on chat + completion acceptance as scores.</dd>
+    </dl>
+    <details><summary>Agent prompt (copy-paste)</summary><pre>In Langfuse project cmli1jekq0bewad07cu6o92zg (staging env), only 8% of traces have any score, and the only evaluator (Valid Plan Schema) checks plan-schema validity — chat_agent answer quality, chat_docs_search relevance, and inline_code_completion acceptance are unmeasured. Set up: (1) an LLM-as-judge online evaluator on chat_agent traces (correctness/helpfulness, sampled), (2) a relevance judge on chat_docs_search, (3) client-side score ingestion for chat thumbs and completion accept/reject, mirroring the existing `query_construction.user_feedback` pattern.</pre></details>
+  </div>
+
+  <div class="finding">
+    <div class="finding-head"><span class="badge P2">P2</span><h3>6 · Duplicate tool calls (retry loops)</h3><span class="tag">Tool/Agent</span><span class="affected">≥35 / 344 tool calls (10%)</span></div>
+    <dl>
+      <dt>Description</dt><dd>Identical (tool, input) called 2–3× within one trace — <code>read_reference</code> re-reads the same reference doc 3×, <code>list_tables</code> re-lists the same DB 3× — concentrated in planner/schema-advisor traces (up to 14 <code>read_reference</code> calls per trace). Pure token + latency waste feeding finding 4.</dd>
+      <dt>Root cause</dt><dd>Each plan-generation retry re-executes the full “read references, list tables” preamble instead of reusing results already in context.</dd>
+      <dt>Examples</dt><dd><a href="https://cloud.langfuse.com/project/cmli1jekq0bewad07cu6o92zg/traces/513bb5782d8c18bf7c3e9ff2ccd9b694">513bb578</a> · <a href="https://cloud.langfuse.com/project/cmli1jekq0bewad07cu6o92zg/traces/06386f21159221cf37eac23394817942">06386f21</a></dd>
+      <dt>Proposed fix</dt><dd>Code: memoize idempotent tool results (read_reference, list_tables) per run; prompt: tell the agent results are already in context on retry.</dd>
+    </dl>
+    <details><summary>Agent prompt (copy-paste)</summary><pre>In `chat_agent` planner runs, the agent calls read_reference and list_tables with identical arguments up to 3× per trace (~10% of all tool calls are exact duplicates; Langfuse traces 513bb5782d8c18bf7c3e9ff2ccd9b694, 06386f21159221cf37eac23394817942). Root cause hypothesis: plan-retry iterations rerun the info-gathering preamble. Add per-run memoization for idempotent tools and/or instruct the agent not to refetch references already present in the conversation.</pre></details>
+  </div>
+
+  <div class="finding">
+    <div class="finding-head"><span class="badge P2">P2</span><h3>7 · Misleading advice on immutable system views</h3><span class="tag">Output quality/Safety</span><span class="affected">≥5 / 8 system-view analyses</span></div>
+    <dl>
+      <dt>Description</dt><dd>Asked to “optimize” <code>information_schema.*</code> views, the agent usually produces a CRITICAL-ranked list of schema rewrites (drop Nullable, add LowCardinality, change ORDER BY) for <strong>read-only system views</strong> the user cannot alter — only lightly hedged (“if building a custom equivalent”). Handling is inconsistent: 1 run correctly led with “this is a system view — you cannot modify it”.</dd>
+      <dt>Root cause</dt><dd>No guardrail in the analysis prompt distinguishing base tables from system views; the “produce ranked optimizations” instruction overrides correctness.</dd>
+      <dt>Examples</dt><dd><a href="https://cloud.langfuse.com/project/cmli1jekq0bewad07cu6o92zg/traces/158ebabe13a33e60c57b91b8e1474e1d">158ebabe</a> (misleading) · <a href="https://cloud.langfuse.com/project/cmli1jekq0bewad07cu6o92zg/traces/a2112b04f5ac10155a1d7744c76b89d2">a2112b04</a> (correct)</dd>
+      <dt>Proposed fix</dt><dd>Prompt: add an explicit rule — if the target is a system table/view, state it is immutable first and pivot to query-side or custom-table advice.</dd>
+    </dl>
+    <details><summary>Agent prompt (copy-paste)</summary><pre>The table-optimization flow in `chat_agent` gives CRITICAL-ranked ALTER-style recommendations for read-only `information_schema` views (Langfuse trace 158ebabe13a33e60c57b91b8e1474e1d recommends removing Nullable/adding LowCardinality on information_schema.columns), while trace a2112b04f5ac10155a1d7744c76b89d2 correctly says the view is immutable. Add a check to the analysis prompt: when the target is in information_schema/system or is a VIEW, lead with "immutable system object", skip DDL recommendations, and offer query-side alternatives. Make behavior consistent across runs.</pre></details>
+  </div>
+
+  <div class="finding">
+    <div class="finding-head"><span class="badge P2">P2</span><h3>8 · Evaluator run hygiene: duplicate + stale scoring</h3><span class="tag">Scores/Evals</span><span class="affected">93 / 104 scored traces</span></div>
+    <dl>
+      <dt>Description</dt><dd><code>Valid Plan Schema</code> scored the same trace up to 7×, and the Jul 10 run scored traces from <strong>Jun 10</strong> (score env tagged <code>default</code> while target traces are <code>staging</code>). Aggregates/dashboards over this score double-count and mix month-old data into “current” views.</dd>
+      <dt>Root cause</dt><dd>The eval job is a batch backfill re-run over an overlapping trace set without idempotency (no dedup on traceId+observation), and its SDK client doesn’t set the environment.</dd>
+      <dt>Examples</dt><dd><a href="https://cloud.langfuse.com/project/cmli1jekq0bewad07cu6o92zg/traces/9ec8b6f510aede401c7d4ac13a550488">9ec8b6f5</a> (Jun 10 trace, 2 Jul 10 scores)</dd>
+      <dt>Proposed fix</dt><dd>Code: make the scoring job idempotent (deterministic score id or skip-if-scored), scope it to a time window, and set <code>environment</code> to match the trace.</dd>
+    </dl>
+    <details><summary>Agent prompt (copy-paste)</summary><pre>The batch job writing the "Valid Plan Schema" score to Langfuse re-scores the same traces (up to 7 scores on one trace; 258 scores across only 104 traces) and its Jul 10 run scored Jun 10 traces; scores carry environment=default while target traces are environment=staging (example trace 9ec8b6f510aede401c7d4ac13a550488). Make the job idempotent — check for an existing score by name+traceId (or use a deterministic score ID) before writing — restrict runs to a recency window, and pass the trace's environment when creating scores.</pre></details>
+  </div>
+
+  <div class="finding">
+    <div class="finding-head"><span class="badge P3">P3</span><h3>9 · JSON-only outputs wrapped in code fences</h3><span class="tag">Output quality/Safety</span><span class="affected">7 / 8 sampled JSON-contract outputs</span></div>
+    <dl>
+      <dt>Description</dt><dd><code>saved_query_title_suggestion</code>, <code>query_construction</code>, <code>chart_config_sql_console</code> prompts demand “only valid JSON, no additional text”, but the model returns <code>```json</code> fenced blocks. Positive user feedback suggests the client strips fences today, but any strict <code>JSON.parse</code> path breaks.</dd>
+      <dt>Root cause</dt><dd>Instruction phrasing doesn’t forbid markdown fences and there’s no structured-output enforcement.</dd>
+      <dt>Examples</dt><dd><a href="https://cloud.langfuse.com/project/cmli1jekq0bewad07cu6o92zg/traces/ccbdc478b95efd9cc209ce2657e6d779">ccbdc478</a></dd>
+      <dt>Proposed fix</dt><dd>Prompt: “no markdown fences” + prefill <code>{</code>; or code: use structured output / tolerant fence-stripping parser everywhere these are parsed.</dd>
+    </dl>
+    <details><summary>Agent prompt (copy-paste)</summary><pre>Several JSON-contract surfaces (saved_query_title_suggestion, query_construction, chart_config_sql_console) instruct "Return only valid JSON" but the model wraps output in ```json fences (e.g. Langfuse trace ccbdc478b95efd9cc209ce2657e6d779). Confirm every consumer strips fences before JSON.parse; then either enforce structured output (tool/JSON mode) or add "Do not wrap the JSON in markdown code fences" and an assistant prefill of `{` to these prompts.</pre></details>
+  </div>
+
+  <div class="finding">
+    <div class="finding-head"><span class="badge P3">P3</span><h3>10 · Instrumentation hygiene gaps</h3><span class="tag">Coverage</span><span class="affected">132 / 132 (trace I/O); 64 default-env gens ($0 cost)</span></div>
+    <dl>
+      <dt>Description</dt><dd>(a) All staging traces have <strong>null trace-level input/output</strong> — nothing searchable in the traces list UI; this triage required per-trace observation pulls. (b) No <code>release</code>/<code>version</code> on any trace and no <code>promptName</code> linkage on any generation — can’t segment regressions by deploy or prompt version. (c) <code>default</code>-env Bedrock generations (<code>us/eu.anthropic.claude-opus-4-7</code>) report usage but <strong>$0 cost</strong> — model price mapping missing.</dd>
+      <dt>Root cause</dt><dd>Root spans never set trace input/output; SDK release/prompt-linking features unused; Bedrock Opus 4.7 model name not matched to a price definition.</dd>
+      <dt>Examples</dt><dd><a href="https://cloud.langfuse.com/project/cmli1jekq0bewad07cu6o92zg/traces/ccbdc478b95efd9cc209ce2657e6d779">ccbdc478</a></dd>
+      <dt>Proposed fix</dt><dd>Instrumentation: set trace input/output on root span; pass <code>release</code> from deploy env var; link prompts via prompt management; add a model price mapping for <code>*.anthropic.claude-opus-4-7</code>.</dd>
+    </dl>
+    <details><summary>Agent prompt (copy-paste)</summary><pre>In this Langfuse project, staging traces have null trace-level input/output, no release/version metadata, and generations have no promptName linkage; default-env Bedrock generations (us/eu.anthropic.claude-opus-4-7) show token usage but $0 cost. In the tracing setup: (1) set trace-level input (user message) and output (final answer) on the root observation, (2) pass release from the deployment's git SHA/env var, (3) fetch prompts via Langfuse prompt management so promptName/version attach to generations, (4) add a model definition/price mapping matching `us.anthropic.claude-opus-4-7` and `eu.anthropic.claude-opus-4-7`.</pre></details>
+  </div>
+
+  <h2>Verified non-issues</h2>
+  <ul class="clean">
+    <li><strong>SQL execution:</strong> 71 <code>ExecuteSQLTool</code> calls, zero content-level failures.</li>
+    <li><strong>Docs-search retrieval relevance:</strong> sampled outputs matched queries, grounded in results with source links.</li>
+    <li><strong>Adversarial/garbage input handling:</strong> 9 gibberish messages + lorem ipsum all got graceful, on-brand redirects (no crash, no hijack). The one “your message may have been cut short” reply initially looked like a misfire but was <strong>correct</strong> — the user really sent a stray <code>h</code>.</li>
+    <li><strong>Truncation:</strong> no length-stop/max-token cutoffs observed on outputs.</li>
+    <li><strong>User feedback polarity:</strong> all 7 feedback scores positive; no thumbs-down in window.</li>
+    <li><strong>Utility surfaces</strong> (title suggestion, chart config): fast (2–4s), cheap, sane outputs matching instructions (modulo fences, finding 9).</li>
+    <li><strong>Language mismatch, PII/secret leakage in sampled content:</strong> none observed (sampled, not exhaustive).</li>
+    <li><strong>Evaluator wiring:</strong> <code>Valid Plan Schema</code> comments show it sees real plans — the 56% False rate is a genuine product signal, not a mis-wired judge.</li>
+  </ul>
+
+  <h2>Suggested order of action</h2>
+  <ol>
+    <li><strong>#1 schema-block token budget</strong> — user-facing hard failures, clear root cause, contained fix.</li>
+    <li><strong>#3 schema-advisor internal errors</strong> — reliability bug in a flagship flow, currently mostly silent.</li>
+    <li><strong>#2 + #6 together</strong> — plan-schema constraints + tool memoization; these two also buy most of the latency win in #4.</li>
+    <li><strong>#5 evaluator coverage</strong> — before iterating on quality, make it measurable.</li>
+    <li>Hygiene batch: #8, #9, #10.</li>
+  </ol>
+
+  <h2>Open questions / not covered</h2>
+  <ul>
+    <li>Is the <code>default</code> env (adversarial-agent / planner-agent / deployment / ChatBedrockConverse, 119 traces) a deliberate dev harness? It was swept only lightly; its $0 cost tracking is finding 10c.</li>
+    <li>Faithfulness of chat answers to actual table stats wasn’t verifiable without ground truth — an evaluator from finding 5 would cover it.</li>
+    <li>All rates are conditioned on scripted staging traffic; production distributions (real users, real schemas) may shift every number, especially #1’s 11%.</li>
+    <li>Score history before Jul 4 wasn’t pulled, so score-regression-over-time wasn’t evaluated.</li>
+  </ul>
+
+  <footer>Generated 2026-07-13 · window 2026-07-04 → 2026-07-13 · 252 traces / 2,654 observations / 265 scores examined · Langfuse project cmli1jekq0bewad07cu6o92zg</footer>
+</main>
+</body>
+</html>
