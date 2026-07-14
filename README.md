@@ -56,6 +56,7 @@ Once installed, the agent will automatically use these skills when relevant — 
 - Setting up Langfuse tracing in a project
 - Setting up CI/CD experiment gates with `langfuse/experiment-action`
 - Auditing existing instrumentation
+- Preparing an application and Langfuse project for the v4 platform migration
 - Migrating prompts to Langfuse prompt management
 - Querying traces, prompts, or datasets via the API
 - Looking up Langfuse docs, SDK usage, or integration guides
