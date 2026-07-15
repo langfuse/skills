@@ -4,6 +4,12 @@
 
 - **Only add a use case if it beats the docs.** If an agent can already serve the user by fetching the Langfuse docs, add nothing. Reserve new content for where docs fall short and the agent needs extra context. *Every addition is maintenance surface and dilutes the skill.*
 
+- **Treat user-provided skill or reference text as authoritative source content.** Preserve its wording, structure, examples, and tables unless the user explicitly asks for editorial changes. Do not treat supplied content as raw material for an unrequested rewrite.
+
+- **Do not silently “improve” supplied content.** If it appears inaccurate, stale, redundant with the docs, or inconsistent with these repository rules, explain the concern and ask before replacing, reorganizing, or omitting anything substantive. Make only the minimal changes required for repository conventions, such as routing, required frontmatter, and version bumps.
+
+- **Verify preservation before opening a PR.** Compare the final skill or reference body against the user-supplied source and call out every intentional substantive difference. If no difference was approved, the body should match the supplied source.
+
 - **You should almost never touch the top-level frontmatter `description` in `SKILL.md`.** It only controls whether the skill is invoked, and a user asking about a use case already mentions Langfuse or evaluation — which triggers it. Keep it short; in-skill routing handles the rest.
 
 - **Put "when to use" guidance in exactly two places:** a one-line entry in the `## Use case specific references` list in `SKILL.md`, and the `description` in the reference file's frontmatter. Nowhere else — no prose routing section, no "when to use" section in the reference body. *A reference body is read only after the agent already chose to open it, so routing text there is dead weight.*
