@@ -2,6 +2,8 @@
 
 ## Adding or Improving a Skill Use Case
 
+FOLLOW THESE INSTRUCTIONS RELIGIOUSLY. After every edit you make, come back to these principles and judge critically whether you adhered to them. Fix your edits if not.
+
 - **Only add a use case if it beats the docs.** If an agent can already serve the user by fetching the Langfuse docs, add nothing. Reserve new content for where docs fall short and the agent needs extra context. *Every addition is maintenance surface and dilutes the skill.*
 
 - **You should almost never touch the top-level frontmatter `description` in `SKILL.md`.** It only controls whether the skill is invoked, and a user asking about a use case already mentions Langfuse or evaluation — which triggers it. Keep it short; in-skill routing handles the rest.
@@ -14,7 +16,7 @@
   - `LANGFUSE_PROJECT_SCRIPT` — runs SDK code that connects to the Langfuse backend (needs network)
   - `GITHUB` — operates on GitHub via the `gh` CLI
 
-- **In the reference file, less is more.** Add only what's useful or what an agent couldn't infer on its own.
+- **In the reference file, less is more.** Add only what's useful or what an agent couldn't infer on its own. Cut anything the agent will already have in context when it needs it.
 
 - **Never commit code.** Link to the relevant Langfuse docs page so the agent fetches current code; use pseudo-code only for logic-specific bits. *Committed code goes stale.*
 
