@@ -38,9 +38,6 @@ Follow these principles for ALL Langfuse work:
 - judge calibration (LLM-as-a-Judge reliability, simple accuracy checks, advanced split-based validation, confusion matrices, and metric ingestion): references/judge-calibration.md
 - systematic error analysis — reading traces, building failure taxonomy, deciding what to fix: references/error-analysis.md
 - setting up CI/CD experiment gates with `langfuse/experiment-action`: references/ci-cd.md
-- choosing the right observation type beyond generation/tool (agent, chain, retriever, evaluator, embedding, guardrail, event) and typing retrieval calls as `retriever`: references/observation-types.md
-- trace nesting (a tool call under the generation that triggered it), the parent-id hazard that silently flattens observations to the trace root, and making tool-call-bearing generations render as chat instead of raw JSON: references/trace-structure.md
-- tracing systems that dispatch subagents (Claude Code, Codex, orchestrator/worker architectures): the `agent` type, subagent nesting/naming, and the Agent Graph: references/multi-agent-tracing.md
 - submitting feedback about this skill: references/skill-feedback.md
 
 

@@ -35,7 +35,7 @@ Every trace should have these fundamentals:
 | Token usage               | Are input/output tokens tracked?                                                         | Enables automatic cost calculation                     |
 | Good trace names          | Are names descriptive? (`chat-response`, not `trace-1`)                                  | Makes traces findable and filterable                   |
 | Span hierarchy            | Are multi-step operations nested properly?                                               | Shows which step is slow or failing                    |
-| Correct observation types | Are generations marked as generations?                                                   | Enables model-specific analytics                       |
+| Correct observation types | Are generations marked as generations, and is each other call given its most specific type (`retriever` for a lookup, `agent` for a subagent, etc.) rather than a generic `tool`/`span`? See the [observation types docs](https://langfuse.com/docs/observability/features/observation-types). | Enables model-specific analytics and drives the Agent Graph |
 | Sensitive data masked     | Is PII/confidential data excluded or masked?                                             | Prevents data leakage                                  |
 | Trace input/output        | Does the trace capture meaningful input/output? Is input explicitly set to show only relevant data (e.g., user message), not all function args? | Makes traces readable in the UI and avoids leaking sensitive args |
 
@@ -123,6 +123,15 @@ making it much easier to debug multi-turn interactions.
 
 Learn more: https://langfuse.com/docs/tracing-features/sessions"
 ```
+
+## Multi-agent systems (subagent dispatch)
+
+When one agent's execution dispatches OTHER agents (coding agents like Claude Code/Codex, research agents, orchestrator/worker architectures), a few extra points on top of the baseline:
+
+- **Type a subagent's own execution as `agent`, not `tool`/`span`.** A bare tool/span for a dispatch hides all of the subagent's internal structure; `agent` lets it show up as its own node in the [Agent Graph](https://langfuse.com/docs/observability/features/agent-graphs).
+- **Don't emit duplicate dispatch + execution nodes.** Emitting both a `tool`-typed "dispatch" span and a separate `agent`-typed observation for the same subagent, as siblings, double-represents one event. Emit only the `agent` observation when you have the subagent's actual execution; keep a bare tool span only as a fallback when you have no visibility into what the subagent did.
+- **Nest recursively.** Nest the subagent's `agent` observation under the generation that decided to dispatch it, and let the subagent's own tool calls and further dispatches follow the same parent-child rule.
+- **Name subagents distinctly.** Frameworks often default every subagent to the same generic role name, making them indistinguishable in the tree and graph (nodes key on name). Derive a specific name from the subagent's actual task/role when the framework doesn't provide one.
 
 ## Common Mistakes
 
