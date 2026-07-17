@@ -130,7 +130,7 @@ When one agent's execution dispatches OTHER agents (coding agents like Claude Co
 
 - **Type a subagent's own execution as `agent`, not `tool`/`span`.** A bare tool/span for a dispatch hides all of the subagent's internal structure; `agent` lets it show up as its own node in the [Agent Graph](https://langfuse.com/docs/observability/features/agent-graphs).
 - **Don't emit duplicate dispatch + execution nodes.** Emitting both a `tool`-typed "dispatch" span and a separate `agent`-typed observation for the same subagent, as siblings, double-represents one event. Emit only the `agent` observation when you have the subagent's actual execution; keep a bare tool span only as a fallback when you have no visibility into what the subagent did.
-- **Nest recursively.** Nest the subagent's `agent` observation under the generation that decided to dispatch it, and let the subagent's own tool calls and further dispatches follow the same parent-child rule.
+- **Nest recursively.** Nest the subagent's `agent` observation under the `agent` or `span` that orchestrates the dispatch, as a sibling of the `generation` that requested it. Within the subagent, put its generations, tool calls, and nested subagent executions under that subagent's `agent` observation; each tool or nested subagent is a sibling of the generation that requested it, not a child of that generation.
 - **Name subagents distinctly.** Frameworks often default every subagent to the same generic role name, making them indistinguishable in the tree and graph (nodes key on name). Derive a specific name from the subagent's actual task/role when the framework doesn't provide one.
 
 ## Common Mistakes
