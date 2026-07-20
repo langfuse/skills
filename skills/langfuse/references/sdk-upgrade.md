@@ -29,7 +29,7 @@ Use the exact minimum versions and migration requirements in the current docs. P
 - Find every Langfuse SDK, integration package, direct OpenTelemetry exporter, initialization site, instrumentation wrapper, trace-update call, and direct Langfuse API call across the whole repository.
 - Record the installed and resolved versions for every application/package. Include lockfiles, workspace overrides, and peer dependencies.
 - Identify tests, examples, workers, and scripts that initialize Langfuse independently; do not assume the main application is the only ingestion path.
-- If this is part of the v4 platform migration, also follow `references/v4-project-migration.md` and use its active-evaluator migration contract to drive the instrumentation changes below.
+- If this is part of the v4 platform migration, also follow `references/v4-project-migration.md`; do not infer evaluator requirements during a standalone SDK upgrade.
 
 ### 2. Upgrade the ingestion path
 
@@ -38,29 +38,20 @@ Use the exact minimum versions and migration requirements in the current docs. P
 - Preserve deliberate custom span-export behavior. Verify whether the application relies on non-LLM spans before accepting a new default span filter.
 - Replace removed or deprecated tracing APIs using the current guide. Do not retain deprecated trace input/output setters unless an active legacy trace evaluator still needs them during a staged cutover.
 - Keep correlating attributes inside the documented propagation scope so the target observations receive the attributes used by filters and analytics.
+- For a v4 platform migration only, implement the code handoff from the active-evaluator migration contract in `references/v4-project-migration.md`: put the required evaluation context on its selected target observation and propagate the attributes used by its filters. Keep evaluator selection, mapping, and cutover decisions in the project workflow.
 
-### 3. Make observation evaluators self-contained
-
-For every active legacy evaluator being replaced:
-
-- Choose one stable target observation by name/type and confirm it exists in representative traces.
-- Put the complete evaluation payload on that observation. Observation evaluators can map only that observation's input, output, metadata, and tool calls; they do not read sibling or child observations.
-- When judging an end-to-end application or agent invocation, use a root observation that records the overall input/output and any additional context the judge requires.
-- Ensure trace-level attributes used by evaluator filters are propagated onto the target observation.
-- Keep the payload intentional and minimal. Do not copy an entire trace into metadata when the evaluator needs only a small subset.
-
-### 4. Replace deprecated API usage
+### 3. Replace deprecated API usage
 
 - Search both SDK resource namespaces and raw HTTP paths; include generated clients, fixtures, shell scripts, dashboards, and data pipelines.
 - Use the current SDK migration guide and API docs to replace transitional aliases and legacy Observations, Scores, or Metrics routes.
 - Check deployment availability before changing a self-hosted client to an endpoint that is Cloud-only or not yet available in that deployment.
 - Update pagination, selected field groups, filters, and response parsing together with the endpoint. A path-only replacement is not a complete migration.
 
-### 5. Verify
+### 4. Verify
 
 - Run the repository's focused formatting, type, lint, and test checks.
 - Exercise every changed ingestion path with representative application behavior. Confirm observation hierarchy, target observation input/output/context, propagated attributes, and absence of unexpected dropped spans.
-- If Langfuse project access is available, inspect the resulting observations and verify that each new evaluator rule matches the intended observation and can populate every variable.
+- For a v4 platform migration, inspect the resulting observations and verify the project workflow's evaluator contract when project access is available.
 - Do not claim live verification when credentials or a runnable environment are unavailable. Report the exact remaining check.
 
 ## Completion report
@@ -69,6 +60,6 @@ Report:
 
 - exact SDK/package versions before and after
 - instrumentation and API call sites changed
-- active legacy evaluators that still temporarily require trace input/output
+- for a v4 platform migration, evaluator-contract code changes and any legacy evaluator that still temporarily requires trace input/output
 - verification run and observed result
 - project or UI actions that remain
