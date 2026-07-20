@@ -29,7 +29,7 @@ Use the exact minimum versions and migration requirements in the current docs. P
 - Find every Langfuse SDK, integration package, direct OpenTelemetry exporter, initialization site, instrumentation wrapper, trace-update call, and direct Langfuse API call across the whole repository.
 - Record the installed and resolved versions for every application/package. Include lockfiles, workspace overrides, and peer dependencies.
 - Identify tests, examples, workers, and scripts that initialize Langfuse independently; do not assume the main application is the only ingestion path.
-- If this is part of the v4 platform migration, also follow `references/v4-project-migration.md` and use its active-evaluator migration contract to drive the instrumentation changes below.
+- If this is part of the v4 platform migration, also follow `references/v4-project-migration.md`. When its handoff includes active legacy trace-level evaluators, follow `references/trace-evaluator-upgrade.md` for the code changes.
 
 ### 2. Upgrade the ingestion path
 
@@ -39,15 +39,11 @@ Use the exact minimum versions and migration requirements in the current docs. P
 - Replace removed or deprecated tracing APIs using the current guide. Do not retain deprecated trace input/output setters unless an active legacy trace evaluator still needs them during a staged cutover.
 - Keep correlating attributes inside the documented propagation scope so the target observations receive the attributes used by filters and analytics.
 
-### 3. Make observation evaluators self-contained
+### 3. Upgrade trace-level evaluators
 
-For every active legacy evaluator being replaced:
+If the project upgrade workflow includes active legacy trace-level evaluators, follow `references/trace-evaluator-upgrade.md`. It owns target-observation selection, filter and variable translation, instrumentation changes, score-cardinality checks, and the project-side handoff.
 
-- Choose one stable target observation by name/type and confirm it exists in representative traces.
-- Put the complete evaluation payload on that observation. Observation evaluators can map only that observation's input, output, metadata, and tool calls; they do not read sibling or child observations.
-- When judging an end-to-end application or agent invocation, use a root observation that records the overall input/output and any additional context the judge requires.
-- Ensure trace-level attributes used by evaluator filters are propagated onto the target observation.
-- Keep the payload intentional and minimal. Do not copy an entire trace into metadata when the evaluator needs only a small subset.
+Do not consider the evaluator code handoff complete until every evaluator variable and retained filter can be satisfied by one stable observation. Do not copy an entire trace into metadata to avoid selecting the correct observation.
 
 ### 4. Replace deprecated API usage
 

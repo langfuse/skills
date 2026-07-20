@@ -8,7 +8,7 @@ metadata:
 
 # Langfuse v4 project migration
 
-Use this as the canonical project-side workflow. A coding agent should combine its output with the SDK upgrade workflow; the Langfuse in-app agent can execute the project steps and produce the same code handoff.
+Use this as the canonical project-side workflow. A coding agent should combine its output with the SDK upgrade and trace-level evaluator upgrade workflows; the Langfuse in-app agent can execute the project steps and produce the same code handoff.
 
 ## Sources of truth
 
@@ -52,6 +52,7 @@ For every active legacy rule, record:
 - Use observation sources for live rules. Experiment rules may additionally use expected output and experiment-item metadata; confirm the current schema before writing.
 - Observation evaluators see only the matched observation. If the evaluator needs an end-to-end request, response, or summary assembled from multiple steps, target a root observation and require the application to write that context onto it.
 - Rebuild filters and mappings deliberately. Do not assume the UI upgrade wizard semantically preserves a legacy rule.
+- When a trace-level rule requires code changes, make the handoff self-contained: include the full legacy filters and mappings, representative observation names/types and payload shapes, the preferred target observation, and each missing field or propagated attribute. The coding agent follows `references/trace-evaluator-upgrade.md`; do not ask it to rediscover project configuration from code.
 
 ## 3. Create and cut over successor rules
 
