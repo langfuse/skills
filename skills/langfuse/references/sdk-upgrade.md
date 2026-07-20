@@ -29,7 +29,7 @@ Use the exact minimum versions and migration requirements in the current docs. P
 - Find every Langfuse SDK, integration package, direct OpenTelemetry exporter, initialization site, instrumentation wrapper, trace-update call, and direct Langfuse API call across the whole repository.
 - Record the installed and resolved versions for every application/package. Include lockfiles, workspace overrides, and peer dependencies.
 - Identify tests, examples, workers, and scripts that initialize Langfuse independently; do not assume the main application is the only ingestion path.
-- If this is part of the v4 platform migration, also follow `references/v4-project-migration.md`. When its handoff includes active legacy trace-level evaluators, follow `references/trace-evaluator-upgrade.md` for the code changes.
+- If this is part of the v4 platform migration, also follow `references/v4-project-migration.md`. When its handoff includes active legacy trace-level evaluators, follow `references/trace-evaluator-upgrade.md` for the code changes. Do not infer evaluator requirements during a standalone SDK upgrade.
 
 ### 2. Upgrade the ingestion path
 
@@ -65,6 +65,6 @@ Report:
 
 - exact SDK/package versions before and after
 - instrumentation and API call sites changed
-- active legacy evaluators that still temporarily require trace input/output
+- for a v4 platform migration, evaluator-contract code changes and any legacy evaluator that still temporarily requires trace input/output
 - verification run and observed result
 - project or UI actions that remain

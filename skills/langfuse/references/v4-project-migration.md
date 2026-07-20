@@ -8,13 +8,16 @@ metadata:
 
 # Langfuse v4 project migration
 
-Use this as the canonical project-side workflow. A coding agent should combine its output with the SDK upgrade and trace-level evaluator upgrade workflows; the Langfuse in-app agent can execute the project steps and produce the same code handoff.
+Use this as the canonical v4 platform migration workflow. A coding agent should execute the SDK and code changes using the SDK and trace-level evaluator upgrade workflows; the Langfuse in-app agent can execute the project steps and produce the same code handoff.
 
 ## Sources of truth
 
 Fetch the applicable pages before taking action:
 
 - [Langfuse v4 overview](https://langfuse.com/docs/v4)
+- [Langfuse CLI](https://langfuse.com/docs/api-and-data-platform/features/cli)
+- [SDK upgrade workflow](https://raw.githubusercontent.com/langfuse/skills/main/skills/langfuse/references/sdk-upgrade.md)
+- [Trace-level evaluator upgrade workflow](https://raw.githubusercontent.com/langfuse/skills/main/skills/langfuse/references/trace-evaluator-upgrade.md)
 - [Evaluator migration guide](https://langfuse.com/faq/all/llm-as-a-judge-migration)
 - [Observation evaluator context](https://langfuse.com/docs/evaluation/evaluation-methods/llm-as-a-judge#observation-evaluator-context)
 - [Evaluators API](https://api.reference.langfuse.com/#tag/unstableevaluators)
@@ -26,7 +29,22 @@ Fetch the applicable pages before taking action:
 
 Discover the current API or tool schema before writes; the evaluator endpoints are unstable.
 
-## 1. Inventory active evaluation rules
+## 1. Set up project access
+
+- Prefer an available Langfuse project interface. Otherwise recommend the [Langfuse CLI](https://langfuse.com/docs/api-and-data-platform/features/cli) and run it directly with `npx langfuse-cli` or `bunx langfuse-cli`; a global installation is optional.
+- Ask the user to configure `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, and `LANGFUSE_BASE_URL` in their environment. Never ask them to paste secrets into the conversation or commit credentials.
+- Verify access and discover the current resources with `npx langfuse-cli api __schema`. Inspect each resource and action with `--help` before use, and request machine-readable output with `--json`.
+- Confirm the project and host before any read or write. If credentials or a project interface are unavailable, continue with the code migration and report project-side checks as blocked.
+
+## 2. Upgrade SDKs and instrumentation
+
+- For a coding agent with repository access, fetch and follow the [SDK upgrade workflow](https://raw.githubusercontent.com/langfuse/skills/main/skills/langfuse/references/sdk-upgrade.md) before declaring the platform migration ready.
+- Inventory every Langfuse SDK, integration package, direct OpenTelemetry exporter, initialization site, and lockfile across the repository. Upgrade each ingestion path to the latest stable release in the major required by the current v4 migration docs, unless the repository has a documented compatibility constraint.
+- Apply every applicable SDK migration step, update removed tracing APIs, and replace deprecated Observations, Scores, and Metrics API routes using the current docs. A dependency-only update is incomplete.
+- Use the evaluator migration contract below to consolidate all required evaluation input, output, metadata, tool calls, and propagated filter attributes onto the single target observation.
+- Verify the resolved versions and representative ingestion behavior. If the agent cannot access or edit the codebase, return an exact SDK and instrumentation handoff and keep this area blocked rather than marking it ready.
+
+## 3. Inventory active evaluation rules
 
 - Confirm the project, host, and whether it is Cloud or self-hosted.
 - Page through all available evaluators and evaluation rules. Inspect each referenced evaluator definition, not only its name.
@@ -34,7 +52,7 @@ Discover the current API or tool schema before writes; the evaluator endpoints a
 - Do not infer that the project has no legacy rules from the public list alone. Verify which targets the interface returns; if it omits legacy trace or dataset rules, use the UI check below.
 - Open the [Evaluators UI](https://cloud.langfuse.com/project/~/evals) and check for active rows marked **Legacy** whenever the interface cannot list those targets. In the in-app agent, redirect the user there. Treat this confirmation as required before declaring the project ready.
 
-## 2. Build an evaluator migration contract
+## 4. Build an evaluator migration contract
 
 For every active legacy rule, record:
 
@@ -54,7 +72,7 @@ For every active legacy rule, record:
 - Rebuild filters and mappings deliberately. Do not assume the UI upgrade wizard semantically preserves a legacy rule.
 - When a trace-level rule requires code changes, make the handoff self-contained: include the full legacy filters and mappings, representative observation names/types and payload shapes, the preferred target observation, and each missing field or propagated attribute. The coding agent follows `references/trace-evaluator-upgrade.md`; do not ask it to rediscover project configuration from code.
 
-## 3. Create and cut over successor rules
+## 5. Create and cut over successor rules
 
 - Reuse the existing evaluator definition when it remains valid. Create a new evaluator version only when the prompt, output definition, or variable contract must change.
 - Update an existing successor rule instead of creating a duplicate with the same name.
@@ -66,7 +84,7 @@ For every active legacy rule, record:
 
 If the available project interface cannot read or update a legacy rule, provide the exact [Evaluators UI](https://cloud.langfuse.com/project/~/evals) action and retain it as an explicit blocker rather than claiming completion.
 
-## 4. Migrate exports
+## 6. Migrate exports
 
 - Inventory configured Blob Storage, Mixpanel, PostHog, and other export integrations in **Project Settings > Integrations**.
 - For Blob Storage, inspect or update the integration through the API when organization-scoped credentials and the current schema are available. Otherwise direct the user to [Blob Storage settings](https://cloud.langfuse.com/project/~/settings/integrations/blobstorage).
@@ -75,11 +93,12 @@ If the available project interface cannot read or update a legacy rule, provide 
 - Do not overwrite bucket credentials, schedules, prefixes, file formats, field groups, or integration secrets while changing the export source.
 - Treat the downstream consumer update as part of the migration. A source toggle without validating queries, joins, dashboards, and field parsing is incomplete.
 
-## 5. Report readiness
+## 7. Report readiness
 
 Return one row per area with `ready`, `changed`, `manual action`, or `blocked`:
 
-- SDK and instrumentation code handoff
+- CLI or project-interface setup
+- SDK versions and instrumentation migration, including any code handoff
 - active trace-to-observation evaluator migrations
 - active dataset-to-experiment evaluator migrations
 - deprecated API code handoff
