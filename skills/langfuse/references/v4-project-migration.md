@@ -16,7 +16,7 @@ Fetch the applicable pages before taking action:
 
 - [Langfuse v4 overview](https://langfuse.com/docs/v4)
 - [Langfuse CLI](https://langfuse.com/docs/api-and-data-platform/features/cli)
-- [SDK upgrade workflow](https://raw.githubusercontent.com/langfuse/skills/main/skills/langfuse/references/sdk-upgrade.md)
+- [SDK upgrade paths](https://langfuse.com/docs/observability/sdk/upgrade-path)
 - [Evaluator migration guide](https://langfuse.com/faq/all/llm-as-a-judge-migration)
 - [Observation evaluator context](https://langfuse.com/docs/evaluation/evaluation-methods/llm-as-a-judge#observation-evaluator-context)
 - [Evaluators API](https://api.reference.langfuse.com/#tag/unstableevaluators)
@@ -37,7 +37,7 @@ Discover the current API or tool schema before writes; the evaluator endpoints a
 
 ## 2. Upgrade SDKs and instrumentation
 
-- For a coding agent with repository access, fetch and follow the [SDK upgrade workflow](https://raw.githubusercontent.com/langfuse/skills/main/skills/langfuse/references/sdk-upgrade.md) before declaring the platform migration ready.
+- For a coding agent with repository access, execute the repository-wide SDK upgrade in the steps below — using the version-specific breaking-changes guide under [SDK upgrade paths](https://langfuse.com/docs/observability/sdk/upgrade-path) as the docs reference — before declaring the platform migration ready.
 - Inventory every Langfuse SDK, integration package, direct OpenTelemetry exporter, initialization site, and lockfile across the repository. Upgrade each ingestion path to the latest stable release in the major required by the current v4 migration docs, unless the repository has a documented compatibility constraint.
 - Apply every applicable SDK migration step, update removed tracing APIs, and replace deprecated Observations, Scores, and Metrics API routes using the current docs. A dependency-only update is incomplete.
 - Use the evaluator migration contract below to consolidate all required evaluation input, output, metadata, tool calls, and propagated filter attributes onto the single target observation.

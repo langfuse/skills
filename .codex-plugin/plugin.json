@@ -33,7 +33,7 @@
       "Set up Langfuse tracing in this app.",
       "Inspect Langfuse traces for recent failures.",
       "Migrate prompts into Langfuse.",
-      "Prepare this application and its Langfuse project for the v4 platform migration. Fetch and follow https://raw.githubusercontent.com/langfuse/skills/main/skills/langfuse/references/v4-project-migration.md and https://raw.githubusercontent.com/langfuse/skills/main/skills/langfuse/references/sdk-upgrade.md. Implement and validate applicable code and project changes, then report UI-only or blocked steps."
+      "Prepare this application and its Langfuse project for the v4 platform migration."
     ],
     "websiteURL": "https://langfuse.com",
     "privacyPolicyURL": "https://langfuse.com/privacy",
