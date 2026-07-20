@@ -84,12 +84,18 @@ If the available project interface cannot read or update a legacy rule, provide 
 
 ## 6. Migrate exports
 
+Changing the export source is a breaking change for every downstream consumer, not a settings toggle. Before proposing or making any source change, explain the concrete consequences for each configured integration and obtain the user's explicit confirmation that downstream owners are prepared.
+
 - Inventory configured Blob Storage, Mixpanel, PostHog, and other export integrations in **Project Settings > Integrations**.
+- Spell out what the source change does per integration before touching it:
+  - **Blob Storage:** the exported tables and file paths change. Legacy writes `traces` and `observations` files; enriched writes `observations_v2` under a new directory prefix, and the separate `traces` file is no longer produced in enriched-only mode. Column sets differ per the [export field reference](https://langfuse.com/docs/api-and-data-platform/features/blob-storage-export-fields#enriched-vs-legacy-differences), so loaders, warehouse table schemas, trace-observation joins, and dashboards across the full data pipeline must be updated — not just the integration setting.
+  - **Mixpanel and PostHog:** the source determines which events and properties are sent, so dashboards, transformations, funnels, and alerts built on the legacy events in those systems are affected and must be revalidated.
+  - **Dual mode** (`legacy and enriched observations`) creates duplicate records by design. Warn that counts, costs, and metrics in downstream systems will be inflated until consumers deduplicate or the transition completes.
 - For Blob Storage, inspect or update the integration through the API when organization-scoped credentials and the current schema are available. Otherwise direct the user to [Blob Storage settings](https://cloud.langfuse.com/project/~/settings/integrations/blobstorage).
 - For Mixpanel and PostHog, use the UI and the linked migration guides. Do not claim an API migration path that the current interface does not provide.
-- Prefer the documented dual-export transition: enable legacy plus enriched observations, update and validate downstream consumers against the field reference, then switch to enriched observations only.
+- Follow the documented dual-export transition: enable legacy plus enriched observations, update and validate downstream consumers against the field reference, then switch to enriched observations only. Never switch a legacy integration directly to enriched-only while downstream consumers are unvalidated.
 - Do not overwrite bucket credentials, schedules, prefixes, file formats, field groups, or integration secrets while changing the export source.
-- Treat the downstream consumer update as part of the migration. A source toggle without validating queries, joins, dashboards, and field parsing is incomplete.
+- Treat the downstream consumer update as part of the migration. A source toggle without validating queries, joins, dashboards, and field parsing is incomplete; report this area as `manual action`, not `ready`, until the user confirms consumers handle the new schema.
 
 ## 7. Report readiness
 
