@@ -49,8 +49,8 @@ Discover the current API or tool schema before writes; the evaluator endpoints a
 - Confirm the project, host, and whether it is Cloud or self-hosted.
 - Page through all available evaluators and evaluation rules. Inspect each referenced evaluator definition, not only its name.
 - Migrate rules whose effective `status` is `active`. Report paused/inactive rules separately; do not reactivate or migrate them unless requested.
-- Do not infer that the project has no legacy rules from the public list alone. Verify which targets the interface returns; if it omits legacy trace or dataset rules, use the UI check below.
-- Open the [Evaluators UI](https://cloud.langfuse.com/project/~/evals) and check for active rows marked **Legacy** whenever the interface cannot list those targets. In the in-app agent, redirect the user there. Treat this confirmation as required before declaring the project ready.
+- Use unstable evaluation-rule `list` and `get` as the source of truth for legacy trace rules. If a bulk page fails, retry with `limit=1` and report unreadable entries as blockers.
+- The unstable reads may still omit legacy dataset rules. Open the [Evaluators UI](https://cloud.langfuse.com/project/~/evals) to check for active dataset rows marked **Legacy** before declaring the project ready.
 
 ## 4. Build an evaluator migration contract
 
