@@ -37,7 +37,7 @@ Discover the current unstable API schema before use. Use unstable evaluation-rul
 
 ## 2. Confirm v4 instrumentation
 
-The SDK upgrade should already have happened. Inspect the repository and a representative newly ingested trace to confirm the resolved SDK or OpenTelemetry path follows `references/sdk-upgrade.md`; do not infer readiness from a dependency declaration alone.
+The SDK upgrade should already have happened. Inspect the repository and a representative newly ingested trace to confirm the resolved SDK or OpenTelemetry path follows the applicable guide under [SDK upgrade paths](https://langfuse.com/docs/observability/sdk/upgrade-path); do not infer readiness from a dependency declaration alone.
 
 V4 SDK migration can change the tracing shape. By default, complete and verify the SDK upgrade before creating successor rules. Migrating against pre-upgrade data is possible but not recommended: link the user to the applicable SDK upgrade guide and proceed only after they explicitly confirm the selected observations, fields, and selectors will remain valid.
 

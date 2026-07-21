@@ -36,9 +36,8 @@ Follow these principles for ALL Langfuse work:
 - creating a prompt or changing any part of an existing prompt, including small edits and debugging/tuning: references/prompt-engineering.md
 - capturing user feedback (thumbs, ratings, implicit signals) as scores on traces: references/user-feedback.md
 - further tips on using the Langfuse CLI: references/cli.md
-- upgrading or migrating Langfuse SDKs to the latest version: references/sdk-upgrade.md
 - upgrading legacy trace-level evaluators and their application instrumentation to observation-level evaluators: references/trace-evaluator-upgrade.md
-- preparing an application and Langfuse project for the v4 platform migration: references/sdk-upgrade.md and references/v4-project-migration.md
+- preparing an application and Langfuse project for the v4 platform migration: references/v4-project-migration.md
 - judge calibration (LLM-as-a-Judge reliability, simple accuracy checks, advanced split-based validation, confusion matrices, and metric ingestion): references/judge-calibration.md
 - systematic error analysis — reading traces, building failure taxonomy, deciding what to fix: references/error-analysis.md
 - setting up CI/CD experiment gates with `langfuse/experiment-action`: references/ci-cd.md
