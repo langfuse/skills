@@ -84,18 +84,27 @@ If the available project interface cannot read or update a legacy rule, provide 
 
 ## 6. Migrate exports
 
-Changing the export source is a breaking change for every downstream consumer, not a settings toggle. Before proposing or making any source change, explain the concrete consequences for each configured integration and obtain the user's explicit confirmation that downstream owners are prepared.
+Switching an integration to enriched-only output is a breaking change for downstream consumers; enabling the dual source (legacy plus enriched observations) is additive and safe. Fetch the documented upgrade paths and follow them instead of restating export mechanics from memory:
+
+- [Blob Storage upgrade path](https://langfuse.com/docs/api-and-data-platform/features/export-to-blob-storage#upgrade-path) and the [enriched vs. legacy field differences](https://langfuse.com/docs/api-and-data-platform/features/blob-storage-export-fields#enriched-vs-legacy-differences)
+- [Mixpanel export migration](https://langfuse.com/integrations/analytics/mixpanel#export-source-fast-preview-langfuse-v4)
+- [PostHog export migration](https://langfuse.com/integrations/analytics/posthog#export-source-fast-preview-langfuse-v4)
+
+Key takeaways:
 
 - Inventory configured Blob Storage, Mixpanel, PostHog, and other export integrations in **Project Settings > Integrations**.
-- Spell out what the source change does per integration before touching it:
-  - **Blob Storage:** the exported tables and file paths change. Legacy writes `traces` and `observations` files; enriched writes `observations_v2` under a new directory prefix, and the separate `traces` file is no longer produced in enriched-only mode. Column sets differ per the [export field reference](https://langfuse.com/docs/api-and-data-platform/features/blob-storage-export-fields#enriched-vs-legacy-differences), so loaders, warehouse table schemas, trace-observation joins, and dashboards across the full data pipeline must be updated — not just the integration setting.
-  - **Mixpanel and PostHog:** the source determines which events and properties are sent, so dashboards, transformations, funnels, and alerts built on the legacy events in those systems are affected and must be revalidated.
-  - **Dual mode** (`legacy and enriched observations`) creates duplicate records by design. Warn that counts, costs, and metrics in downstream systems will be inflated until consumers deduplicate or the transition completes.
-- For Blob Storage, inspect or update the integration through the API when organization-scoped credentials and the current schema are available. Otherwise direct the user to [Blob Storage settings](https://cloud.langfuse.com/project/~/settings/integrations/blobstorage).
-- For Mixpanel and PostHog, use the UI and the linked migration guides. Do not claim an API migration path that the current interface does not provide.
-- Follow the documented dual-export transition: enable legacy plus enriched observations, update and validate downstream consumers against the field reference, then switch to enriched observations only. Never switch a legacy integration directly to enriched-only while downstream consumers are unvalidated.
-- Do not overwrite bucket credentials, schedules, prefixes, file formats, field groups, or integration secrets while changing the export source.
-- Treat the downstream consumer update as part of the migration. A source toggle without validating queries, joins, dashboards, and field parsing is incomplete; report this area as `manual action`, not `ready`, until the user confirms consumers handle the new schema.
+- Check eligibility first: many integrations can no longer select legacy sources (Langfuse Cloud date cutoffs; self-hosted deployments that completed the v4 migration — see the docs for the exact rules). An integration that already exports enriched observations only is complete by default.
+- Follow the documented dual-export transition per integration. Switching from legacy to legacy plus enriched observations is additive and needs no downstream sign-off — apply it directly. The switch from the dual source to enriched observations only stops the legacy output and requires the user's explicit confirmation that downstream owners are prepared. Never switch a legacy integration directly to enriched-only.
+- A source change applies to future exports only; already-exported history keeps the legacy shape and is not re-exported.
+- Change only the export source. Leave credentials, schedules, prefixes, file formats, field groups, and integration secrets untouched. Apply the change in the integration settings UI — for Blob Storage the documented public API (project-scoped keys) also works; Mixpanel and PostHog have no API migration path.
+
+Effects outside Langfuse — spell these out per configured integration before the enriched-only cutover:
+
+- **Blob Storage:** the exported tables, file paths, and column sets change (scores are unaffected). Warehouse loaders, table schemas, trace-observation joins, dashboards, and any storage-event automation keyed on the legacy file paths must be updated — the integration setting is the smallest part of the migration. After the switch the legacy directories receive no further files, so pipelines still watching them go silent without an error signal.
+- **Mixpanel and PostHog:** the source determines which events and properties are sent, so dashboards, transformations, funnels, and alerts built on the legacy events in those systems must be revalidated.
+- **Dual mode** exports the same data in both the legacy and the enriched shape by design. Downstream counts, costs, and metrics are inflated only where a consumer ingests both — for example a warehouse model loading both observation tables, or analytics queries matching both event sets. Keep each consumer on exactly one shape during the transition.
+- Because history is not re-exported, downstream consumers must either keep handling the legacy schema for historical data or the user must re-export history as documented.
+- Treat the downstream consumer update as part of the migration. Report this area as `manual action`, not `ready`, until the user confirms consumers handle the new schema.
 
 ## 7. Report readiness
 
