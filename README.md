@@ -39,7 +39,7 @@ ln -s /path/to/langfuse-skills/skills/langfuse /path/to/skills-directory/langfus
 
 ## Prerequisites
 
-You need a Langfuse account ([cloud](https://cloud.langfuse.com) or [self-hosted](https://langfuse.com/docs/deployment/self-host)) and API keys:
+You need a Langfuse account ([cloud](https://cloud.langfuse.com) or [self-hosted](https://langfuse.com/docs/deployment/self-host)) and API keys to get started:
 
 ```bash
 export LANGFUSE_PUBLIC_KEY=pk-lf-...
