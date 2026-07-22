@@ -23,8 +23,8 @@ Fetch the applicable pages before taking action:
 - [Evaluation Rules API](https://api.reference.langfuse.com/#tag/unstableevaluationrules)
 - [Blob storage export migration](https://langfuse.com/docs/api-and-data-platform/features/export-to-blob-storage#export-source-fast-preview)
 - [Export field reference](https://langfuse.com/docs/api-and-data-platform/features/blob-storage-export-fields#enriched-vs-legacy-differences)
-- [Mixpanel export migration](https://langfuse.com/integrations/analytics/mixpanel#export-source-fast-preview-langfuse-v4)
-- [PostHog export migration](https://langfuse.com/integrations/analytics/posthog#export-source-fast-preview-langfuse-v4)
+- [Mixpanel export migration](https://langfuse.com/integrations/analytics/mixpanel#migrate-export-source)
+- [PostHog export migration](https://langfuse.com/integrations/analytics/posthog#migrate-export-source)
 
 Discover the current API or tool schema before writes; the evaluator endpoints are unstable.
 
@@ -87,8 +87,8 @@ If the available project interface cannot read or update a legacy rule, provide 
 Switching an integration to enriched-only output is a breaking change for downstream consumers; enabling the dual source (legacy plus enriched observations) is additive and safe. Fetch the documented upgrade paths and follow them instead of restating export mechanics from memory:
 
 - [Blob Storage upgrade path](https://langfuse.com/docs/api-and-data-platform/features/export-to-blob-storage#upgrade-path) and the [enriched vs. legacy field differences](https://langfuse.com/docs/api-and-data-platform/features/blob-storage-export-fields#enriched-vs-legacy-differences)
-- [Mixpanel export migration](https://langfuse.com/integrations/analytics/mixpanel#export-source-fast-preview-langfuse-v4)
-- [PostHog export migration](https://langfuse.com/integrations/analytics/posthog#export-source-fast-preview-langfuse-v4)
+- [Mixpanel export migration](https://langfuse.com/integrations/analytics/mixpanel#migrate-export-source) and the [legacy vs. enriched event changes](https://langfuse.com/integrations/analytics/mixpanel#legacy-vs-enriched)
+- [PostHog export migration](https://langfuse.com/integrations/analytics/posthog#migrate-export-source) and the [legacy vs. enriched event changes](https://langfuse.com/integrations/analytics/posthog#legacy-vs-enriched)
 
 Key takeaways:
 
