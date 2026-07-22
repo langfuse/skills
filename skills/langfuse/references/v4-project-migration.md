@@ -93,14 +93,14 @@ Changing the export source is a breaking change for every downstream consumer, n
 Key takeaways:
 
 - Inventory configured Blob Storage, Mixpanel, PostHog, and other export integrations in **Project Settings > Integrations**.
-- Check eligibility first: Cloud projects created on or after 2026-05-20 already export enriched observations only and cannot select legacy sources — for them this step is complete by default.
+- Check eligibility first: many integrations can no longer select legacy sources (Langfuse Cloud date cutoffs; self-hosted deployments that completed the v4 migration — see the docs for the exact rules). An integration that already exports enriched observations only is complete by default.
 - Follow the documented dual-export transition per integration: switch to legacy plus enriched observations, validate downstream consumers, then switch to enriched observations only. Never switch a legacy integration directly to enriched-only while downstream consumers are unvalidated.
 - A source change applies to future exports only; already-exported history keeps the legacy shape and is not re-exported.
 - Change only the export source. Leave credentials, schedules, prefixes, file formats, field groups, and integration secrets untouched. Apply the change in the integration settings UI — for Blob Storage the documented public API (project-scoped keys) also works; Mixpanel and PostHog have no API migration path.
 
 Effects outside Langfuse — spell these out per configured integration and obtain the user's explicit confirmation that downstream owners are prepared before changing anything:
 
-- **Blob Storage:** the exported tables, file paths, and column sets change (scores are unaffected). Warehouse loaders, table schemas, trace-observation joins, dashboards, and any storage-event automation keyed on the legacy file paths must be updated — the integration setting is the smallest part of the migration.
+- **Blob Storage:** the exported tables, file paths, and column sets change (scores are unaffected). Warehouse loaders, table schemas, trace-observation joins, dashboards, and any storage-event automation keyed on the legacy file paths must be updated — the integration setting is the smallest part of the migration. After the switch the legacy directories receive no further files, so pipelines still watching them go silent without an error signal.
 - **Mixpanel and PostHog:** the source determines which events and properties are sent, so dashboards, transformations, funnels, and alerts built on the legacy events in those systems must be revalidated.
 - **Dual mode** creates duplicate records by design: counts, costs, and metrics in downstream systems are inflated until consumers deduplicate or the transition completes.
 - Because history is not re-exported, downstream consumers must either keep handling the legacy schema for historical data or the user must re-export history as documented.
