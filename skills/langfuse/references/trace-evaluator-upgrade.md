@@ -34,6 +34,7 @@ Discover the current unstable API schema before use. Use unstable evaluation-rul
 - Record status, block reason, filters, variable mappings and JSONPaths, sampling, delay, time scope, evaluator definition, and score name.
 - Migrate only trace-target rules in this section. Dataset-target rules follow the short migration below; do not include observation, experiment, or event rules in this workflow.
 - Classify trace rules as active, inactive, or blocked/paused before asking which ones to retain. Offer to delete blocked rules the user no longer needs. Require approval for deletion; if the unstable API cannot mutate legacy trace rules, give the exact UI action instead.
+- Separate rules by time scope before planning a migration. Deactivate or delete rules that run only on historical data (`EXISTING` without `NEW`); migrate only rules that depend on new/live data. Require approval before deleting any rule.
 - Show the complete inventory and get one consolidated decision about retained and deleted rules. Do not let discarded rules drive code changes.
 
 ## Dataset-item evaluator migration
