@@ -1,6 +1,6 @@
 ---
 name: langfuse-v4-project-migration
-description: Prepare a Langfuse project for the v4 platform by inventorying active evaluation rules, migrating legacy trace and dataset evaluators to observation and experiment targets, and moving exports to the enriched observation schema.
+description: Prepare a Langfuse project for the v4 platform by migrating deprecated API calls to their replacement endpoints, inventorying active evaluation rules, migrating legacy trace and dataset evaluators to observation and experiment targets, and moving exports to the enriched observation schema.
 metadata:
   required_access:
     - LANGFUSE_PROJECT_INTERFACE
@@ -17,6 +17,8 @@ Fetch the applicable pages before taking action:
 - [Langfuse v4 overview](https://langfuse.com/docs/v4)
 - [Langfuse CLI](https://langfuse.com/docs/api-and-data-platform/features/cli)
 - [SDK upgrade paths](https://langfuse.com/docs/observability/sdk/upgrade-path)
+- [Deprecated API migration](https://langfuse.com/docs/deprecated-api-migration)
+- [Deprecated APIs reference](https://langfuse.com/docs/api-and-data-platform/features/deprecated-apis)
 - [Evaluator migration guide](https://langfuse.com/faq/all/llm-as-a-judge-migration)
 - [Observation evaluator context](https://langfuse.com/docs/evaluation/evaluation-methods/llm-as-a-judge#observation-evaluator-context)
 - [Evaluators API](https://api.reference.langfuse.com/#tag/unstableevaluators)
@@ -39,11 +41,21 @@ Discover the current API or tool schema before writes; the evaluator endpoints a
 
 - For a coding agent with repository access, execute the repository-wide SDK upgrade in the steps below — using the version-specific breaking-changes guide under [SDK upgrade paths](https://langfuse.com/docs/observability/sdk/upgrade-path) as the docs reference — before declaring the platform migration ready.
 - Inventory every Langfuse SDK, integration package, direct OpenTelemetry exporter, initialization site, and lockfile across the repository. Upgrade each ingestion path to the latest stable release in the major required by the current v4 migration docs, unless the repository has a documented compatibility constraint.
-- Apply every applicable SDK migration step, update removed tracing APIs, and replace deprecated Observations, Scores, and Metrics API routes using the current docs. A dependency-only update is incomplete.
+- Apply every applicable SDK migration step and update removed tracing APIs using the current docs. A dependency-only update is incomplete. Deprecated API routes reached outside the SDK client are migrated in the next step.
 - Use the evaluator migration contract below to consolidate all required evaluation input, output, metadata, tool calls, and propagated filter attributes onto the single target observation.
 - Verify the resolved versions and representative ingestion behavior. If the agent cannot access or edit the codebase, return an exact SDK and instrumentation handoff and keep this area blocked rather than marking it ready.
 
-## 3. Inventory active evaluation rules
+## 3. Migrate direct API calls
+
+- Fetch the [deprecated API migration guide](https://langfuse.com/docs/deprecated-api-migration) before rewriting any call. It maps every deprecated endpoint to its replacement with parameter mappings, semantic differences, and before/after examples, and is also served as plain markdown at `https://langfuse.com/docs/deprecated-api-migration.md` with stable section anchors for programmatic use.
+- This step covers API usage outside the SDK client methods migrated in the previous step: raw HTTP calls in application code, `curl` in scripts and CI, generated API clients, SDK API namespaces such as `langfuse.api.*` and `langfuse.api.legacy.*`, notebooks, dashboards, and data pipelines. Inventory them by searching for `/api/public` paths and the deprecated endpoint names, not only for client libraries.
+- Map each inventoried call to its replacement using the guide's quick reference and per-endpoint sections; do not rewrite calls from memory. Check the guide before touching a call — some routes on the same resources are not deprecated and must stay unchanged.
+- Migrate parameters, pagination, filters, field groups, and response parsing together with the path, following the guide's parameter mappings and semantic differences per endpoint. The replacements are not drop-in; a path-only rewrite is incomplete.
+- Where the guide changes the response shape rather than only the route, rework the downstream consumer to the new model instead of reshaping the response back into the deprecated structure.
+- Confirm the deployment the code targets serves each replacement endpoint before cutover, using the [compatibility matrix](https://langfuse.com/docs/compatibility). Code calling a self-hosted v3 deployment must keep the deprecated routes; report its cutover as blocked on the server upgrade.
+- Verify each rewritten call against real project data, comparing with the deprecated response where it is still available. Return calls that cannot be migrated or verified as part of the deprecated API code handoff instead of marking this area ready.
+
+## 4. Inventory active evaluation rules
 
 - Confirm the project, host, and whether it is Cloud or self-hosted.
 - Page through all available evaluators and evaluation rules. Inspect each referenced evaluator definition, not only its name.
@@ -51,7 +63,7 @@ Discover the current API or tool schema before writes; the evaluator endpoints a
 - Do not infer that the project has no legacy rules from the public list alone. Verify which targets the interface returns; if it omits legacy trace or dataset rules, use the UI check below.
 - Open the [Evaluators UI](https://cloud.langfuse.com/project/~/evals) and check for active rows marked **Legacy** whenever the interface cannot list those targets. In the in-app agent, redirect the user there. Treat this confirmation as required before declaring the project ready.
 
-## 4. Build an evaluator migration contract
+## 5. Build an evaluator migration contract
 
 For every active legacy rule, record:
 
@@ -70,7 +82,7 @@ For every active legacy rule, record:
 - Observation evaluators see only the matched observation. If the evaluator needs an end-to-end request, response, or summary assembled from multiple steps, target a root observation and require the application to write that context onto it.
 - Rebuild filters and mappings deliberately. Do not assume the UI upgrade wizard semantically preserves a legacy rule.
 
-## 5. Create and cut over successor rules
+## 6. Create and cut over successor rules
 
 - Reuse the existing evaluator definition when it remains valid. Create a new evaluator version only when the prompt, output definition, or variable contract must change.
 - Update an existing successor rule instead of creating a duplicate with the same name.
@@ -82,7 +94,7 @@ For every active legacy rule, record:
 
 If the available project interface cannot read or update a legacy rule, provide the exact [Evaluators UI](https://cloud.langfuse.com/project/~/evals) action and retain it as an explicit blocker rather than claiming completion.
 
-## 6. Migrate exports
+## 7. Migrate exports
 
 Switching an integration to enriched-only output is a breaking change for downstream consumers; enabling the dual source (legacy plus enriched observations) is additive and safe. Fetch the documented upgrade paths and follow them instead of restating export mechanics from memory:
 
@@ -106,7 +118,7 @@ Effects outside Langfuse — spell these out per configured integration before t
 - Because history is not re-exported, downstream consumers must either keep handling the legacy schema for historical data or the user must re-export history as documented.
 - Treat the downstream consumer update as part of the migration. Report this area as `manual action`, not `ready`, until the user confirms consumers handle the new schema.
 
-## 7. Report readiness
+## 8. Report readiness
 
 Return one row per area with `ready`, `changed`, `manual action`, or `blocked`:
 
@@ -114,7 +126,7 @@ Return one row per area with `ready`, `changed`, `manual action`, or `blocked`:
 - SDK versions and instrumentation migration, including any code handoff
 - active trace-to-observation evaluator migrations
 - active dataset-to-experiment evaluator migrations
-- deprecated API code handoff
+- direct API call migration, including any deprecated API code handoff
 - Blob Storage and analytics export migrations
 - verification and rollback status
 
