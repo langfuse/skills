@@ -1,55 +1,19 @@
 ---
 name: langfuse-skill-feedback
-description: Submit feedback about the Langfuse skill to its maintainers via GitHub Discussions. Use when the user indicates the skill gave incorrect guidance, is missing information, or could be improved.
+description: Submit approved feedback about the Langfuse skill through authenticated Langfuse feedback intake, with a GitHub issue as the unauthenticated fallback.
 metadata:
   required_access:
+    - LANGFUSE_PROJECT_INTERFACE
     - GITHUB
 ---
 
 # Skill Feedback
 
-Follow these steps exactly:
+This workflow is only for feedback about the Langfuse skill's instructions and behavior, not product support or a user's application data.
 
-1. **Ask permission**: Ask the user if they'd like you to submit feedback to the skill maintainers. Make it clear this is about the skill (the agent instructions), not about Langfuse the product. If they decline, move on.
-2. **Draft feedback**: Write the feedback using the form structure below. Present the draft to the user and ask if they'd like to change anything before submitting.
-3. **Submit**: Once approved, submit via `gh` CLI as described below. Share the resulting discussion URL with the user.
-
-## Feedback Form Structure
-
-Draft the feedback using these two fields:
-
-**Describe your idea or feedback** (required)
-A clear description of what went wrong or what could be improved. Include:
-- What the user was trying to do
-- What the skill did vs what was expected
-- Any specific instructions that were incorrect or missing
-
-**What would the ideal outcome look like?** (optional)
-What the correct behavior or guidance should be.
-
-Format the body as markdown with the two field labels as headings.
-
-## Submitting
-
-Create a GitHub Discussion on the `langfuse/skills` repository using the GraphQL API:
-
-```bash
-gh api graphql -f query='
-mutation($repoId: ID!, $categoryId: ID!, $title: String!, $body: String!) {
-  createDiscussion(input: {repositoryId: $repoId, categoryId: $categoryId, title: $title, body: $body}) {
-    discussion { url }
-  }
-}' \
-  -f repoId="$(gh api graphql -f query='{ repository(owner: "langfuse", name: "skills") { id } }' --jq '.data.repository.id')" \
-  -f categoryId="$(gh api graphql -f query='{ repository(owner: "langfuse", name: "skills") { discussionCategories(first: 10) { nodes { id name } } } }' --jq '.data.repository.discussionCategories.nodes[] | select(.name == "Ideas & Improvements") | .id')" \
-  -f title="<concise title>" \
-  -f body="<formatted feedback>"
-```
-
-If the `gh` CLI is not authenticated or the request fails, give the user this link to create the discussion manually:
-
-```
-https://github.com/langfuse/skills/discussions/new?category=ideas-improvements
-```
-
-After submission, share the discussion URL with the user.
+1. Draft concise feedback that explains what the user was trying to do, what the skill did, and what should improve. Use `targetType` `skill` and target `langfuse`. Add a goal or reference URL only when the user supplied it and it is necessary.
+2. Remove secrets, credentials, customer data, trace payloads, and unrelated conversation context. Never infer or attach those details.
+3. Show the user every user-controlled field exactly as it will be submitted and ask for explicit permission. Do not submit if they decline or have not approved the final draft.
+4. Prefer the authenticated in-app `submitFeedback` MCP tool when it is available. Otherwise discover the current public API operation with the Langfuse CLI schema and operation help, then submit through the authenticated project interface. Do not add client-identification headers.
+5. If authenticated feedback intake is unavailable, unconfigured, or unsupported, offer to create an issue in [`langfuse/skills`](https://github.com/langfuse/skills/issues/new). Treat this as a separate external write and obtain approval before creating it.
+6. Report the receipt ID returned by Langfuse or the GitHub issue URL. If submission fails, state the safe error without exposing request bodies or credentials.
