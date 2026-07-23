@@ -71,6 +71,7 @@ export LANGFUSE_PUBLIC_KEY=pk-lf-...
 export LANGFUSE_SECRET_KEY=sk-lf-...
 export LANGFUSE_BASE_URL=https://cloud.langfuse.com # example for EU cloud. For US cloud it's us.cloud.langfuse.com, and can also be a self-hosted URL. The server must always be specified in order to access Langfuse.
 ```
+If `LANGFUSE_BASE_URL` is used instead of `LANGFUSE_HOST`, run `export LANGFUSE_HOST="$LANGFUSE_BASE_URL"`.
 If not set, ask the user to set them in their shell or a `.env` file (do not ask them to paste keys into chat for security reasons). Keys are found in Langfuse UI → Settings → API Keys.
 
 ### Detailed CLI Reference

@@ -61,7 +61,7 @@ Discover the current API or tool schema before writes; the evaluator endpoints a
 - Page through all available evaluators and evaluation rules. Inspect each referenced evaluator definition, not only its name.
 - Migrate rules whose effective `status` is `active`. Report paused/inactive rules separately; do not reactivate or migrate them unless requested.
 - Use unstable evaluation-rule `list` and `get` as the source of truth for legacy trace rules. If a bulk page fails, retry with `limit=1` and report unreadable entries as blockers.
-- The unstable reads may still omit legacy dataset rules. Open the [Evaluators UI](https://cloud.langfuse.com/project/~/evals) to check for active dataset rows marked **Legacy** before declaring the project ready.
+- Open the [Evaluators UI](https://cloud.langfuse.com/project/~/evals) and check for active rows marked **Legacy** whenever the interface cannot list those targets. In the in-app agent, redirect the user there. Treat this confirmation as required before declaring the project ready.
 
 ## 5. Build an evaluator migration contract
 
@@ -81,7 +81,7 @@ For every active legacy rule, record:
 - Use observation sources for live rules. Experiment rules may additionally use expected output and experiment-item metadata; confirm the current schema before writing.
 - Observation evaluators see only the matched observation. If the evaluator needs an end-to-end request, response, or summary assembled from multiple steps, target a root observation and require the application to write that context onto it.
 - Rebuild filters and mappings deliberately. Do not assume the UI upgrade wizard semantically preserves a legacy rule.
-- When a trace-level rule requires code changes, make the handoff self-contained: include the full legacy filters and mappings, representative observation names/types and payload shapes, the preferred target observation, and each missing field or propagated attribute. The coding agent follows `references/trace-evaluator-upgrade.md`; do not ask it to rediscover project configuration from code.
+- When a trace-level evaluator requires code changes, make the handoff self-contained: include the full legacy filters and mappings, representative observation names/types and payload shapes, the preferred target observation, and each missing field or propagated attribute. The coding agent follows `references/trace-evaluator-upgrade.md`; do not ask it to rediscover project configuration from code.
 
 ## 6. Create and cut over successor rules
 
