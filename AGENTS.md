@@ -41,7 +41,20 @@ When to bump (follow semver):
 
 When **not** to bump:
 - Typo fixes, formatting, comment-only changes.
-- Changes to repo tooling, CI, or files outside the published skills (e.g. this `agents.md`, READMEs, GitHub workflows).
+- Changes to repo tooling, CI, or files outside the published skills (e.g. this `AGENTS.md`, READMEs, GitHub workflows).
 - Internal refactors that don't change observable skill behavior.
 
 If unsure whether a change warrants a bump, err on the side of bumping patch.
+
+## Reviewing Pull Requests
+
+When reviewing a PR (e.g. triggered by `@claude review`), enforce the principles above — they are the review criteria, not just authoring advice. Do not restate them in the review; call out where the diff violates them. Focus on:
+
+- **Does the addition beat the docs?** Flag any new use case or reference content an agent could already get by fetching the Langfuse docs. Every addition is maintenance surface.
+- **No committed code.** Flag committed code samples that should instead link to a Langfuse docs page; pseudo-code for logic-specific bits is fine.
+- **`metadata.required_access` present and correct.** Every reference file's frontmatter must declare it, using only the allowed tokens.
+- **Routing lives in exactly two places.** A one-line entry in `## Use case specific references` in `SKILL.md` and the reference file's frontmatter `description` — nowhere else.
+- **Version bumps in lockstep.** If published skill behavior changed, both `.claude-plugin/plugin.json` and `.cursor-plugin/plugin.json` must be bumped to the same version in the PR (and no bump for tooling/docs-only changes).
+- **CLI path sync.** If a skill's path changed, the [CLI repo](https://github.com/langfuse/langfuse-cli) reference must be updated too.
+
+Prioritize correctness and adherence to these principles over style nits. If the diff is clean against all of the above, say so plainly.

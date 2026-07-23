@@ -1,6 +1,6 @@
 ---
 name: langfuse-v4-project-migration
-description: Prepare a Langfuse project for the v4 platform by inventorying active evaluation rules, migrating legacy trace and dataset evaluators to observation and experiment targets, and moving exports to the enriched observation schema.
+description: Prepare a Langfuse project for the v4 platform by migrating deprecated API calls to their replacement endpoints, inventorying active evaluation rules, migrating legacy trace and dataset evaluators to observation and experiment targets, and moving exports to the enriched observation schema.
 metadata:
   required_access:
     - LANGFUSE_PROJECT_INTERFACE
@@ -17,15 +17,16 @@ Fetch the applicable pages before taking action:
 - [Langfuse v4 overview](https://langfuse.com/docs/v4)
 - [Langfuse CLI](https://langfuse.com/docs/api-and-data-platform/features/cli)
 - [SDK upgrade paths](https://langfuse.com/docs/observability/sdk/upgrade-path)
-- [Trace-level evaluator upgrade workflow](https://raw.githubusercontent.com/langfuse/skills/main/skills/langfuse/references/trace-evaluator-upgrade.md)
+- [Deprecated API migration](https://langfuse.com/docs/deprecated-api-migration)
+- [Deprecated APIs reference](https://langfuse.com/docs/api-and-data-platform/features/deprecated-apis)
 - [Evaluator migration guide](https://langfuse.com/faq/all/llm-as-a-judge-migration)
 - [Observation evaluator context](https://langfuse.com/docs/evaluation/evaluation-methods/llm-as-a-judge#observation-evaluator-context)
 - [Evaluators API](https://api.reference.langfuse.com/#tag/unstableevaluators)
 - [Evaluation Rules API](https://api.reference.langfuse.com/#tag/unstableevaluationrules)
 - [Blob storage export migration](https://langfuse.com/docs/api-and-data-platform/features/export-to-blob-storage#export-source-fast-preview)
 - [Export field reference](https://langfuse.com/docs/api-and-data-platform/features/blob-storage-export-fields#enriched-vs-legacy-differences)
-- [Mixpanel export migration](https://langfuse.com/integrations/analytics/mixpanel#export-source-fast-preview-langfuse-v4)
-- [PostHog export migration](https://langfuse.com/integrations/analytics/posthog#export-source-fast-preview-langfuse-v4)
+- [Mixpanel export migration](https://langfuse.com/integrations/analytics/mixpanel#migrate-export-source)
+- [PostHog export migration](https://langfuse.com/integrations/analytics/posthog#migrate-export-source)
 
 Discover the current API or tool schema before writes; the evaluator endpoints are unstable.
 
@@ -40,11 +41,21 @@ Discover the current API or tool schema before writes; the evaluator endpoints a
 
 - For a coding agent with repository access, execute the repository-wide SDK upgrade in the steps below — using the version-specific breaking-changes guide under [SDK upgrade paths](https://langfuse.com/docs/observability/sdk/upgrade-path) as the docs reference — before declaring the platform migration ready.
 - Inventory every Langfuse SDK, integration package, direct OpenTelemetry exporter, initialization site, and lockfile across the repository. Upgrade each ingestion path to the latest stable release in the major required by the current v4 migration docs, unless the repository has a documented compatibility constraint.
-- Apply every applicable SDK migration step, update removed tracing APIs, and replace deprecated Observations, Scores, and Metrics API routes using the current docs. A dependency-only update is incomplete.
+- Apply every applicable SDK migration step and update removed tracing APIs using the current docs. A dependency-only update is incomplete. Deprecated API routes reached outside the SDK client are migrated in the next step.
 - Use the evaluator migration contract below to consolidate all required evaluation input, output, metadata, tool calls, and propagated filter attributes onto the single target observation.
 - Verify the resolved versions and representative ingestion behavior. If the agent cannot access or edit the codebase, return an exact SDK and instrumentation handoff and keep this area blocked rather than marking it ready.
 
-## 3. Inventory active evaluation rules
+## 3. Migrate direct API calls
+
+- Fetch the [deprecated API migration guide](https://langfuse.com/docs/deprecated-api-migration) before rewriting any call. It maps every deprecated endpoint to its replacement with parameter mappings, semantic differences, and before/after examples, and is also served as plain markdown at `https://langfuse.com/docs/deprecated-api-migration.md` with stable section anchors for programmatic use.
+- This step covers API usage outside the SDK client methods migrated in the previous step: raw HTTP calls in application code, `curl` in scripts and CI, generated API clients, SDK API namespaces such as `langfuse.api.*` and `langfuse.api.legacy.*`, notebooks, dashboards, and data pipelines. Inventory them by searching for `/api/public` paths and the deprecated endpoint names, not only for client libraries.
+- Map each inventoried call to its replacement using the guide's quick reference and per-endpoint sections; do not rewrite calls from memory. Check the guide before touching a call — some routes on the same resources are not deprecated and must stay unchanged.
+- Migrate parameters, pagination, filters, field groups, and response parsing together with the path, following the guide's parameter mappings and semantic differences per endpoint. The replacements are not drop-in; a path-only rewrite is incomplete.
+- Where the guide changes the response shape rather than only the route, rework the downstream consumer to the new model instead of reshaping the response back into the deprecated structure.
+- Confirm the deployment the code targets serves each replacement endpoint before cutover, using the [compatibility matrix](https://langfuse.com/docs/compatibility). Code calling a self-hosted v3 deployment must keep the deprecated routes; report its cutover as blocked on the server upgrade.
+- Verify each rewritten call against real project data, comparing with the deprecated response where it is still available. Return calls that cannot be migrated or verified as part of the deprecated API code handoff instead of marking this area ready.
+
+## 4. Inventory active evaluation rules
 
 - Confirm the project, host, and whether it is Cloud or self-hosted.
 - Page through all available evaluators and evaluation rules. Inspect each referenced evaluator definition, not only its name.
@@ -52,7 +63,7 @@ Discover the current API or tool schema before writes; the evaluator endpoints a
 - Use unstable evaluation-rule `list` and `get` as the source of truth for legacy trace rules. If a bulk page fails, retry with `limit=1` and report unreadable entries as blockers.
 - The unstable reads may still omit legacy dataset rules. Open the [Evaluators UI](https://cloud.langfuse.com/project/~/evals) to check for active dataset rows marked **Legacy** before declaring the project ready.
 
-## 4. Build an evaluator migration contract
+## 5. Build an evaluator migration contract
 
 For every active legacy rule, record:
 
@@ -72,7 +83,7 @@ For every active legacy rule, record:
 - Rebuild filters and mappings deliberately. Do not assume the UI upgrade wizard semantically preserves a legacy rule.
 - When a trace-level rule requires code changes, make the handoff self-contained: include the full legacy filters and mappings, representative observation names/types and payload shapes, the preferred target observation, and each missing field or propagated attribute. The coding agent follows `references/trace-evaluator-upgrade.md`; do not ask it to rediscover project configuration from code.
 
-## 5. Create and cut over successor rules
+## 6. Create and cut over successor rules
 
 - Reuse the existing evaluator definition when it remains valid. Create a new evaluator version only when the prompt, output definition, or variable contract must change.
 - Update an existing successor rule instead of creating a duplicate with the same name.
@@ -84,22 +95,31 @@ For every active legacy rule, record:
 
 If the available project interface cannot read or update a legacy rule, provide the exact [Evaluators UI](https://cloud.langfuse.com/project/~/evals) action and retain it as an explicit blocker rather than claiming completion.
 
-## 6. Migrate exports
+## 7. Migrate exports
 
-Changing the export source is a breaking change for every downstream consumer, not a settings toggle. Before proposing or making any source change, explain the concrete consequences for each configured integration and obtain the user's explicit confirmation that downstream owners are prepared.
+Switching an integration to enriched-only output is a breaking change for downstream consumers; enabling the dual source (legacy plus enriched observations) is additive and safe. Fetch the documented upgrade paths and follow them instead of restating export mechanics from memory:
+
+- [Blob Storage upgrade path](https://langfuse.com/docs/api-and-data-platform/features/export-to-blob-storage#upgrade-path) and the [enriched vs. legacy field differences](https://langfuse.com/docs/api-and-data-platform/features/blob-storage-export-fields#enriched-vs-legacy-differences)
+- [Mixpanel export migration](https://langfuse.com/integrations/analytics/mixpanel#migrate-export-source) and the [legacy vs. enriched event changes](https://langfuse.com/integrations/analytics/mixpanel#legacy-vs-enriched)
+- [PostHog export migration](https://langfuse.com/integrations/analytics/posthog#migrate-export-source) and the [legacy vs. enriched event changes](https://langfuse.com/integrations/analytics/posthog#legacy-vs-enriched)
+
+Key takeaways:
 
 - Inventory configured Blob Storage, Mixpanel, PostHog, and other export integrations in **Project Settings > Integrations**.
-- Spell out what the source change does per integration before touching it:
-  - **Blob Storage:** the exported tables and file paths change. Legacy writes `traces` and `observations` files; enriched writes `observations_v2` under a new directory prefix, and the separate `traces` file is no longer produced in enriched-only mode. Column sets differ per the [export field reference](https://langfuse.com/docs/api-and-data-platform/features/blob-storage-export-fields#enriched-vs-legacy-differences), so loaders, warehouse table schemas, trace-observation joins, and dashboards across the full data pipeline must be updated — not just the integration setting.
-  - **Mixpanel and PostHog:** the source determines which events and properties are sent, so dashboards, transformations, funnels, and alerts built on the legacy events in those systems are affected and must be revalidated.
-  - **Dual mode** (`legacy and enriched observations`) creates duplicate records by design. Warn that counts, costs, and metrics in downstream systems will be inflated until consumers deduplicate or the transition completes.
-- For Blob Storage, inspect or update the integration through the API when organization-scoped credentials and the current schema are available. Otherwise direct the user to [Blob Storage settings](https://cloud.langfuse.com/project/~/settings/integrations/blobstorage).
-- For Mixpanel and PostHog, use the UI and the linked migration guides. Do not claim an API migration path that the current interface does not provide.
-- Follow the documented dual-export transition: enable legacy plus enriched observations, update and validate downstream consumers against the field reference, then switch to enriched observations only. Never switch a legacy integration directly to enriched-only while downstream consumers are unvalidated.
-- Do not overwrite bucket credentials, schedules, prefixes, file formats, field groups, or integration secrets while changing the export source.
-- Treat the downstream consumer update as part of the migration. A source toggle without validating queries, joins, dashboards, and field parsing is incomplete; report this area as `manual action`, not `ready`, until the user confirms consumers handle the new schema.
+- Check eligibility first: many integrations can no longer select legacy sources (Langfuse Cloud date cutoffs; self-hosted deployments that completed the v4 migration — see the docs for the exact rules). An integration that already exports enriched observations only is complete by default.
+- Follow the documented dual-export transition per integration. Switching from legacy to legacy plus enriched observations is additive and needs no downstream sign-off — apply it directly. The switch from the dual source to enriched observations only stops the legacy output and requires the user's explicit confirmation that downstream owners are prepared. Never switch a legacy integration directly to enriched-only.
+- A source change applies to future exports only; already-exported history keeps the legacy shape and is not re-exported.
+- Change only the export source. Leave credentials, schedules, prefixes, file formats, field groups, and integration secrets untouched. Apply the change in the integration settings UI — for Blob Storage the documented public API (project-scoped keys) also works; Mixpanel and PostHog have no API migration path.
 
-## 7. Report readiness
+Effects outside Langfuse — spell these out per configured integration before the enriched-only cutover:
+
+- **Blob Storage:** the exported tables, file paths, and column sets change (scores are unaffected). Warehouse loaders, table schemas, trace-observation joins, dashboards, and any storage-event automation keyed on the legacy file paths must be updated — the integration setting is the smallest part of the migration. After the switch the legacy directories receive no further files, so pipelines still watching them go silent without an error signal.
+- **Mixpanel and PostHog:** the source determines which events and properties are sent, so dashboards, transformations, funnels, and alerts built on the legacy events in those systems must be revalidated.
+- **Dual mode** exports the same data in both the legacy and the enriched shape by design. Downstream counts, costs, and metrics are inflated only where a consumer ingests both — for example a warehouse model loading both observation tables, or analytics queries matching both event sets. Keep each consumer on exactly one shape during the transition.
+- Because history is not re-exported, downstream consumers must either keep handling the legacy schema for historical data or the user must re-export history as documented.
+- Treat the downstream consumer update as part of the migration. Report this area as `manual action`, not `ready`, until the user confirms consumers handle the new schema.
+
+## 8. Report readiness
 
 Return one row per area with `ready`, `changed`, `manual action`, or `blocked`:
 
@@ -107,7 +127,7 @@ Return one row per area with `ready`, `changed`, `manual action`, or `blocked`:
 - SDK versions and instrumentation migration, including any code handoff
 - active trace-to-observation evaluator migrations
 - active dataset-to-experiment evaluator migrations
-- deprecated API code handoff
+- direct API call migration, including any deprecated API code handoff
 - Blob Storage and analytics export migrations
 - verification and rollback status
 
