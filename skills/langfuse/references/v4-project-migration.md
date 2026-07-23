@@ -52,7 +52,7 @@ Discover the current API or tool schema before writes; the evaluator endpoints a
 - Map each inventoried call to its replacement using the guide's quick reference and per-endpoint sections; do not rewrite calls from memory. Check the guide before touching a call — some routes on the same resources are not deprecated and must stay unchanged.
 - Migrate parameters, pagination, filters, field groups, and response parsing together with the path, following the guide's parameter mappings and semantic differences per endpoint. The replacements are not drop-in; a path-only rewrite is incomplete.
 - Where the guide changes the response shape rather than only the route, rework the downstream consumer to the new model instead of reshaping the response back into the deprecated structure.
-- Confirm the target deployment serves each replacement endpoint before cutover using the [compatibility matrix](https://langfuse.com/docs/compatibility); do not point a self-hosted v3 deployment at v4-only endpoints.
+- Confirm the deployment the code targets serves each replacement endpoint before cutover, using the [compatibility matrix](https://langfuse.com/docs/compatibility). Code calling a self-hosted v3 deployment must keep the deprecated routes; report its cutover as blocked on the server upgrade.
 - Verify each rewritten call against real project data, comparing with the deprecated response where it is still available. Return calls that cannot be migrated or verified as part of the deprecated API code handoff instead of marking this area ready.
 
 ## 4. Inventory active evaluation rules
