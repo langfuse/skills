@@ -14,9 +14,10 @@ In the v4 data model, a trace groups observations sharing a trace ID; it is not 
 
 ## Sources of truth
 
-Fetch the applicable pages in full before editing:
+Fetch the [trace-level evaluator upgrade guide](https://langfuse.com/faq/all/llm-as-a-judge-migration) in full before planning or editing. Treat it as the primary reference and fetch it again whenever the API shape, instrumentation guidance, or migration semantics are unclear. Do not infer those details from memory.
 
-- [Trace-level evaluator upgrade guide](https://langfuse.com/faq/all/llm-as-a-judge-migration)
+Fetch the other applicable pages in full before editing:
+
 - [Langfuse v4 overview](https://langfuse.com/docs/v4)
 - [Observation evaluator context](https://langfuse.com/docs/evaluation/evaluation-methods/llm-as-a-judge#observation-evaluator-context)
 - [Python v3 to v4](https://langfuse.com/docs/observability/sdk/upgrade-path/python-v3-to-v4)
@@ -31,9 +32,24 @@ Discover the current unstable API schema before use. Use unstable evaluation-rul
 
 - Page through every evaluation rule, then fetch each trace-target rule and its referenced evaluator. If a bulk page fails to parse, retry with `limit=1` to isolate unreadable entries and report them as blockers.
 - Record status, block reason, filters, variable mappings and JSONPaths, sampling, delay, time scope, evaluator definition, and score name.
-- Migrate only trace-target rules. Do not include observation, experiment, event, or dataset rules in this workflow.
+- Migrate only trace-target rules in this section. Dataset-target rules follow the short migration below; do not include observation, experiment, or event rules in this workflow.
 - Classify trace rules as active, inactive, or blocked/paused before asking which ones to retain. Offer to delete blocked rules the user no longer needs. Require approval for deletion; if the unstable API cannot mutate legacy trace rules, give the exact UI action instead.
 - Show the complete inventory and get one consolidated decision about retained and deleted rules. Do not let discarded rules drive code changes.
+
+## Dataset-item evaluator migration
+
+Use the unstable Evaluation Rules API to read the legacy `dataset` rule, then
+create an `experiment` rule with the same evaluator, score name, sampling, and
+mappings. Translate the dataset filter from `datasetId` to
+`experimentDatasetId`; map `dataset_item.expected_output` and
+`dataset_item.metadata` to `experimentItemExpectedOutput` and
+`experimentItemMetadata`.
+
+Keep the legacy rule active while the project still uses low-level dataset-run
+APIs. Disable it once the project emits experiment context; leaving both copies
+active can create duplicate scores for Experiment Runner runs. Review mappings
+that use `dataset_item.input` or named observations, since those are not always
+one-to-one.
 
 ## 2. Confirm v4 instrumentation
 
