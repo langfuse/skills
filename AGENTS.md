@@ -8,7 +8,7 @@ FOLLOW THESE INSTRUCTIONS RELIGIOUSLY. After every edit you make, come back to t
 
 - **You should almost never touch the top-level frontmatter `description` in `SKILL.md`.** It only controls whether the skill is invoked, and a user asking about a use case already mentions Langfuse or evaluation — which triggers it. Keep it short; in-skill routing handles the rest.
 
-- **Put "when to use" guidance in exactly two places:** a one-line entry in the `## Use case specific references` list in `SKILL.md`, and the `description` in the reference file's frontmatter. Nowhere else — no prose routing section, no "when to use" section in the reference body. *A reference body is read only after the agent already chose to open it, so routing text there is dead weight.*
+- **Put "when to use" guidance in exactly two places:** exactly one one-line entry per reference in the `## Use case specific references` list in `SKILL.md`, and the `description` in the reference file's frontmatter. Nowhere else — no prose routing section, no "when to use" section in the reference body. *A reference body is read only after the agent already chose to open it, so routing text there is dead weight.*
 
 - **Every reference file's frontmatter must declare a `metadata.required_access` list** — the kinds of access an agent needs to execute that reference. Use only these tokens, and reuse them consistently across files:
   - `CODEBASE` — reads or edits the user's source code
@@ -16,7 +16,7 @@ FOLLOW THESE INSTRUCTIONS RELIGIOUSLY. After every edit you make, come back to t
   - `LANGFUSE_PROJECT_SCRIPT` — runs SDK code that connects to the Langfuse backend (needs network)
   - `GITHUB` — operates on GitHub via the `gh` CLI
 
-- **In the reference file, less is more.** Add only what's useful or what an agent couldn't infer on its own. Cut anything the agent will already have in context when it needs it.
+- **Every line must earn its place.** Add only what's useful or what an agent couldn't infer on its own. Cut filler, restatements, self-explanatory steps, and anything the agent will already have from the relevant docs or task context. Keep new use-case references at 100 lines or fewer, including frontmatter; this is a maximum, if you exceed this length, you are likely producing slop.
 
 - **Never commit code.** Link to the relevant Langfuse docs page so the agent fetches current code; use pseudo-code only for logic-specific bits. *Committed code goes stale.*
 
@@ -50,10 +50,12 @@ If unsure whether a change warrants a bump, err on the side of bumping patch.
 
 When reviewing a PR (e.g. triggered by `@claude review`), enforce the principles above — they are the review criteria, not just authoring advice. Do not restate them in the review; call out where the diff violates them. Focus on:
 
-- **Does the addition beat the docs?** Flag any new use case or reference content an agent could already get by fetching the Langfuse docs. Every addition is maintenance surface.
+- **Docs checked, and the addition beats them.** Fetch every docs page named or linked in the changed skill content, then search the Langfuse docs for the use case even if the diff links no page. Compare the proposed content directly with those sources. Flag anything an agent could get from the docs; almost no product guidance should be duplicated. Prefer moving generally useful guidance to the docs and linking to it from the skill.
+- **Does this need a new reference?** After removing docs duplication, check whether the remaining non-obvious workflow belongs in an existing reference. Flag a new file when extending an existing reference—or adding nothing—would serve the agent as well.
+- **Is the reference ruthlessly concise?** Flag filler, self-explanatory instructions, repeated guidance, and details the agent will already have from the fetched docs or task context. New use-case references should be at most 100 lines including frontmatter; anything longer needs specific, convincing justification and should still be cut as far as possible.
 - **No committed code.** Flag committed code samples that should instead link to a Langfuse docs page; pseudo-code for logic-specific bits is fine.
 - **`metadata.required_access` present and correct.** Every reference file's frontmatter must declare it, using only the allowed tokens.
-- **Routing lives in exactly two places.** A one-line entry in `## Use case specific references` in `SKILL.md` and the reference file's frontmatter `description` — nowhere else.
+- **Routing is proportional and lives in exactly two places.** Require exactly one compact `## Use case specific references` entry per reference file plus its frontmatter `description`. Flag multiple `SKILL.md` bullets pointing to the same reference, redundant prose routing, and extra prominence given to a newly added workflow.
 - **Version bumps in lockstep.** If published skill behavior changed, both `.claude-plugin/plugin.json` and `.cursor-plugin/plugin.json` must be bumped to the same version in the PR (and no bump for tooling/docs-only changes).
 - **CLI path sync.** If a skill's path changed, the [CLI repo](https://github.com/langfuse/langfuse-cli) reference must be updated too.
 
