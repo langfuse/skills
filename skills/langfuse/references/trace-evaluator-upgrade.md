@@ -19,6 +19,7 @@ dataset rules are exposed there, while new rules use observation or experiment t
 ## Inventory and scope
 
 - Page through all rules and fetch each referenced evaluator. Record target, status, filters, mappings/JSONPaths, sampling, delay, time scope, evaluator, and score name.
+- If a bulk page fails, retry with `limit=1` to isolate unreadable entries; report any page that still fails as a blocker and do not claim a complete inventory.
 - Separate active, inactive, and blocked rules. Focus only on active rules. Treat historical-only rules (`EXISTING` without `NEW`) as candidates to ignore or delete; migrate only rules that depend on new/live data. Get approval before writes or deletion.
 - Migrate only legacy trace and dataset targets here. Do not touch existing observation, experiment, or event rules. If the unstable API cannot mutate a legacy rule, return the exact UI action.
 - Show the complete inventory and a consolidated retain/delete decision before changing project configuration.
