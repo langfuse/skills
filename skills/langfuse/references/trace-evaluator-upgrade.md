@@ -13,14 +13,15 @@ metadata:
 Use the [evaluator migration guide](https://langfuse.com/faq/all/llm-as-a-judge-migration),
 [v4 overview](https://langfuse.com/docs/v4), and current [Evaluation Rules](https://api.reference.langfuse.com/#tag/unstableevaluationrules)
 and [Evaluators](https://api.reference.langfuse.com/#tag/unstableevaluators) API schemas as
-the sources of truth. Read the current unstable schema before using it: legacy trace and
-dataset rules are exposed there, while new rules use observation or experiment targets.
+the sources of truth. Read the current unstable schema before using it: only the unstable
+Evaluation Rules API returns legacy `trace` and `dataset` targets; new rules use observation
+or experiment targets.
 
 ## Inventory and scope
 
 - Page through all rules and fetch each referenced evaluator. Record target, status, filters, mappings/JSONPaths, sampling, delay, time scope, evaluator, and score name.
 - If a bulk page fails, retry with `limit=1` to isolate unreadable entries; report any page that still fails as a blocker and do not claim a complete inventory.
-- Separate active, inactive, and blocked rules. Focus only on active rules. Treat historical-only rules (`EXISTING` without `NEW`) as candidates to ignore or delete; migrate only rules that depend on new/live data. Get approval before writes or deletion.
+- Separate active, inactive, and blocked rules. Migrate only active rules that depend on new/live data. Historical-only rules (`EXISTING` without `NEW`) may be ignored; deactivation or deletion is optional and requires approval.
 - Migrate only legacy trace and dataset targets here. Do not touch existing observation, experiment, or event rules. If the unstable API cannot mutate a legacy rule, return the exact UI action.
 - Show the complete inventory and a consolidated retain/delete decision before changing project configuration.
 
@@ -51,10 +52,15 @@ them after the successor is verified and the legacy rule is disabled.
 ## Dataset item to experiment
 
 Read the legacy `dataset` rule and referenced evaluator, then create an `experiment` rule with
-the same evaluator, score name, sampling, and mappings. Translate `datasetId` to
-`experimentDatasetId`, and translate dataset-item expected output and metadata to the
-corresponding experiment-item fields using the current unstable schema. Preserve input
-mappings and JSONPaths against the experiment-item shape.
+the same evaluator, score name, sampling, and mappings. Use the experiment target's current
+dataset filter and dataset ID from the unstable schema.
+As of the current API, this is `datasetId` with IDs from the v2 dataset endpoint. Translate
+dataset-item expected output and metadata to the corresponding experiment-item fields, and
+preserve input mappings and JSONPaths against the experiment-item shape.
+
+For dataset runs, the root observation carries the run's input and output, so mapping legacy
+trace input/output to observation input/output is safe and needs no evaluator-specific
+instrumentation change.
 
 Keep the legacy rule active while the project still uses low-level dataset-run APIs. Disable
 it after the project emits experiment context; leaving both active can create duplicate
