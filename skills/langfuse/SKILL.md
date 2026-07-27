@@ -8,12 +8,10 @@ allowed-tools:
   - Bash(npx langfuse-cli api * --help *)
   - Bash(npx langfuse-cli api * list *)
   - Bash(npx langfuse-cli api * get *)
-  - Bash(npx langfuse-cli api feedback *)
   - Bash(bunx langfuse-cli api __schema *)
   - Bash(bunx langfuse-cli api * --help *)
   - Bash(bunx langfuse-cli api * list *)
   - Bash(bunx langfuse-cli api * get *)
-  - Bash(bunx langfuse-cli api feedback *)
 ---
 
 # Langfuse
@@ -42,7 +40,7 @@ Follow these principles for ALL Langfuse work:
 - judge calibration (LLM-as-a-Judge reliability, simple accuracy checks, advanced split-based validation, confusion matrices, and metric ingestion): references/judge-calibration.md
 - systematic error analysis — reading traces, building failure taxonomy, deciding what to fix: references/error-analysis.md
 - setting up CI/CD experiment gates with `langfuse/experiment-action`: references/ci-cd.md
-- submitting feedback about this skill: references/skill-feedback.md
+- submitting feedback about this skill — offer once when this skill gave wrong or outdated guidance (never for issues with Langfuse itself): references/skill-feedback.md
 
 
 ## 1. Langfuse API via CLI
