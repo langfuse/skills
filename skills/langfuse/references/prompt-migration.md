@@ -18,10 +18,12 @@ Verify credentials exist — check presence only, never print the secret key (it
 ```bash
 [ -n "$LANGFUSE_PUBLIC_KEY" ] && echo "public key: set" || echo "public key: missing"
 [ -n "$LANGFUSE_SECRET_KEY" ] && echo "secret key: set" || echo "secret key: missing"
-[ -n "$LANGFUSE_BASE_URL" ]   && echo "base url: $LANGFUSE_BASE_URL" || echo "base url: missing"
+[ -n "${LANGFUSE_BASE_URL:-${LANGFUSE_HOST:-}}" ] && echo "base url: set" || echo "base url: missing"
 ```
 
-If missing, ask the user to set them in their shell or a `.env` file. Do not ask them to paste keys into chat.
+Use `LANGFUSE_BASE_URL` for current SDKs. If only `LANGFUSE_HOST` is set, export `LANGFUSE_BASE_URL="$LANGFUSE_HOST"`. If a CLI expects `LANGFUSE_HOST` and only `LANGFUSE_BASE_URL` is set, export `LANGFUSE_HOST="$LANGFUSE_BASE_URL"`.
+
+If credentials or the base URL are missing, ask the user to set them in their shell or a `.env` file. Do not ask them to paste secret keys into chat.
 
 ## 1. Inventory every prompt (before writing any code)
 
@@ -33,6 +35,8 @@ For each prompt, record:
 - **Type**: `chat` (message array) or `text` (plain string)
 - **Variables**: values interpolated in, converted to `{{var}}`
 - **Content**: the actual text to upload
+
+Before choosing `text` or `chat`, fetch and follow [Chat vs Text Prompts](https://langfuse.com/docs/prompt-management/data-model#text-vs-chat-prompts). Do not default unrelated prompt flows to one prompt type.
 
 Prompts typically live in OpenAI message arrays, Anthropic system arguments, LangChain prompt templates, Vercel AI system/prompt fields, and raw multi-line strings near LLM calls.
 
@@ -51,13 +55,17 @@ Prompts typically live in OpenAI message arrays, Anthropic system arguments, Lan
 | Per-request (`{{query}}`) | Persona / personality |
 | Environment-specific (`{{company_name}}`) | Static examples |
 
-**Naming:** lowercase-hyphenated, feature-based (`document-summarizer`), hierarchical for related prompts (`support/triage`), prefix subprompts with `_` (`_base-personality`). Extract a subprompt when the same text appears in 2+ prompts, forms a distinct component, or would change together.
+**Naming:** lowercase-hyphenated, feature-based (`document-summarizer`), hierarchical for related prompts (`support/triage`), prefix subprompts with `_` (`_base-personality`).
 
-## 3. Get approval, then create and refactor
+Before extracting subprompts, fetch and follow [Prompt Composability](https://langfuse.com/docs/prompt-management/features/composability). Use composition for the reuse and shared-maintenance cases described there, not merely to decompose one coherent prompt flow.
 
-Present the plan and get approval before writing anything — how many prompts across which files, proposed names, subprompts to extract, variables to add, and any complex templates you'll simplify.
+## 3. Present the plan, then create and refactor
 
-Once approved:
+When the user explicitly requests a migration and credentials work, treat that request as authorization to create prompts and refactor the call sites. Present the inventory and plan as a progress update, then continue.
+
+Ask only when a materially different design choice would change behavior, required credentials are unavailable, or destructive cleanup needs approval. Do not stop merely to confirm names, prompt types, or optional tracing.
+
+Then:
 
 - Create the prompts (label migrated prompts `production` — they're already live) and refactor call sites to fetch each prompt from Langfuse and compile its variables in. The SDK calls differ across Python and JS/TS — fetch the current docs: https://langfuse.com/docs/prompt-management/get-started
 - Fetch by the `production` label
