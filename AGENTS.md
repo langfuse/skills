@@ -48,7 +48,11 @@ If unsure whether a change warrants a bump, err on the side of bumping patch.
 
 ## Reviewing Pull Requests
 
-When reviewing a PR (e.g. triggered by `@claude review`), enforce the principles above — they are the review criteria, not just authoring advice. Do not restate them in the review; call out where the diff violates them. Focus on:
+When reviewing a PR (e.g. triggered by `@claude review`), enforce the principles above — they are the review criteria. 
+
+**First, read each changed file the way its runtime consumer will — then apply judgment.** A reference is opened mid-task by an agent trying to do the work; `SKILL.md` and this file are read by authoring agents. Read each from that seat and ask: does every line make sense here, can the reader act on it, and does it earn its place? Flag anything that reads as filler, hedging, restatement, meta-commentary about how the file was written, or an instruction aimed at a different audience (e.g. authoring notes like "don't duplicate the docs here" left inside a reference the runtime agent can't act on) — even when it breaks none of the specific checks below.
+
+Then work through these specific checks:
 
 - **Docs checked, and the addition beats them.** Fetch every docs page named or linked in the changed skill content, then search the Langfuse docs for the use case even if the diff links no page. Compare the proposed content directly with those sources. Flag anything an agent could get from the docs; almost no product guidance should be duplicated. Prefer moving generally useful guidance to the docs and linking to it from the skill.
 - **Does this need a new reference?** After removing docs duplication, check whether the remaining non-obvious workflow belongs in an existing reference. Flag a new file when extending an existing reference—or adding nothing—would serve the agent as well.
@@ -59,4 +63,4 @@ When reviewing a PR (e.g. triggered by `@claude review`), enforce the principles
 - **Version bumps in lockstep.** If published skill behavior changed, both `.claude-plugin/plugin.json` and `.cursor-plugin/plugin.json` must be bumped to the same version in the PR (and no bump for tooling/docs-only changes).
 - **CLI path sync.** If a skill's path changed, the [CLI repo](https://github.com/langfuse/langfuse-cli) reference must be updated too.
 
-Prioritize correctness and adherence to these principles over style nits. If the diff is clean against all of the above, say so plainly.
+Prioritize correctness, and the read above, over pure formatting nits (whitespace, heading casing). "This line is meaningless to the reader" is never a mere nit. If the diff is clean against all of the above, say so plainly.
