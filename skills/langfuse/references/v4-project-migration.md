@@ -44,7 +44,7 @@ Discover unstable schemas before use.
 ## Migrate evaluators
 
 - Inventory all active evaluators and rules, inspect each referenced definition, and report inactive rules without reactivating them.
-- Check the [Evaluators UI](https://cloud.langfuse.com/project/~/evals) for active **Legacy** rows; public interfaces may not expose every legacy target.
+- Check the Evaluators UI on the confirmed target host for active **Legacy** rows ([open in Langfuse Cloud](https://cloud.langfuse.com/project/~/evals)); public interfaces may not expose every legacy target.
 - For each inspected active legacy rule, record its filters, sampling, mappings, representative payloads, one observation or experiment successor, required code changes, and cutover test.
 - Label this a **project-verified contract** only when the rule and representative observations were inspected. Label code-only suggestions **candidate targets**, never project state.
 - Consolidate all required evaluator variables and filter attributes onto the one target observation. Observation evaluators cannot read siblings or children.
@@ -67,7 +67,7 @@ Discover unstable schemas before use.
 ## Validate and report
 
 - Test applicable hierarchy, root input/output, propagated attributes, public/release/environment behavior, API pagination and parsing, delivery semantics, and absence of deprecated calls.
-- Run a separate-project canary before declaring ingestion ready. Mocked tests do not verify backend ingestion or project behavior.
-- Re-read rules and integrations after writes. Preserve disabled legacy rules for rollback; never claim completion without the required UI legacy-row check.
-- Always return all seven readiness rows as `ready`, `changed`, `manual action`, or `blocked`: project access; SDK/instrumentation; trace evaluators; dataset evaluators; direct APIs; exports; verification/rollback.
-- Include project-verified contracts, clearly separated candidate targets, direct UI links, exact blockers, and the next action for every non-ready row.
+- Before production cutover, send representative traces from the migrated instrumentation to a non-production Langfuse project and inspect the resulting observations there. Mocked tests do not verify backend ingestion or project behavior.
+- Re-read rules and integrations after writes. Preserve disabled legacy rules for rollback; never claim completion without checking the Evaluators UI on the target host for legacy rows.
+- The readiness report must contain exactly these seven rows, each marked `ready`, `changed`, `manual action`, or `blocked`: project access; SDK/instrumentation; trace evaluators; dataset evaluators; direct APIs; exports; verification/rollback.
+- In evaluator rows, separate contracts verified against project data from targets suggested only by code inspection. For every row not marked `ready`, include the blocker, next action, and a direct UI link when applicable.
