@@ -9,230 +9,71 @@ metadata:
 
 # Langfuse Prompt Migration
 
-Migrate hardcoded prompts to Langfuse for version control, A/B testing, and deployment-free iteration.
+Migrate hardcoded prompts into Langfuse-managed prompts. The API mechanics (`create_prompt`, `get_prompt`, `.compile()`, linking to traces) are in the docs — fetch them at execution time.
 
 ## Prerequisites
 
-Verify credentials are set before starting. Check existence only — never print the secret key, since the value would land in the agent's context and transcripts:
+Verify credentials exist — check presence only, never print the secret key (its value would land in the agent's context and transcripts):
 
 ```bash
-[ -n "$LANGFUSE_PUBLIC_KEY" ] && echo "LANGFUSE_PUBLIC_KEY: set" || echo "LANGFUSE_PUBLIC_KEY: missing"
-[ -n "$LANGFUSE_SECRET_KEY" ] && echo "LANGFUSE_SECRET_KEY: set" || echo "LANGFUSE_SECRET_KEY: missing"
-[ -n "$LANGFUSE_BASE_URL" ]   && echo "LANGFUSE_BASE_URL: $LANGFUSE_BASE_URL" || echo "LANGFUSE_BASE_URL: missing"
+[ -n "$LANGFUSE_PUBLIC_KEY" ] && echo "public key: set" || echo "public key: missing"
+[ -n "$LANGFUSE_SECRET_KEY" ] && echo "secret key: set" || echo "secret key: missing"
+[ -n "${LANGFUSE_BASE_URL:-${LANGFUSE_HOST:-}}" ] && echo "base url: set" || echo "base url: missing"
 ```
 
-If not set, ask the user to configure them in their shell or a `.env` file. Do not ask them to paste keys into chat.
+Use `LANGFUSE_BASE_URL` for current SDKs. If only `LANGFUSE_HOST` is set, export `LANGFUSE_BASE_URL="$LANGFUSE_HOST"`. If a CLI expects `LANGFUSE_HOST` and only `LANGFUSE_BASE_URL` is set, export `LANGFUSE_HOST="$LANGFUSE_BASE_URL"`.
 
-## Migration Flow
+If credentials or the base URL are missing, ask the user to set them in their shell or a `.env` file. Do not ask them to paste secret keys into chat.
 
-```
-1. Scan codebase for prompts
-2. Analyze templating compatibility
-3. Propose structure (names, subprompts, variables)
-4. User approves
-5. Create prompts in Langfuse
-6. Refactor code to use get_prompt()
-7. Link prompts to traces (if tracing enabled)
-8. Verify application works
-```
+## 1. Inventory every prompt (before writing any code)
 
-## Step 1: Find Prompts and Build an Inventory
+For each prompt, record:
 
-Before writing ANY code, make a complete list of every prompt you found. For each one, note:
+- **Name**: lowercase, hyphenated (e.g. `chat-assistant`)
+- **Source file**: where the prompt text lives
+- **Code file to refactor**: the file that USES the prompt. For asset files (`.txt`/`.yaml`/`.md`), this is the file that loads the asset, not the asset itself
+- **Type**: `chat` (message array) or `text` (plain string)
+- **Variables**: values interpolated in, converted to `{{var}}`
+- **Content**: the actual text to upload
 
-- Name: descriptive, lowercase, hyphenated (e.g. chat-assistant, email-classifier)
-- Source file: where the prompt text lives
-- Code file to refactor: the Python/JS file that USES the prompt (for asset files like .txt/.yaml/.md, this is the file that reads/loads the asset — NOT the asset file itself)
-- Type: chat (used as a message in a chat API) or text (used as a plain string)
-- Variables: values interpolated into the prompt, converted to {{var}} syntax:
-f-string {var} → {{var}}
-.format(var=...) → {{var}}
-${var} → {{var}}
-String concatenation + var + → {{var}}
-YAML {var} → {{var}}
-- Prompt content: the actual text to upload, with variables converted to {{var}} syntax
+Before choosing `text` or `chat`, fetch and follow [Chat vs Text Prompts](https://langfuse.com/docs/prompt-management/data-model#text-vs-chat-prompts). Do not default unrelated prompt flows to one prompt type.
 
-Search for these patterns:
+Prompts typically live in OpenAI message arrays, Anthropic system arguments, LangChain prompt templates, Vercel AI system/prompt fields, and raw multi-line strings near LLM calls.
 
-| Framework | Look for |
-|-----------|----------|
-| OpenAI | `messages=[{"role": "system", "content": "..."}]` |
-| Anthropic | `system="..."` |
-| LangChain | `ChatPromptTemplate`, `SystemMessage` |
-| Vercel AI | `system: "..."`, `prompt: "..."` |
-| Raw | Multi-line strings near LLM calls |
+## 2. Convert templating and decide structure
 
-## Step 2: Check Templating Compatibility
+**Variable syntax:** Langfuse substitutes only double-brace `{{var}}`. Convert every single-brace form during upload — `{var}`, `${var}`, f-string `{var}`, `.format(var=...)`, and string concatenation all become `{{var}}`. Uploading `{var}` will silently fail to substitute.
 
-**CRITICAL:** Langfuse only supports simple `{{variable}}` substitution. No conditionals, loops, or filters.
+**Complex templates:** Langfuse has no conditionals, loops, or filters. If the code uses them (e.g. Jinja `{% if %}`/`{% for %}`), either pre-compute the value in code and pass a plain `{{variable}}` (recommended), or store the raw template and compile client-side — which loses Playground preview and UI experiments. See https://langfuse.com/docs/prompt-management/features/variables and the [external templating FAQ](https://langfuse.com/faq/all/using-external-templating-libraries).
 
-| Template Feature | Langfuse Native | Action |
-|------------------|-----------------|--------|
-| `{{variable}}` | ✅ | Direct migration |
-| `{var}` / `${var}` | ⚠️ | Convert to `{{var}}` |
-| `{% if %}` / `{% for %}` | ❌ | Move logic to code |
-| `{{ var \| filter }}` | ❌ | Apply filter in code |
+**What to make a variable vs. keep hardcoded:**
 
-**CRITICAL — Variable syntax:** Langfuse uses DOUBLE curly braces for variables: `{{var}}`. When uploading prompt content, you MUST convert every single-brace `{var}` from the original code to double-brace `{{var}}`. Never upload `{var}` — it must be `{{var}}`.
-
-### Decision Tree
-
-```
-Contains {% if %}, {% for %}, or filters?
-├─ No → Direct migration
-└─ Yes → Choose:
-    ├─ Option A (RECOMMENDED): Move logic to code, pass pre-computed values
-    └─ Option B: Store raw template, compile client-side with Jinja2
-        └─ ⚠️ Loses: Playground preview, UI experiments
-```
-
-### Simplifying Complex Templates
-
-**Conditionals** → Pre-compute in code:
-```python
-# Instead of {% if user.is_premium %}...{% endif %} in prompt
-# Use {{tier_message}} and compute value in code before compile()
-```
-
-**Loops** → Pre-format in code:
-```python
-# Instead of {% for tool in tools %}...{% endfor %} in prompt
-# Use {{tools_list}} and format the list in code before compile()
-```
-
-For external templating details, fetch: https://langfuse.com/faq/all/using-external-templating-libraries
-
-## Step 3: Propose Structure
-
-### Naming Conventions
-
-| Rule | Example | Bad |
-|------|---------|-----|
-| Lowercase, hyphenated | `chat-assistant` | `ChatAssistant_v2` |
-| Feature-based | `document-summarizer` | `prompt1` |
-| Hierarchical for related | `support/triage` | `supportTriage` |
-| Prefix subprompts with `_` | `_base-personality` | `shared-personality` |
-
-### Identify Subprompts
-
-Extract when:
-- Same text in 2+ prompts
-- Represents distinct component (personality, safety rules, format)
-- Would need to change together
-
-### Variable Extraction
-
-| Make Variable | Keep Hardcoded |
+| Make variable | Keep hardcoded |
 |---------------|----------------|
 | User-specific (`{{user_name}}`) | Output format instructions |
 | Dynamic content (`{{context}}`) | Safety guardrails |
-| Per-request (`{{query}}`) | Persona/personality |
+| Per-request (`{{query}}`) | Persona / personality |
 | Environment-specific (`{{company_name}}`) | Static examples |
 
-## Step 4: Present Plan to User
+**Naming:** lowercase-hyphenated, feature-based (`document-summarizer`), hierarchical for related prompts (`support/triage`), prefix subprompts with `_` (`_base-personality`).
 
-Format:
-```
-Found N prompts across M files:
+Before extracting subprompts, fetch and follow [Prompt Composability](https://langfuse.com/docs/prompt-management/features/composability). Use composition for the reuse and shared-maintenance cases described there, not merely to decompose one coherent prompt flow.
 
-src/chat.py:
-  - System prompt (47 lines) → 'chat-assistant'
+## 3. Present the plan, then create and refactor
 
-src/support/triage.py:
-  - Triage prompt (34 lines) → 'support/triage'
-    ⚠️ Contains {% if %} - will simplify
+When the user explicitly requests a migration and credentials work, treat that request as authorization to create prompts and refactor the call sites. Present the inventory and plan as a progress update, then continue.
 
-Subprompts to extract:
-  - '_base-personality' - used by: chat-assistant, support/triage
+Ask only when a materially different design choice would change behavior, required credentials are unavailable, or destructive cleanup needs approval. Do not stop merely to confirm names, prompt types, or optional tracing.
 
-Variables to add:
-  - {{user_name}} - hardcoded in 2 prompts
+Then:
 
-Proceed?
-```
+- Create the prompts (label migrated prompts `production` — they're already live) and refactor call sites to fetch each prompt from Langfuse and compile its variables in. The SDK calls differ across Python and JS/TS — fetch the current docs: https://langfuse.com/docs/prompt-management/get-started
+- Fetch by the `production` label
+- If the codebase already has Langfuse tracing (decorators, an instrumented client, or manual spans), link prompts so you can see which version produced each response. See https://langfuse.com/docs/prompt-management/features/link-to-traces
 
-## Step 5: Create Prompts in Langfuse
+## 4. Verify
 
-Use `langfuse.create_prompt()` with:
-- `name`: Your chosen name
-- `prompt`: Template text (or message array for chat type)
-- `type`: `"text"` or `"chat"`
-- `labels`: `["production"]` (they're already live)
-- `config`: Optional model settings
-
-**Labeling strategy:**
-- `production` → All migrated prompts
-- `staging` → Add later for testing
-- `latest` → Auto-applied by Langfuse
-
-For full API: fetch https://langfuse.com/docs/prompts/get-started
-
-## Step 6: Refactor Code
-
-Replace hardcoded prompts with:
-
-```python
-prompt = langfuse.get_prompt("name", label="production")
-messages = prompt.compile(var1=value1, var2=value2)
-```
-
-**Key points:**
-- Always use `label="production"` (not `latest`) for stability
-- Call `.compile()` to substitute variables
-- For chat prompts, result is message array ready for API
-
-For SDK examples (Python/JS/TS): fetch https://langfuse.com/docs/prompts/get-started
-
-## Step 7: Link Prompts to Traces
-
-If codebase uses Langfuse tracing, link prompts so you can see which version produced each response.
-
-### Detect Existing Tracing
-
-Look for:
-- `@observe()` decorators
-- `langfuse.trace()` calls
-- `from langfuse.openai import openai` (instrumented client)
-
-### Link Methods
-
-| Setup | How to Link |
-|-------|-------------|
-| `@observe()` decorator | `langfuse_context.update_current_observation(prompt=prompt)` |
-| Manual tracing | `trace.generation(prompt=prompt, ...)` |
-| OpenAI integration | `openai.chat.completions.create(..., langfuse_prompt=prompt)` |
-
-### Verify in UI
-
-1. Go to **Traces** → select a trace
-2. Click on **Generation**
-3. Check **Prompt** field shows name and version
-
-For tracing details: fetch https://langfuse.com/docs/prompts/get-started#link-with-langfuse-tracing
-
-## Step 8: Verify Migration
-
-### Checklist
-
-- [ ] All prompts created with `production` label
-- [ ] Code fetches with `label="production"`
-- [ ] Variables compile without errors
-- [ ] Subprompts resolve correctly
-- [ ] Application behavior unchanged
-- [ ] Generations show linked prompt in UI (if tracing)
-
-### Common Issues
-
-| Issue | Solution |
-|-------|----------|
-| `PromptNotFoundError` | Check name spelling |
-| Variables not replaced | Use `{{var}}` not `{var}`, call `.compile()` |
-| Subprompt not resolved | Must exist with same label |
-| Old prompt cached | Restart app |
-
-## Out of Scope
-
-- Prompt engineering (writing better prompts)
-- Evaluation setup
-- A/B testing workflow
-- Non-LLM string templates
+- All prompts created with the `production` label; code fetches with `label="production"`
+- Variables and subprompts compile without errors
+- Application behavior is unchanged
+- Generations show the linked prompt in the UI (if tracing enabled)
