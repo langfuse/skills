@@ -205,7 +205,7 @@ So two runs over the same data report the same numbers, define metrics consisten
 - **Error rate** — affected items / items examined, with the denominator stated (traces, or calls of a specific tool). Count failures from output **content**, not just `level=ERROR` (see #1 in Reliability).
 - **Prevalence** — "traces affected / traces examined" against the *product* traces you inspected, not the raw window count. If synthetic traffic dominates (workflow step 3), report the rate both including and excluding it when it changes the conclusion.
 
-### Gotchas (learned the hard way)
+### Gotchas
 
 - **Pagination differs per endpoint** (`traces`/`scores` are page-based, `observations` is cursor-based) — follow the pagination tip in [cli.md](cli.md) exactly.
 - **Trace `scores` field returns score IDs (strings), not score objects.** To get values, pull scores separately and join on `traceId`.
