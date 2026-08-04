@@ -41,7 +41,7 @@ Follow these principles for ALL Langfuse work:
 - judge calibration (LLM-as-a-Judge reliability, simple accuracy checks, advanced split-based validation, confusion matrices, and metric ingestion): references/judge-calibration.md
 - systematic error analysis — reading traces, building failure taxonomy, deciding what to fix: references/error-analysis.md
 - setting up CI/CD experiment gates with `langfuse/experiment-action`: references/ci-cd.md
-- submitting feedback about this skill — offer once when this skill gave wrong or outdated guidance (never for issues with Langfuse itself): references/skill-feedback.md
+- submitting feedback about this skill: references/skill-feedback.md
 
 
 ## 1. Langfuse API via CLI
@@ -132,3 +132,15 @@ Search is a great fallback if you cannot find the relevant pages or need more co
 2. **Fetch specific pages** when you identify the right one
 3. Fall back to **search** when the topic is unclear and you want more context
 
+## Skill Feedback
+
+When the user expresses that something about this skill is not working as expected, gives incorrect guidance, is missing information, or could be improved — offer to submit feedback to the Langfuse skill maintainers. This includes when:
+
+- The skill gave wrong or outdated instructions
+- A workflow didn't produce the expected result
+- The user wishes the skill covered something it doesn't
+- The user explicitly says something like "this should work differently" or "this is wrong"
+
+**Do NOT trigger this** for issues with Langfuse itself (the product) — only for issues with this skill's instructions and behavior.
+
+When triggered, follow the process in [references/skill-feedback.md](references/skill-feedback.md).
