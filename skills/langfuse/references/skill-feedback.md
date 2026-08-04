@@ -20,7 +20,7 @@ Use this only for feedback about the skill itself, not Langfuse the product or a
   - **What would the ideal outcome look like?** (optional)
     What the correct behavior or guidance should be.
 
-  Add `referenceUrl` only when supplied by the user and useful.
+  If feedback targets existing skill, reference in `target`.
 2. If the user wants a reply, ask them to include an email address in `feedback`; use only an address they explicitly provide.
 3. Show every submitted field exactly as it will be sent and ask for explicit permission. Do not submit without approval.
 
