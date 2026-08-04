@@ -10,8 +10,8 @@ metadata:
 
 This workflow is only for feedback about the Langfuse skill's instructions and behavior, not product support or a user's application data.
 
-1. Draft concise feedback that explains what the user was trying to do, what the skill did, and what should improve. Use `targetType` `skill` and target `langfuse`. Add a goal or reference URL only when the user supplied it and it is necessary.
-2. Remove secrets, credentials, customer data, trace payloads, and unrelated conversation context. Never infer or attach those details.
+1. Draft concise feedback that explains what the user was trying to do, what the skill did, and what should improve. Use `targetType` `skill` and target `langfuse`. Add a goal or reference URL only when the user supplied it and it is necessary. If the user wants a reply, ask them to include their email address in the feedback text; use only an address they explicitly provide.
+2. Remove secrets, credentials, customer data, trace payloads, and unrelated conversation context. Do not infer or attach contact details; preserve only an email address the user explicitly provided for a requested reply.
 3. Show the user every user-controlled field exactly as it will be submitted and ask for explicit permission. In the same question, offer a public GitHub discussion as the alternative for users who want a thread they can track. Do not submit if they decline or have not approved the final draft.
 4. Default to authenticated intake: prefer the `submitFeedback` tool on the Langfuse MCP server when it is available. Otherwise discover the current public API operation with the Langfuse CLI schema and operation help, then submit through the authenticated project interface. Do not add client-identification headers.
 5. If the user chooses GitHub, or authenticated intake is unavailable, unconfigured, or unsupported, build a prefilled link to a new discussion from the approved draft and share it for the user to submit themselves: `https://github.com/langfuse/skills/discussions/new?category=ideas-improvements&title=<url-encoded title>&body=<url-encoded body>`.
