@@ -40,7 +40,6 @@ Follow these principles for ALL Langfuse work:
 - judge calibration (LLM-as-a-Judge reliability, simple accuracy checks, advanced split-based validation, confusion matrices, and metric ingestion): references/judge-calibration.md
 - systematic error analysis — reading traces, building failure taxonomy, deciding what to fix: references/error-analysis.md
 - issue detection triage — find production problems and rank them P0–P3: references/issue-detection-triage.md
-- closing the loop from a reported symptom to a measured, proven fix: references/improvement-loop.md
 - setting up CI/CD experiment gates with `langfuse/experiment-action`: references/ci-cd.md
 - submitting feedback about this skill: references/skill-feedback.md
 
