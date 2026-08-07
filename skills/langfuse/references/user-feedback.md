@@ -45,37 +45,11 @@ Rules:
 
 ### 3. Implement Score Creation
 
-**For implicit feedback (server-side):** Use `langfuse.create_score()` / `langfuse.score.create()` wherever the event is already handled in application code. Fetch SDK docs for current API: https://langfuse.com/docs/evaluation/evaluation-methods/scores-via-sdk
+Fetch and follow the current [user feedback guide](https://langfuse.com/docs/observability/features/user-feedback) and [score ingestion docs](https://langfuse.com/docs/evaluation/evaluation-methods/scores-via-sdk) before editing code. They contain the current browser and server SDK APIs plus framework-specific patterns for returning trace IDs to the frontend.
 
-**For explicit feedback (frontend):** Use `LangfuseWeb` in the browser. It uses the public key only — no secret key exposed.
+**For implicit feedback (server-side):** Create the score where the behavior is already handled in application code.
 
-```typescript
-import { LangfuseWeb } from "langfuse";
-
-const langfuse = new LangfuseWeb({
-  publicKey: process.env.NEXT_PUBLIC_LANGFUSE_PUBLIC_KEY!,
-  baseUrl: process.env.NEXT_PUBLIC_LANGFUSE_HOST,
-});
-
-langfuse.score({
-  traceId,
-  name: "user-thumbs",
-  value: 1, // 1 = positive, 0 = negative
-  dataType: "BOOLEAN",
-  comment: optionalUserComment,
-});
-```
-
-The trace ID must be available in the frontend for this to work. For Vercel AI SDK, the non-obvious pattern is using `generateMessageId`:
-
-```typescript
-import { getActiveTraceId } from "@langfuse/tracing";
-
-// Inside route handler wrapped with observe()
-return result.toUIMessageStreamResponse({
-  generateMessageId: () => getActiveTraceId() || crypto.randomUUID(),
-});
-```
+**For explicit feedback (frontend):** Make the relevant trace ID available to the frontend and use the current Langfuse browser SDK with a public key only. Never expose a Langfuse secret key in browser code.
 
 ### 4. Verify
 
@@ -87,6 +61,6 @@ Point users to what they can do with feedback data: filter traces by low scores,
 
 | Mistake | Problem | Fix |
 |---------|---------|-----|
-| Secret key in frontend code | Security risk | Use `LangfuseWeb` with public key only |
+| Secret key in frontend code | Security risk | Use the current browser SDK with a public key only |
 | Missing `dataType` on boolean scores | Value `1` inferred as `NUMERIC` | Always pass `dataType: "BOOLEAN"` explicitly |
 | Inconsistent score names across the app | Can't aggregate or filter reliably | Pick one name per feedback type, use it everywhere |
