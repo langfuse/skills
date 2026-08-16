@@ -1,7 +1,7 @@
 ---
 name: langfuse
 description: >-
-  Interact with Langfuse and access its documentation. Use when needing to (1) query or modify Langfuse data programmatically via the CLI — traces, prompts, datasets, scores, sessions, and any other API resource, (2) look up Langfuse documentation, concepts, integration guides, or SDK usage, or (3) understand how any Langfuse feature works. Also use for LLM evaluation and prompt work even when Langfuse is not named: building or improving an eval dataset, guarding against regressions with a test set, writing or editing prompts, moving prompts out of code, capturing user feedback, or checking whether an LLM judge is reliable.
+  Interact with Langfuse and access its documentation. Use when supporting user in workflows along the AI Engineering Loop: Tracing, monitoring, creating datsets, running experiments and evaluating. Use when needing to (1) query or modify Langfuse data programmatically via the CLI — traces, prompts, datasets, scores, sessions, and any other API resource, (2) look up Langfuse documentation, concepts, integration guides, or SDK usage, or (3) understand how any Langfuse feature works. Also use for LLM evaluation and prompt work even when Langfuse is not named: creating or improving an (eval) dataset, guarding against regressions with a test set, writing or editing prompts, moving prompts out of code, capturing user feedback, or checking whether an LLM judge is reliable.
 allowed-tools:
   - WebFetch(domain:langfuse.com)
   - Bash(curl *langfuse.com/*)
