@@ -1,6 +1,7 @@
 ---
 name: langfuse
-description: Interact with Langfuse and access its documentation. Use when needing to (1) query or modify Langfuse data programmatically via the CLI — traces, prompts, datasets, scores, sessions, and any other API resource, (2) look up Langfuse documentation, concepts, integration guides, or SDK usage, or (3) understand how any Langfuse feature works. This skill covers CLI-based API access (via npx) and multiple documentation retrieval methods.
+description: >-
+  Interact with Langfuse and access its documentation. Use for AI engineering workflows including tracing, monitoring, creating or improving evaluation datasets, guarding against regressions, running experiments, evaluating AI applications or LLM judges, writing, editing, or migrating prompts, and capturing user feedback—even when Langfuse is not named. Also use to query or modify Langfuse data through the CLI or to look up Langfuse concepts, integrations, and SDK guidance.
 allowed-tools:
   - WebFetch(domain:langfuse.com)
   - Bash(curl *langfuse.com/*)
@@ -24,7 +25,7 @@ Follow these principles for ALL Langfuse work:
 
 1. **Documentation First**: NEVER implement based on memory. Always fetch current docs before writing code (Langfuse updates frequently) See the section below on how to access documentation.
 2. **CLI for Data Access**: Use `langfuse-cli` when querying/modifying Langfuse data. See the section below on how to use the CLI.
-3. **Best Practices by Use Case**: Check the relevant reference file below for use-case-specific guidelines before implementing
+3. **Best Practices by Use Case**: Read the relevant reference below before asking the user for more details or implementing.
 4. **Use latest Langfuse versions**: Unless the user specified otherwise or there's a good reason, always use the latest version of Langfuse SDKs/APIs. Even if you're only creating a plan for another agent to execute, be explicit about the exact version to use.
 5. **If you guide the user through UI** and are unsure about a label or location, inspect the user’s screenshots or ask to see the relevant screen. Do not assume UI labels have the exact same names as API, SDK, or CLI fields.
 
