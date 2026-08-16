@@ -1,6 +1,6 @@
 ---
 name: langfuse-dataset-construction
-description: Collaborative Langfuse dataset creation workflow. Use when the user needs to create, design, seed, reshape, review, or upload a Langfuse dataset or dataset version; especially when they need a minimal but complete dataset with agreed input, expected output, metadata, sources, and coverage dimensions before live mutation.
+description: Collaborative Langfuse dataset creation workflow. Use when the user needs to create, design, seed, reshape, review, or upload a Langfuse dataset or dataset version; especially when they need a minimal but complete dataset, e.g. for quality checks or avoiding regression.
 metadata:
   required_access:
     - LANGFUSE_PROJECT_INTERFACE
