@@ -25,7 +25,7 @@ Follow these principles for ALL Langfuse work:
 
 1. **Documentation First**: NEVER implement based on memory. Always fetch current docs before writing code (Langfuse updates frequently) See the section below on how to access documentation.
 2. **CLI for Data Access**: Use `langfuse-cli` when querying/modifying Langfuse data. See the section below on how to use the CLI.
-3. **Best Practices by Use Case**: Check the relevant reference file below for use-case-specific guidelines before implementing
+3. **Best Practices by Use Case**: Check the relevant reference file below for use-case-specific guidelines before asking the user for more details and especially before implementing
 4. **Use latest Langfuse versions**: Unless the user specified otherwise or there's a good reason, always use the latest version of Langfuse SDKs/APIs. Even if you're only creating a plan for another agent to execute, be explicit about the exact version to use.
 5. **If you guide the user through UI** and are unsure about a label or location, inspect the user’s screenshots or ask to see the relevant screen. Do not assume UI labels have the exact same names as API, SDK, or CLI fields.
 
@@ -33,7 +33,7 @@ Follow these principles for ALL Langfuse work:
 ## Use case specific references
 
 - instrumenting an existing function/application: references/instrumentation.md
-- creating or getting to a good evaluation dataset from production traces, monitored failures, expert examples, existing assets, or targeted synthetic gap-fills to measure quality or test for regressions in AI systems: references/create-dataset.md
+- creating or getting to a good (evaluation) dataset to measure quality or test for regressions in AI systems: references/create-dataset.md
 - migrating prompts from a codebase into Langfuse: references/prompt-migration.md
 - creating a prompt or changing any part of an existing prompt, including small edits and debugging/tuning: references/prompt-engineering.md
 - capturing user feedback (thumbs, ratings, implicit signals) as scores on traces: references/user-feedback.md
