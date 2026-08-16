@@ -48,7 +48,7 @@ If unsure whether a change warrants a bump, err on the side of bumping patch.
 
 ## Reviewing Pull Requests
 
-When reviewing a PR (e.g. triggered by `@claude review`), enforce the principles above — they are the review criteria.
+When reviewing a PR (e.g. triggered by `@claude review`), enforce the principles above — they are the review criteria. 
 
 **First, read each changed file the way its runtime consumer will — then apply judgment.** A reference is opened mid-task by an agent trying to do the work; `SKILL.md` and this file are read by authoring agents. Read each from that seat and ask: does every line make sense here, can the reader act on it, and does it earn its place? Flag anything that reads as filler, hedging, restatement, meta-commentary about how the file was written, or an instruction aimed at a different audience (e.g. authoring notes like "don't duplicate the docs here" left inside a reference the runtime agent can't act on) — even when it breaks none of the specific checks below.
 
