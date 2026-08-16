@@ -1,6 +1,6 @@
 {
   "name": "langfuse",
-  "version": "1.2.0",
+  "version": "1.5.0",
   "description": "Skills for working with Langfuse, the open-source LLM engineering platform for tracing, prompt management, and evaluation.",
   "author": {
     "name": "Langfuse",
@@ -32,7 +32,8 @@
     "defaultPrompt": [
       "Set up Langfuse tracing in this app.",
       "Inspect Langfuse traces for recent failures.",
-      "Migrate prompts into Langfuse."
+      "Migrate prompts into Langfuse.",
+      "Prepare this application and its Langfuse project for the v4 platform migration."
     ],
     "websiteURL": "https://langfuse.com",
     "privacyPolicyURL": "https://langfuse.com/privacy",

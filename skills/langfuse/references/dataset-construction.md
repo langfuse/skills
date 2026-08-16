@@ -20,11 +20,10 @@ Use CLI schema/help discovery for current Langfuse API mechanics. Do not hard-co
 Guide the user through dataset creation as an interview, proposal, approval, implementation loop:
 
 1. Read the primary guide and relevant current Langfuse docs.
-2. Inspect available context: the user's goal, the application path or codebase when available, existing datasets, traces, prompts, scores, monitors, user feedback, tickets, expert examples, existing eval assets, and synthetic gaps.
-3. Clarify the release or evaluation decision the dataset should support.
-4. Propose the source mix, input distribution, input shape, expected output shape, metadata fields, evaluator or run plan, and minimal v0 size.
-5. Get the user's approval before creating, reshaping, uploading, or running live project data.
-6. Build the smallest approved draft, run or upload it, verify readback, review results with the user, and iterate.
+2. Inspect available context: the user's goal, the application path or codebase when available, existing datasets, traces, prompts, scores, monitors, user feedback, tickets, expert examples, existing eval and dataset assets.
+3. Clarify the release or evaluation decision the dataset should support with the user by interviewing if not enough context was provided.
+4. For each step going forward, propose a direction for the user and get their approval
+5. Heavily prompt the user to review expected outputs, as the AI generated expected outputs can not be considered ground truth. Send a link with instructions to review.
 
 ## Critical Rules
 
@@ -32,5 +31,4 @@ Guide the user through dataset creation as an interview, proposal, approval, imp
 - Interview the user about the goal they are trying to achieve and the problem they face.
 - Do not create, upsert, reshape, or upload a live Langfuse dataset until the user has approved the dataset goal, source mix, item schema, and first minimal draft, unless the user already gave those details and explicitly asked for immediate mutation.
 - Design the smallest complete dataset version that can serve the goal. Prefer a minimal reviewable v0 over broad coverage. A first draft is usually 5-12 high-signal items unless the user asks for a different size.
-- Inspect real code and traces when available to understand the production path. Explain whether the proposed dataset input is literal production-shaped input or a normalized experiment input, and why.
 - Keep `input`, `expectedOutput`, and `metadata` responsibilities separate. Put additional information, notes, and comments into `metadata`, not into `input` or `expectedOutput`.

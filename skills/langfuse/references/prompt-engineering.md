@@ -7,34 +7,29 @@ metadata:
 
 # Prompt Engineering
 
-## Establish the target
+## Universal principles
 
-Before editing, identify:
+1. **Be specific.** State the required output format, constraints, and, when order matters, numbered steps. Write for someone with minimal context.
+2. **Use labeled sections** for the role, instructions, examples, and context. Use XML tags when they help distinguish rules, data, and variables.
+3. **Give the model a role.** A focused system-prompt sentence can steer tone and behavior.
+4. **Explain why important rules exist** so the model can apply them to adjacent cases.
 
-- the exact model and version
-- the complete prompt and message roles, including variables, examples, and injected context
-- relevant model settings, tools, and structured-output schemas
-- observable success criteria and representative test cases
+## Adjusting an existing prompt
 
-Fetch the target model's current prompting guidance. Start with the [OpenAI prompting guide](https://developers.openai.com/api/docs/guides/prompt-engineering) and [reasoning-model guidance](https://developers.openai.com/api/docs/guides/reasoning-best-practices), or the [Anthropic prompting overview](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/overview) and [Claude prompting best practices](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices). For other providers, use their official model-specific guidance.
+1. **Pin down the failure first.** Use concrete misbehaving outputs and name the exact failure mode: wrong format, ignored instruction, wrong tone, hallucination, or another observable error. The task and data show what could fail, not what did fail; do not write a fix before observing the failure.
+2. **Trace the failure to the prompt.** Look for a missing, ambiguous, or conflicting instruction.
+3. **Fix the failure class, not the example.** Generalize the observed mistake into an error class and write the instruction at that level, in your own words. Cover adjacent cases, but do not add definitions, rules, or examples for unobserved problems or encode the failing example itself. If a generalized instruction does not work, report the failure instead of narrowing the rule to that case.
+4. **Preserve existing behavior.** Before changing text, identify what behavior it protects. Avoid contradicting other rules or breaking cases that already work.
+5. **Make the smallest testable edit.** Change one cause per attempt so you can attribute the result. Avoid extra length, emphasis, or all-caps. In Langfuse, save each attempt as a new version or label so you can compare and roll back.
 
-Do not transfer techniques between model families without testing them. In particular, do not ask a reasoning model to reveal chain-of-thought unless its current provider guidance explicitly recommends that technique.
+## Model-specific tuning
 
-## Write a new prompt
+Identify the target model if you can — tuning differs by model, so when you know which model the prompt runs on, follow that model's own prompting guidance.
 
-1. Translate the success criteria into explicit instructions, constraints, and an output contract.
-2. Separate instructions, examples, and untrusted or variable context with clear labels or delimiters. Add a role only when it clarifies the desired behavior or tone.
-3. Explain the reason behind important rules when it helps the model generalize to adjacent cases.
-4. Start with the shortest prompt that covers the requirements. Add examples only when they teach behavior that the instructions do not reliably produce.
-5. Test representative, boundary, and adversarial cases before treating the prompt as ready.
-
-## Improve an existing prompt
-
-1. **Observe the failure first.** Collect concrete inputs and misbehaving outputs, then name the observable failure mode. Do not infer a failure from the task or data alone.
-2. **Verify the prompt is the cause.** Check whether the failure instead comes from missing context, retrieval, tool behavior, model settings, an output parser, or the selected model.
-3. **Trace the failure to a prompt defect.** Locate a missing, ambiguous, or conflicting instruction.
-4. **Fix the failure class.** Generalize the observed mistake into a rule that covers adjacent cases without encoding the failing example or inventing rules for unobserved problems. If the generalized rule does not help, report that result instead of narrowing it to the example.
-5. **Preserve working behavior.** Identify what the surrounding instructions protect and keep regression cases for it.
-6. **Make one testable change.** Compare the candidate against the same cases and success criteria. Do not substitute repetition, emphasis, or all-caps for a clearer instruction. Revert or revise the change if it does not improve results without unacceptable regressions.
-
-When the prompt is managed in Langfuse, save each attempt as a new version, compare variants in the [Playground](https://langfuse.com/docs/prompt-management/features/playground) or a [dataset experiment](https://langfuse.com/docs/evaluation/experiments/experiments-via-ui), and move a deployment label only after validation. See [prompt version control](https://langfuse.com/docs/prompt-management/features/prompt-version-control).
+| Technique | Standard (GPT) | Reasoning (Claude latest) |
+|-----------|----------------|---------------------------|
+| Instruction density | High, prescriptive | Goal-level; don't micro-manage steps |
+| Reasoning | Add explicit chain-of-thought | Native thinking; "think thoroughly" + tune `effort` |
+| Emphasis language | Strong directives fine | Dial back `MUST`/`CRITICAL` |
+| Output format | Prefilling/scaffolds | Prefill removed (4.6+); structured outputs + "no preamble" |
+| Roles | `developer` > `user` > `assistant` | `system` role + `user`/`assistant` |
