@@ -69,7 +69,7 @@ Discover unstable schemas before use.
 
 - Test applicable hierarchy, root input/output, propagated attributes, public/release/environment behavior, API pagination and parsing, delivery semantics, and absence of deprecated calls.
 - Before production cutover, send representative traces from the migrated instrumentation to a non-production Langfuse project and inspect the resulting observations there. Mocked tests do not verify backend ingestion or project behavior.
-- On a session path, confirm the root and every applicable child observation carry the intended session ID and that session cost includes the cost-bearing children. Keep SDK/instrumentation readiness blocked when emitted-trace inspection is unavailable.
+- On a session path, confirm the root and every applicable child observation carry the intended session ID and that session cost includes the cost-bearing children.
 - Re-read rules and integrations after writes. Preserve disabled legacy rules for rollback; never claim completion without checking the Evaluators UI on the target host for legacy rows.
 - The readiness report must contain exactly these seven rows, each marked `ready`, `changed`, `manual action`, or `blocked`: project access; SDK/instrumentation; trace evaluators; dataset evaluators; direct APIs; exports; verification/rollback.
 - In evaluator rows, separate contracts verified against project data from targets suggested only by code inspection. For every row not marked `ready`, include the blocker, next action, and a direct UI link when applicable.

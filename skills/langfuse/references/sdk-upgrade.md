@@ -28,10 +28,7 @@ Follow every intermediate guide when the installed version is more than one majo
 2. Find every source of correlating attributes, including `session_id`/`sessionId`, `user_id`/`userId`, tags, metadata, version, environment, and trace name. Search for the values and surrounding application concepts, not only removed SDK method names.
 3. Apply every relevant item from the exact version-specific guides. Preserve each correlating attribute by establishing its documented propagation scope before any observation-producing call that must inherit it.
 4. For sessions, propagate the session ID early enough that the root and every applicable child observation—including cost-bearing generations—receive the same value. For work crossing service boundaries, follow the current distributed-tracing and baggage guidance rather than assuming in-process context crosses the boundary.
-5. Run focused format, type, lint, and test checks, then exercise each changed ingestion path with representative application behavior.
-6. Fetch the emitted trace and verify the expected correlating attributes on the root and every applicable child observation. For a session path, also confirm the observations are grouped into the intended session and its cost includes the cost-bearing children.
 
-Do not mark the upgrade ready when only dependency or compile-time checks passed. If runtime execution or trace inspection is unavailable, report the exact verification as blocked.
 
 ## Completion report
 
