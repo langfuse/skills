@@ -27,7 +27,6 @@ Follow every intermediate guide when the installed version is more than one majo
 1. Inventory every SDK, integration package, direct OpenTelemetry exporter, initialization site, instrumentation wrapper, lockfile, worker, script, and test that can emit Langfuse data.
 2. Find every source of correlating attributes, including `session_id`/`sessionId`, `user_id`/`userId`, tags, metadata, version, environment, and trace name. Search for the values and surrounding application concepts, not only removed SDK method names.
 3. Apply every relevant item from the exact version-specific guides. Preserve each correlating attribute by establishing its documented propagation scope before any observation-producing call that must inherit it.
-4. For sessions, propagate the session ID early enough that the root and every applicable child observation—including cost-bearing generations—receive the same value. For work crossing service boundaries, follow the current distributed-tracing and baggage guidance rather than assuming in-process context crosses the boundary.
 
 
 ## Completion report
