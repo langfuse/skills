@@ -22,7 +22,7 @@ Install as a [Cursor plugin](https://cursor.com/docs/plugins):
 
 ### skills CLI
 
-Install via the [skills CLI](https://github.com/anthropics/skills):
+Install via the [skills CLI](https://github.com/vercel-labs/skills):
 
 ```bash
 npx skills add langfuse/skills --skill "langfuse"
