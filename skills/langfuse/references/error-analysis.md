@@ -73,7 +73,7 @@ When a category warrants a prompt fix, always offer the user two options:
 
 ### Setup evaluators
 
-When a category warrants an evaluator setup, propose the type of evaluator and offer to set it up for the user
+When a category warrants an evaluator, build it following `references/setting-up-evals.md`.
 
 
 ### Common gotchas

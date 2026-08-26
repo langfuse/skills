@@ -31,7 +31,7 @@ Treat trace errors and logged failures as existing coverage. Unless the user wan
 
 Do not propose evaluating a known failure with an owner and a planned one-time fix unless the user wants to track whether it recurs.
 
-If formal error analysis is the right next step, explain why and ask whether the user wants to do it. If they agree, set up the scores, representative sample, and annotation queue, then guide the user through the review. If you start error analysis, do not start metric selection until the analysis is complete.
+If formal error analysis is the right next step, explain why and ask whether the user wants to do it. If they agree, run it following `references/error-analysis.md`, and do not start metric selection until the analysis is complete.
 
 ## Define the metric set
 
