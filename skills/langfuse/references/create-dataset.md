@@ -11,22 +11,23 @@ metadata:
 
 ## Primary Guide
 
-Follow the [Langfuse Academy datasets guide](https://langfuse.com/academy/datasets) as the human-readable source of truth for dataset design. Do not duplicate the guide here; fetch current docs before implementation.
+Follow the [Langfuse Academy datasets guide](https://langfuse.com/academy/datasets) as the human-readable source of truth for dataset design; fetch current docs before implementation.
 
-Use CLI schema/help discovery for current Langfuse API mechanics. Do not hard-code CLI recipes for dataset operations in this reference.
+Use CLI schema/help discovery for current Langfuse API mechanics.
 
 ## Workflow
 
 Guide the user through dataset creation as an interview, proposal, approval, implementation loop:
 
 1. Read the primary guide and relevant current Langfuse docs.
+2. Clarify the problem the user is facing, interviewing them if context is thin, to decide the goal, release, or evaluation decision the dataset should support.
 3. Inspect available context: the user's goal, the application path or codebase when available, existing datasets, traces, prompts, scores, monitors, user feedback, tickets, expert examples, existing eval and dataset assets.
-4. Interview the user on available sources beyond production traces
-6. Clarify the problem the user is facing to help decide on the goal, release or evaluation decision the dataset should support with the user by interviewing the user if not enough context was provided.
-7. For each step going forward, propose a direction for the user and get their approval, specifically:
-- Specify dataset distribution dimensions with user (propose and get user input)
-- Specify item schema input, expected output, metadata (propose and get user input)
-5. Heavily prompt the user to review expected outputs, as the AI generated expected outputs can not be considered ground truth. Send a link with instructions to review.
+4. Interview the user on available sources beyond production traces.
+5. For each step going forward, propose a direction and get the user's approval, specifically:
+   - Dataset distribution dimensions (propose and get user input).
+   - Item schema: input, expected output, metadata (propose and get user input).
+6. Generate the first minimal draft of items against the approved schema and distribution, then present it for approval.
+7. Heavily prompt the user to review expected outputs, as AI-generated expected outputs cannot be considered ground truth. Send a link with instructions to review.
 
 ## Critical Rules
 - Do not create, upsert, reshape, or upload a live Langfuse dataset until the user has approved the dataset goal, source mix, item schema, and first minimal draft, unless the user already gave those details and explicitly asked for immediate mutation.
