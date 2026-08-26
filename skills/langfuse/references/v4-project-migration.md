@@ -35,7 +35,8 @@ Discover unstable schemas before use.
 
 - Inventory every Langfuse SDK, integration, OTEL exporter, initialization site, lockfile, raw request, generated client, script, notebook, and CI call.
 - Upgrade to the latest stable SDK major required by the current docs and apply every applicable breaking change. Record both declared and resolved versions; update an existing lockfile.
-- Put overall input/output on the root observation and propagate every trace attribute needed to filter or aggregate observations.
+- Find every source of correlating attributes, including session and user IDs, tags, metadata, version, environment, and trace name; do not search only for removed SDK methods.
+- Put overall input/output on the root observation. Establish the documented propagation scope before observation-producing calls so every applicable child receives the attributes needed for filtering and aggregation, including the session ID on cost-bearing generations.
 - For raw `/api/public/ingestion`, use the current Langfuse SDK in Python or JS/TS. For other languages, use the language's native OpenTelemetry API and follow the custom-ingestion guide.
 - When replacing synchronous ingestion, assess buffering, retries, flushing, shutdown, and error propagation. Do not claim identical delivery semantics without verification.
 - For other deprecated APIs, migrate the path, parameters, pagination, filters, field groups, response parsing, and downstream consumer together using the deprecated-API guide.
@@ -68,6 +69,7 @@ Discover unstable schemas before use.
 
 - Test applicable hierarchy, root input/output, propagated attributes, public/release/environment behavior, API pagination and parsing, delivery semantics, and absence of deprecated calls.
 - Before production cutover, send representative traces from the migrated instrumentation to a non-production Langfuse project and inspect the resulting observations there. Mocked tests do not verify backend ingestion or project behavior.
+- On a session path, confirm the root and every applicable child observation carry the intended session ID and that session cost includes the cost-bearing children.
 - Re-read rules and integrations after writes. Preserve disabled legacy rules for rollback; never claim completion without checking the Evaluators UI on the target host for legacy rows.
 - The readiness report must contain exactly these seven rows, each marked `ready`, `changed`, `manual action`, or `blocked`: project access; SDK/instrumentation; trace evaluators; dataset evaluators; direct APIs; exports; verification/rollback.
 - In evaluator rows, separate contracts verified against project data from targets suggested only by code inspection. For every row not marked `ready`, include the blocker, next action, and a direct UI link when applicable.

@@ -1,7 +1,7 @@
 ---
 name: langfuse
 description: >-
-  Interact with Langfuse and access its documentation. Use when supporting users across the AI Engineering Loop: tracing, monitoring, creating datasets, running experiments, and evaluating AI applications. Use when needing to (1) query or modify Langfuse data programmatically via the CLI — traces, prompts, datasets, scores, sessions, and any other API resource, (2) look up Langfuse documentation, concepts, integration guides, or SDK usage, or (3) understand how any Langfuse feature works. Also use for LLM evaluation and prompt work even when Langfuse is not named: creating or improving an evaluation dataset, guarding against regressions with a test set, writing or editing prompts, moving prompts out of code, capturing user feedback, or checking whether an LLM judge is reliable. This skill covers CLI-based API access (via npx) and multiple documentation retrieval methods.
+  Interact with Langfuse and access its documentation: tracing, monitoring, creating datasets, running experiments, and evaluating AI applications. Use when needing to (1) query or modify Langfuse data, (2) look up Langfuse documentation, concepts, integration guides, a feature or SDK usage, or (3) do any AI engineering task (AI observability, prompt engineering/management, evaluation and evaluator management, experimentation, dataset management, evaluation-driven CI/CD, feedback collection). Invoke it for tasks in this scope even when Langfuse is not configured or explicitly mentioned.
 allowed-tools:
   - WebFetch(domain:langfuse.com)
   - Bash(curl *langfuse.com/*)
@@ -38,8 +38,9 @@ Follow these principles for ALL Langfuse work:
 - creating a prompt or changing any part of an existing prompt, including small edits and debugging/tuning: references/prompt-engineering.md
 - capturing user feedback (thumbs, ratings, implicit signals) as scores on traces: references/user-feedback.md
 - further tips on using the Langfuse CLI: references/cli.md
+- upgrading or migrating Langfuse SDKs and preserving application instrumentation attributes: references/sdk-upgrade.md
 - upgrading legacy trace-level or dataset-item evaluators to observation-level or experiment evaluators: references/trace-evaluator-upgrade.md. Use the [evaluator migration guide](https://langfuse.com/faq/all/llm-as-a-judge-migration) as the primary reference.
-- preparing an application and Langfuse project for the v4 platform migration: references/v4-project-migration.md
+- preparing a Langfuse project for the v4 platform migration: references/v4-project-migration.md
 - judge calibration (LLM-as-a-Judge reliability, simple accuracy checks, advanced split-based validation, confusion matrices, and metric ingestion): references/judge-calibration.md
 - systematic error analysis — reading traces, building failure taxonomy, deciding what to fix: references/error-analysis.md
 - setting up CI/CD experiment gates with `langfuse/experiment-action`: references/ci-cd.md
