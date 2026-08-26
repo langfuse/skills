@@ -61,6 +61,10 @@ Once installed, the agent will automatically use these skills when relevant — 
 - Querying traces, prompts, or datasets via the API
 - Looking up Langfuse docs, SDK usage, or integration guides
 
+## Contributing
+
+Want to improve a skill or add a new one? See [CONTRIBUTING.md](./CONTRIBUTING.md).
+
 ## Feedback & Requests
 
 Something not working as expected, or want a new skill? [Start a discussion](https://github.com/langfuse/skills/discussions/new?category=ideas-improvements).
