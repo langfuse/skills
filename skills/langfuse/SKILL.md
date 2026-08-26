@@ -33,6 +33,7 @@ Follow these principles for ALL Langfuse work:
 ## Use case specific references
 
 - instrumenting an existing function/application: references/instrumentation.md
+- creating or getting to a good (evaluation) dataset to measure quality or test for regressions in AI systems: references/create-dataset.md
 - migrating prompts from a codebase into Langfuse: references/prompt-migration.md
 - creating a prompt or changing any part of an existing prompt, including small edits and debugging/tuning: references/prompt-engineering.md
 - capturing user feedback (thumbs, ratings, implicit signals) as scores on traces: references/user-feedback.md
