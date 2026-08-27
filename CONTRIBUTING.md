@@ -19,13 +19,13 @@ If you think you should have access but don't, reach out to @Lotte-Verheyden.
 
 The harness runs code agents (Claude Code and Codex) headlessly on Modal against a Langfuse dataset and traces every run back to Langfuse. You trigger a run by pointing it at a dataset and a **commit** of your skill. See the harness repo's `README` and `runtime-skills/README.md` for detailed mechanics.
 
-### 0. Read `AGENTS.md` first
+### 0. Before starting on your skill changes, read `AGENTS.md` first
 
 Skim [`AGENTS.md`](./AGENTS.md) and the skill you are changing. It documents the best practices your change must follow, and your change is reviewed against it.
 
-### 1. Create or reuse a dataset
+### 1. Create or reuse a dataset in the Langfuse project
 
-Tests run against a Langfuse **dataset**. Each item is one task handed verbatim to the agent, plus an `expected_output` describing what "good" looks like:
+Tests run against a Langfuse **dataset**. Each item is one task handed verbatim to the agent, plus an `expected_output` that says what "good" looks like.
 
 ```json
 { "input":           {"prompt": "the task handed verbatim to the agent"},
@@ -35,18 +35,24 @@ Tests run against a Langfuse **dataset**. Each item is one task handed verbatim 
   "metadata":        {"env_folder": "optional-starter-workspace-under-envs/"} }
 ```
 
-**Check for an existing dataset first.** Skill-testing datasets live under a `skill-testing/` folder — e.g. `skill-testing/prompt-migration`. Always follow this convention: `skill-testing/<name>`.
+**First check whether a suitable dataset already exists in Langfuse.** Skill-testing datasets are under a `skill-testing/` folder — e.g. `skill-testing/prompt-migration`.
+
+> [!TIP]
+> **Folder conventions: always follow these.** Every skill-testing dataset lives under the skill-testing folder: `skill-testing/<name>`
 
 ### 2. Environments
 
 Some tasks need a realistic starting codebase ("instrument *this application*" only makes sense if there's an application). Those live under `envs/` in the harness repo, referenced by a dataset item's `metadata.env_folder`.
 
-- **Environments must be merged and deployed before a dataset can reference them.** `envs/` is bundled into the agent image (`images.py` adds it via `add_local_dir`), so a new or changed environment only reaches the sandbox after the image is rebuilt on a deploy. The `metadata.env_folder` path must match exactly.
-- Follow the folder convention: `envs/<name>-skill-testing/`.
+> [!IMPORTANT]
+> **Environments must be merged and deployed before a dataset can reference them.** `envs/` is bundled into the agent image (`images.py` adds it via `add_local_dir`), so a new or changed environment only reaches the sandbox after the image is rebuilt on a deploy. The `metadata.env_folder` path must match exactly.
+
+> [!TIP]
+> **Folder conventions: always follow these.** Every skill-testing env lives under a skill-testing folder: `envs/<name>-skill-testing/`
 
 ### 3. Commit your skill version on a branch
 
-You test a skill by its **commit hash** — Modal fetches it from GitHub at the exact commit and path you give it.
+You test a skill by its **commit hash**. Modal fetches the skill from the Github repo at the exact commit and path you give it.
 
 ```bash
 # add your skill version under runtime-skills/ in the harness repo
@@ -56,11 +62,14 @@ git push -u origin HEAD
 git rev-parse HEAD          # copy the full 40-char SHA
 ```
 
-The commit **must be pushed** but **does not need to be merged**. Keep the branch until the experiment finishes. You never merge the skill versions you test — committing on a branch is only so Modal can fetch it. The skills themselves live in this repo; `runtime-skills/` in the harness repo is just a staging area for experiments.
+The commit **must be pushed** but **does not need to be merged**. Keep the branch until the experiment finishes.
+
+> [!TIP]
+> **You never merge the skill versions you are testing.** Committing on a branch is only so Modal can fetch it. The skills themselves live in this repo; `runtime-skills/` in the harness repo is just a staging area for experiments.
 
 ### 4. Trigger the experiment
 
-In the Langfuse project: open the dataset → Start Experiment → From Webhook → the ⚡ trigger → select the company Modal webhook → paste the payload:
+In the Langfuse project: open the dataset → Start Experiment → From Webhook → the ⚡ trigger → select the existing company Modal webhook → paste the payload:
 
 ```json
 {
@@ -74,44 +83,54 @@ In the Langfuse project: open the dataset → Start Experiment → From Webhook 
 }
 ```
 
-**Run a baseline first** — an experiment on the skill version *before* your changes — then run one *with* your changes to compare. It can take several minutes after you click Run for the experiment to appear.
+**First run an experiment on the skill version before your changes as a baseline. Then run an experiment with your changes to compare with.**
 
-**Always test on both Claude and GPT.** `run_configs: ["claude-code", "codex"]` runs both agents; always keep both. Claude and GPT behave *wildly* differently — a skill that looks great on one can regress on the other.
+It can take several minutes after you click Run for the experiment to show up.
 
-Company infrastructure (Modal, credentials, the webhook) is maintained centrally. If the webhook is unavailable, ask a harness-repo maintainer.
+> [!TIP]
+> Company infrastructure (Modal, credentials, the webhook) is maintained centrally. If the webhook is unavailable, ask a harness-repo maintainer.
+
+#### Always test on both GPT and Claude
+
+`run_configs: ["claude-code", "codex"]` runs both agents. **Always keep both.** Claude and GPT behave *wildly* differently, a skill that looks great on one can regress on the other.
 
 ### 5. Review the results
 
-You don't always need an automated evaluator, especially early on. For a new use case it's often more useful to open the traces and read what the agent actually did. Working through the results with a coding agent usually tells you more than a pre-built scorer — stay manual until automating something makes sense.
+You do not always need an automated evaluator, especially early on. For a new use case it's often more useful to open the traces and read what the agent actually did.
 
-### 6. Test file invocation (new reference files)
+Working through the results with a coding agent usually tells you more than a pre-built scorer, and it's fine to stay manual until it makes sense to automate something.
 
-When you create a new reference file, **always test on the reference-file invocation dataset.** This checks that your routing addition to `SKILL.md` works. You're testing two things:
+### 6. If you are creating a new reference file: test file invocation
 
-1. **The file is invoked when it should be.**
-2. **It doesn't break invocations of other files.** A new reference file (or a broadened description) can start hijacking prompts that should route elsewhere.
+When you are creating a new reference file, **always test on the reference file invocation dataset.** This is to test whether your routing addition to the main `SKILL.md` file is working as expected. You are testing two things:
 
-Add 2–3 items with scenarios where your file should be invoked:
+1. **The file is invoked when it should be**
+2. **It does not break invocations of other files in other scenarios.** A new reference file (or a broadened description) can start hijacking prompts that should route elsewhere
+
+Add 2-3 items to the dataset with scenarios where you want your reference file to be invoked, and set the expected output to your file:
 
 ```json
 { "input":           {"prompt": "a realistic user question for this reference file"},
   "expected_output": {"invoked_reference_file": "my-new-reference.md"} }
 ```
 
-`reference_file_invoked` is scored deterministically from the skill reads detected on the trace.
+`reference_file_invoked` is scored deterministically from the **skill reads detected on the trace.**
 
-**Changing an existing item to point at your new file → stop and get review.** If you find yourself wanting to repoint an *existing* dataset item to your new reference file, that's a signal to get review first. Involve @Lotte-Verheyden before making that change.
+> [!IMPORTANT]
+> **Changing an existing item to point at your new file → stop and get review.** If you find yourself wanting to change an *existing* dataset item so it invokes your new reference file instead of the one previously specified, that is a signal to get review before touching the dataset. Involve @Lotte-Verheyden before making that change.
 
-**Don't overfit routing descriptions to the dataset.** Overfitting to specific dataset scenarios — especially in frontmatter `description` fields — produces a high experiment score but tells you nothing about generalized use. Focus on generalized routing rules.
+#### Do not overfit routing descriptions to the dataset
 
-## Checklist (Langfuse team)
+What often happens is overfitting to the specific scenarios of your datasets, especially in frontmatter `description` fields. This produces a high experiment score but tells you nothing about generalised use of the skill. Avoid this and focus on improving the score with generalised routing rules.
 
-Before a skill change counts as tested:
+## Checklist
+
+Before a skill change counts as tested, you should have done all of the following:
 
 - [ ] Read `AGENTS.md` and confirmed the skill behaves accordingly.
-- [ ] If you added a new reference file **or** changed any routing: tested reference-file invocation.
-- [ ] If you added a new reference file: added 2–3 examples to the reference-file invocation dataset.
+- [ ] If you added a new reference file **or** changed any routing: tested reference file invocation.
+- [ ] If you added a new reference file: added 2-3 examples to the reference file invocation dataset.
 - [ ] Committed and pushed the skill on a branch.
 - [ ] Merged any new environments you need for testing.
-- [ ] Ran the experiment on **both** Claude Code and Codex, with a baseline to compare against.
+- [ ] Run the experiment on **both** Claude Code and Codex, with a baseline to compare against.
 - [ ] Reviewed the results and found them acceptable.
