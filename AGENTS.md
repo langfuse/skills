@@ -48,19 +48,21 @@ If unsure whether a change warrants a bump, err on the side of bumping patch.
 
 ## Reviewing Pull Requests
 
-When reviewing a PR (e.g. triggered by `@claude review`), enforce the principles above — they are the review criteria. 
+When reviewing a PR (e.g. triggered by `@claude review`), enforce these principles:
 
-**First, read each changed file the way its runtime consumer will — then apply judgment.** A reference is opened mid-task by an agent trying to do the work; `SKILL.md` and this file are read by authoring agents. Read each from that seat and ask: does every line make sense here, can the reader act on it, and does it earn its place? Flag anything that reads as filler, hedging, restatement, meta-commentary about how the file was written, or an instruction aimed at a different audience (e.g. authoring notes like "don't duplicate the docs here" left inside a reference the runtime agent can't act on) — even when it breaks none of the specific checks below.
+First, read each changed file the way its runtime consumer will: these files are opened mid-task by an agent trying to do the work. Read from that seat and ask: does every line make sense here, can the agent act on it, and does it earn its place? 
+
+Flag anything that reads as filler, hedging, restatement, meta-commentary about how the file was written, or an instruction aimed at a different audience (e.g. authoring notes like "don't duplicate the docs here" left inside a reference the runtime agent can't act on) — even when it breaks none of the specific checks below.
 
 Then work through these specific checks:
 
-- **Docs checked, and the addition beats them.** Fetch every docs page named or linked in the changed skill content, then search the Langfuse docs for the use case even if the diff links no page. Compare the proposed content directly with those sources. Flag anything an agent could get from the docs; almost no product guidance should be duplicated. Prefer moving generally useful guidance to the docs and linking to it from the skill.
-- **Does this need a new reference?** After removing docs duplication, check whether the remaining non-obvious workflow belongs in an existing reference. Flag a new file when extending an existing reference—or adding nothing—would serve the agent as well.
+- **Docs checked, and the addition beats them.** Search the Langfuse docs for the use case, compare the proposed content directly with your the fetched docs sources. Flag anything an agent could get from the docs; almost no product guidance should be duplicated. Prefer moving generally useful guidance to the docs and linking to it from the skill.
+- **Does this need a new reference?** Flag a new reference file when extending an existing reference—or adding nothing—would serve the agent as well.
 - **Is the reference ruthlessly concise?** Flag filler, self-explanatory instructions, repeated guidance, and details the agent will already have from the fetched docs or task context. New use-case references should be at most 100 lines including frontmatter; anything longer needs specific, convincing justification and should still be cut as far as possible.
 - **No committed code.** Flag committed code samples that should instead link to a Langfuse docs page; pseudo-code for logic-specific bits is fine.
-- **`metadata.required_access` present and correct.** Every reference file's frontmatter must declare it, using only the allowed tokens.
-- **Routing is proportional and lives in exactly two places.** Require exactly one compact `## Use case specific references` entry per reference file plus its frontmatter `description`. Flag multiple `SKILL.md` bullets pointing to the same reference, redundant prose routing, and extra prominence given to a newly added workflow.
-- **Version bumps in lockstep.** If published skill behavior changed, both `.claude-plugin/plugin.json` and `.cursor-plugin/plugin.json` must be bumped to the same version in the PR (and no bump for tooling/docs-only changes).
+- **`metadata.required_access` present and correct.**
+- **Routing lives in exactly two places.** Require exactly one compact `## Use case specific references` entry per reference file plus its frontmatter `description`. Flag multiple `SKILL.md` bullets pointing to the same reference, redundant prose routing, and extra prominence given to a newly added workflow.
+- **Version bumps.** If published skill behavior changed, both `.claude-plugin/plugin.json` and `.cursor-plugin/plugin.json` must be bumped to the same version in the PR (and no bump for tooling/docs-only changes).
 - **CLI path sync.** If a skill's path changed, the [CLI repo](https://github.com/langfuse/langfuse-cli) reference must be updated too.
 
 Prioritize correctness, and the read above, over pure formatting nits (whitespace, heading casing). "This line is meaningless to the reader" is never a mere nit. If the diff is clean against all of the above, say so plainly.
