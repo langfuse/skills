@@ -57,6 +57,8 @@ For evaluator functionality, use the unstable API endpoints.
 
 Follow [Writing good evaluators](https://langfuse.com/academy/evaluate/writing-evaluators) to choose the evaluator type; do not always default to an LLM-as-a-judge.
 
+- Before creating the evaluator, verify its target filter by fetching the observations it actually matches. Confirm the set is exactly what you intend—no duplicates that would be scored (and billed) twice.
+- Prioritize a clean score name: it is the metric that lands on every observation, so name it after what is measured (`refusal`), not after the evaluator (`refusal judge`). Keep any evaluator-mechanism wording out of the score name.
 - Explain why the chosen evaluation method measures the intended behavior, what evidence it relies on, what it cannot tell the user, and when another method would be better.
 - When methods have significant trade-offs and none is clearly superior, explain the options and let the user decide before implementation.
 - Only if an LLM-as-a-judge is the best fit, calibrate it on real examples before treating it as ready(`references/judge-calibration.md`). You can do this by running an experiment on a dataset where the prompt being tested is the LLM-as-a-judge prompt.
