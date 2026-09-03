@@ -83,7 +83,7 @@ For common workflows, tips, and full usage patterns, see [references/cli.md](ref
 
 ## 2. Langfuse Documentation
 
-Three methods to access Langfuse docs, in order of preference. **Always prefer your application's native web fetch and search tools** (e.g., `WebFetch`, `WebSearch`, `mcp_fetch`, etc.) over `curl` when available. The URLs and patterns below work with any fetching method — the `curl` examples are just illustrative.
+Four methods to access Langfuse docs and the API reference; 2a-2c are in order of preference. **For 2a-2c, prefer your application's native web fetch and search tools** (e.g., `WebFetch`, `WebSearch`, `mcp_fetch`, etc.) over `curl` when available. The URLs and patterns below work with any fetching method — the `curl` examples are just illustrative.
 
 ### 2a. Documentation Index (llms.txt)
 
@@ -130,11 +130,23 @@ Returns a JSON response with:
 
 Search is a great fallback if you cannot find the relevant pages or need more context. Especially useful when debugging issues as all GitHub Issues and Discussions are also indexed. Responses can be large — extract only the relevant portions. Note that changelog posts may also surface here: use them only to confirm a feature exists, never to implement from — their examples may be outdated, so always implement from the docs and API/SDK reference.
 
+### 2d. API Reference from the Deployment (OpenAPI)
+
+Every Langfuse deployment serves the OpenAPI spec of the version it runs, with no authentication: `/api/openapi.yaml` on v4.27.0+, `/generated/api/openapi.yml` on any version. Prefer it over `https://api.reference.langfuse.com`, which tracks Langfuse Cloud rather than the installed version, and use it for exact request and response schemas; the CLI's `--help` shows request flags, not response shapes.
+
+```bash
+curl -sSfL "$LANGFUSE_BASE_URL/api/openapi.yaml" -o /tmp/openapi.yaml  # ~590 KB: download and grep it, never web-fetch or read it whole
+grep -n "^  /api/public/" /tmp/openapi.yaml  # endpoint paths; response schemas are under components/schemas
+```
+
+`$LANGFUSE_BASE_URL/api/docs` (v4.27.0+) renders the same spec as an interactive reference; see the [self-hosted API reference FAQ](https://langfuse.com/faq/all/self-hosting-api-reference).
+
 ### Documentation Workflow
 
 1. Start with **llms.txt** to orient — scan for relevant page titles
 2. **Fetch specific pages** when you identify the right one
 3. Fall back to **search** when the topic is unclear and you want more context
+4. Grep the **deployment's OpenAPI spec** (2d) for exact REST endpoint paths, parameters, or response fields
 
 ## Skill Feedback
 
