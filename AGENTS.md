@@ -28,11 +28,12 @@ When changing the path to any Langfuse skill in this repo, you must also update 
 
 ## Plugin Version Bumps
 
-The repo ships as a plugin to two marketplaces, each with its own manifest:
+The repo ships as a plugin to three marketplaces, each with its own manifest:
 - `.claude-plugin/plugin.json` (Claude Code)
+- `.codex-plugin/plugin.json` (Codex)
 - `.cursor-plugin/plugin.json` (Cursor)
 
-Both manifests have a `version` field and **must stay in lockstep** — always bump them together to the same value, in the same PR as the change.
+All manifests have a `version` field and **must stay in lockstep** — always bump them together to the same value, in the same PR as the change.
 
 When to bump (follow semver):
 - **Patch** (`1.0.0` → `1.0.1`): bug fixes in a skill, clarifications to skill instructions, small content corrections.
