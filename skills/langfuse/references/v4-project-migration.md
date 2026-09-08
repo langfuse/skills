@@ -18,6 +18,8 @@ Fetch only the pages needed for the surfaces found:
 - [SDK upgrade paths](https://langfuse.com/docs/observability/sdk/upgrade-path)
 - [Custom ingestion migration](https://langfuse.com/integrations/native/opentelemetry/migration-to-v4)
 - [Deprecated API migration](https://langfuse.com/faq/all/deprecated-api-migration)
+- [Observations API response contract and examples](https://langfuse.com/docs/api-and-data-platform/features/observations-api)
+- [Observation log levels and terminal status](https://langfuse.com/docs/observability/features/log-levels)
 - [Evaluator migration](https://langfuse.com/faq/all/llm-as-a-judge-migration)
 - [Evaluation Rules](https://api.reference.langfuse.com/#tag/unstableevaluationrules) and [Evaluators](https://api.reference.langfuse.com/#tag/unstableevaluators) APIs
 - Export migrations: [Blob Storage](https://langfuse.com/docs/api-and-data-platform/features/export-to-blob-storage#upgrade-path), [Mixpanel](https://langfuse.com/integrations/analytics/mixpanel#migrate-export-source), and [PostHog](https://langfuse.com/integrations/analytics/posthog#migrate-export-source)
@@ -37,9 +39,11 @@ Discover unstable schemas before use.
 - Upgrade to the latest stable SDK major required by the current docs and apply every applicable breaking change. Record both declared and resolved versions; update an existing lockfile.
 - Find every source of correlating attributes, including session and user IDs, tags, metadata, version, environment, and trace name; do not search only for removed SDK methods.
 - Put overall input/output on the root observation. Establish the documented propagation scope before observation-producing calls so every applicable child receives the attributes needed for filtering and aggregation, including the session ID on cost-bearing generations.
+- Trace root status through exception and shutdown handlers to downstream error triage. Preserve the application's outcome classification and existing diagnostic messages using the log-level guidance.
 - For raw `/api/public/ingestion`, use the current Langfuse SDK in Python or JS/TS. For other languages, use the language's native OpenTelemetry API and follow the custom-ingestion guide.
 - When replacing synchronous ingestion, assess buffering, retries, flushing, shutdown, and error propagation. Do not claim identical delivery semantics without verification.
 - For other deprecated APIs, migrate the path, parameters, pagination, filters, field groups, response parsing, and downstream consumer together using the deprecated-API guide.
+- Follow response fields into every consumer and fixture. Search for removed row fields and nested metadata access, including SDK attribute names; endpoint replacement alone does not establish compatibility.
 - Check self-hosted compatibility before replacing calls; report code targeting a v3 server as blocked on the server upgrade.
 
 ## Migrate evaluators
@@ -68,8 +72,12 @@ Discover unstable schemas before use.
 ## Validate and report
 
 - Test applicable hierarchy, root input/output, propagated attributes, public/release/environment behavior, API pagination and parsing, delivery semantics, and absence of deprecated calls.
+- For read APIs, build fixtures from current documented response examples or sanitized captured responses and record their source. Exercise parsing through the resulting metadata, usage, cost, and error summaries, including continuation and terminal pages.
+- Check requested field groups against the current contract and assert that each consumer's required fields arrive. Use a generation with known usage/cost to catch silent zero defaults; also cover valid empty usage and null cost. HTTP 200 alone is insufficient.
+- Test root status on success, failure, and applicable clean-exit/cancellation paths, including preservation of an existing diagnostic message.
 - Before production cutover, send representative traces from the migrated instrumentation to a non-production Langfuse project and inspect the resulting observations there. Mocked tests do not verify backend ingestion or project behavior.
 - On a session path, confirm the root and every applicable child observation carry the intended session ID and that session cost includes the cost-bearing children.
 - Re-read rules and integrations after writes. Preserve disabled legacy rules for rollback; never claim completion without checking the Evaluators UI on the target host for legacy rows.
 - The readiness report must contain exactly these seven rows, each marked `ready`, `changed`, `manual action`, or `blocked`: project access; SDK/instrumentation; trace evaluators; dataset evaluators; direct APIs; exports; verification/rollback.
 - In evaluator rows, separate contracts verified against project data from targets suggested only by code inspection. For every row not marked `ready`, include the blocker, next action, and a direct UI link when applicable.
+- In direct APIs and verification/rollback, distinguish offline consumer tests from live reads. Without project access, report the tested response source and leave live verification blocked.
