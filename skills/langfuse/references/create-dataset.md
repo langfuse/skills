@@ -4,7 +4,6 @@ description: Collaborative Langfuse dataset creation workflow. Use when the user
 metadata:
   required_access:
     - LANGFUSE_PROJECT_INTERFACE
-    - LANGFUSE_PROJECT_SCRIPT
 ---
 
 # Langfuse Dataset Construction
