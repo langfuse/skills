@@ -6,9 +6,6 @@ description: Deep-dive error analysis of an LLM pipeline or AI application using
   into a taxonomy and decide what to prioritise fixing. Also trigger for "review my
   traces", "my outputs look wrong", "help me debug my LLM app", "I want to analyse
   errors", "build a failure taxonomy", or "what's going wrong with my pipeline".
-metadata:
-  required_access:
-    - LANGFUSE_PROJECT_INTERFACE
 ---
 
 # Error Analysis

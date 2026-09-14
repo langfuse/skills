@@ -1,9 +1,6 @@
 ---
 name: langfuse-cli
 description: Langfuse CLI usage reference — install, resource/action discovery, credentials, and common usage tips for `langfuse-cli`. Use for further tips on using the Langfuse CLI.
-metadata:
-  required_access:
-    - LANGFUSE_PROJECT_INTERFACE
 ---
 
 # Langfuse CLI Reference
