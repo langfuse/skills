@@ -1,11 +1,6 @@
 ---
 name: langfuse-evaluator-upgrade
 description: Upgrade legacy trace-level or dataset-item LLM-as-a-Judge evaluators to observation-level or experiment evaluators. Use when a project needs the coding handoff for evaluator migration during the v4 transition.
-metadata:
-  required_access:
-    - CODEBASE
-    - LANGFUSE_PROJECT_INTERFACE
-    - LANGFUSE_PROJECT_SCRIPT
 ---
 
 # Evaluator upgrade
