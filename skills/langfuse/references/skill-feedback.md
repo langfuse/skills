@@ -1,9 +1,6 @@
 ---
 name: langfuse-skill-feedback
 description: Submit feedback about the Langfuse skill to its maintainers. Use when the skill's instructions are wrong, outdated, missing something, or could be improved.
-metadata:
-  required_access:
-    - LANGFUSE_PROJECT_INTERFACE
 ---
 
 # Skill Feedback

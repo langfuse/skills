@@ -1,17 +1,9 @@
 ---
 name: langfuse-user-feedback
-description: Wires up user feedback (thumbs up/down, ratings, comments) from an application's frontend to Langfuse scores. Use when user wants to capture end-user feedback, add ratings to traces, or connect user complaints to Langfuse.
-metadata:
-  required_access:
-    - CODEBASE
-    - LANGFUSE_PROJECT_SCRIPT
+description: Capture user feedback as Langfuse scores. Use when choosing or implementing explicit ratings, behavioral signals, conversation signals, or task outcomes.
 ---
 
 # User Feedback
-
-Tracing must already be set up — feedback is stored as scores on traces.
-
-Docs: https://langfuse.com/docs/observability/features/user-feedback
 
 ## Workflow
 
@@ -19,48 +11,25 @@ Docs: https://langfuse.com/docs/observability/features/user-feedback
 
 If the user has asked for something specific, go with that. Otherwise, look at the application and **present a few UX options** for how feedback could work, then ask the user which they prefer before implementing.
 
-Common UX patterns to suggest:
+Before presenting options, read [Capturing signals](https://langfuse.com/academy/monitoring/capturing-signals) and inspect the relevant application flow and existing scores. Present findings specific to the application rather than repeating examples from the docs.
 
-| UX Pattern | Best for | How it works |
-|------------|----------|--------------|
-| Thumbs up/down | Chat apps, Q&A | Simple binary buttons next to each response |
-| Star rating (1–5) | Content generation, summaries | Star row or dropdown after each output |
-| "Was this helpful?" banner | Search, documentation assistants | Single yes/no prompt at the bottom of a response |
-| Regenerate / copy tracking | Any app with these actions | Implicit — log when users retry (negative signal) or copy output (positive signal) |
-| Free-text comment | Complex outputs, internal tools | Optional text field alongside a rating |
-| Report button | Any user-facing app | Flag icon to report bad/harmful responses |
+Present every set of proposed signals or metrics as a table with:
 
-This table is not exhaustive — if the application suggests a different feedback pattern that fits better, propose that instead. Present 2–3 options that match the application's use case and ask the user which approach they'd like. This decision shapes everything downstream (score names, data types, frontend components), so it's important to align early.
+- Priority: P0, P1, ..
+- Status: whether the score or signal is already implemented or newly proposed
+- Signal name: Name the score after the observed signal, not the quality you hope it represents: draft_edited, not quality. Reuse the same name for the same signal throughout the application.
+- Explanation: what it indicates, its limitations and biases, and why it fits the application
+- Effort: XS-L
+- Implementation: a very short description such as “Langfuse evaluator” or “application code”. When a signal can be captured deterministically in both application code and a Langfuse code evaluator, present both as options.
 
-Feedback can be **explicit** (user rates via thumbs, stars, etc.) or **implicit** (derived from behavior like copying output, retrying, or escalating to support). Both are stored as scores. Explicit feedback requires the trace ID to reach the frontend; implicit feedback is logged server-side where the event already happens.
+When multiple signals can be captured by one evaluator, group them and reflect this in the Implementation and Effort columns.
 
-### 2. Choose Score Names
+When proposing an outcome signal, explicitly include the implementation complexity in its effort and explanation; unless the supporting workflow and data already exist or the expected value clearly justifies building them, recommend deferring it.
 
-Name reflects the signal source, not what you hope it measures (e.g., `user-thumbs` not `response-quality` — a thumbs down doesn't tell you *what* was wrong). Avoid generic names like `feedback` or `score`.
+### 2. Implement the Feedback
 
-Rules:
-- Lowercase with hyphens
-- One consistent name per feedback type across the entire app
-- If capturing multiple signals, each gets its own distinct name
+Read the [user feedback loop guide](https://langfuse.com/guides/user-feedback-loop) and follow its links to the current SDK documentation before editing code.
 
-### 3. Implement Score Creation
+### 3. Verify
 
-Fetch and follow the current [user feedback guide](https://langfuse.com/docs/observability/features/user-feedback) and [score ingestion docs](https://langfuse.com/docs/evaluation/evaluation-methods/scores-via-sdk) before editing code. They contain the current browser and server SDK APIs plus framework-specific patterns for returning trace IDs to the frontend.
-
-**For implicit feedback (server-side):** Create the score where the behavior is already handled in application code.
-
-**For explicit feedback (frontend):** Make the relevant trace ID available to the frontend and use the current Langfuse browser SDK with a public key only. Never expose a Langfuse secret key in browser code.
-
-### 4. Verify
-
-Trigger a feedback action and check the trace's Scores tab in Langfuse. Confirm the score name, value, and data type are correct.
-
-Point users to what they can do with feedback data: filter traces by low scores, use score analytics for trends, build annotation queues for team review.
-
-## Common Mistakes
-
-| Mistake | Problem | Fix |
-|---------|---------|-----|
-| Secret key in frontend code | Security risk | Use the current browser SDK with a public key only |
-| Missing `dataType` on boolean scores | Value `1` inferred as `NUMERIC` | Always pass `dataType: "BOOLEAN"` explicitly |
-| Inconsistent score names across the app | Can't aggregate or filter reliably | Pick one name per feedback type, use it everywhere |
+Trigger each implemented signal and confirm that its score has the intended name, value, data type, and attachment.
