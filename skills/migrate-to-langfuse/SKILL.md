@@ -38,7 +38,7 @@ Fetch and follow; do not reproduce their content:
 
 | Scenario | Source of truth |
 | --- | --- |
-| Vendor with a published guide (Arize AX, Phoenix, Braintrust, Helicone, Promptfoo, ...) | `https://langfuse.com/resources/engineering/migrate-from-<vendor>.md` — check `https://langfuse.com/llms.txt` for the current list |
+| Vendor with a published guide (LangSmith, Arize AX, Phoenix, Braintrust, Helicone, Promptfoo, ...) | `https://langfuse.com/resources/engineering/migrate-from-<vendor>.md` — check `https://langfuse.com/llms.txt` for the current list |
 | Vendor without a published guide, or historical data from any vendor | references/reingest-history.md, plus the vendor's own export API docs |
 
 Historical-trace reingestion is never improvised: read references/reingest-history.md in full before writing or running any reingestion code, even when a vendor guide exists. The vendor guide covers extraction; the reference governs reingestion — deterministic IDs, raw OTLP payloads, original timestamps, the cutover-time bound, and the warning that imported history is billed as new ingestion.

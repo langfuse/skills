@@ -1,10 +1,6 @@
 ---
 name: migrate-to-langfuse-reingest-history
 description: Write and run a script that extracts traces, scores, datasets, and prompts from a source system and reingests them into Langfuse with original timestamps.
-metadata:
-  required_access:
-    - CODEBASE
-    - LANGFUSE_PROJECT_SCRIPT
 ---
 
 # Reingest historical data into Langfuse
