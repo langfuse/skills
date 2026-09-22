@@ -9,15 +9,15 @@ description: Prepare an application and Langfuse project for v4 by upgrading ing
 
 Fetch only the pages needed for the surfaces found:
 
-- [V4 overview](https://langfuse.com/docs/v4) and [compatibility](https://langfuse.com/docs/compatibility)
+- [V4 upgrade guide](https://langfuse.com/faq/all/upgrade-to-langfuse-v4) and [compatibility](https://langfuse.com/docs/compatibility)
 - [SDK upgrade paths](https://langfuse.com/docs/observability/sdk/upgrade-path)
 - [Custom ingestion migration](https://langfuse.com/integrations/native/opentelemetry/migration-to-v4)
 - [Deprecated API migration](https://langfuse.com/faq/all/deprecated-api-migration)
 - [Evaluator migration](https://langfuse.com/faq/all/llm-as-a-judge-migration)
-- [Evaluation Rules](https://api.reference.langfuse.com/#tag/unstableevaluationrules) and [Evaluators](https://api.reference.langfuse.com/#tag/unstableevaluators) APIs
+- [Evaluation Rules](https://api.reference.langfuse.com/#tag/evaluationrules) and [Evaluators](https://api.reference.langfuse.com/#tag/unstableevaluators) APIs
 - Export migrations: [Blob Storage](https://langfuse.com/docs/api-and-data-platform/features/export-to-blob-storage#upgrade-path), [Mixpanel](https://langfuse.com/integrations/analytics/mixpanel#migrate-export-source), and [PostHog](https://langfuse.com/integrations/analytics/posthog#migrate-export-source)
 
-Discover unstable schemas before use.
+Discover the current schemas before use.
 
 ## Choose the execution mode
 
@@ -45,13 +45,6 @@ Discover unstable schemas before use.
 - Label this a **project-verified contract** only when the rule and representative observations were inspected. Label code-only suggestions **candidate targets**, never project state.
 - Consolidate all required evaluator variables and filter attributes onto the one target observation. Observation evaluators cannot read siblings or children.
 - Create or update the successor disabled, validate it on newly ingested data, obtain approval before enabling it, compare scores and logs, then disable rather than delete the legacy rule.
-
-### Deprecated trace input/output escape hatch
-
-- Default to removing deprecated trace input/output and migrating the evaluator to root-observation input/output.
-- Never add or retain `set_current_trace_io()`, `span.set_trace_io()`, `setActiveTraceIO()`, `span.setTraceIO()`, or equivalent compatibility merely because a legacy rule exists or project access is unavailable.
-- Offer compatibility only when automatic migration is currently impossible or the user explicitly insists on preserving the legacy evaluator unchanged after being warned that trace input/output is deprecated.
-- Even then, require explicit confirmation before changing code, mark the evaluator migration `manual action` or `blocked`, and document the condition for removing the escape hatch. Do not present it as the recommended migration.
 
 ## Migrate exports
 
