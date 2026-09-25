@@ -1,11 +1,6 @@
 ---
 name: langfuse-v4-project-migration
 description: Prepare an application and Langfuse project for v4 by upgrading ingestion and API usage, migrating legacy evaluators, and moving exports to the enriched observation schema.
-metadata:
-  required_access:
-    - CODEBASE
-    - LANGFUSE_PROJECT_INTERFACE
-    - LANGFUSE_PROJECT_SCRIPT
 ---
 
 # Langfuse v4 project migration

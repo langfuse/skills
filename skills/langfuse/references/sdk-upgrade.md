@@ -1,10 +1,6 @@
 ---
 name: langfuse-sdk-upgrade
 description: Upgrade Langfuse SDKs and application instrumentation while preserving trace attributes across observations. Use for Python or JS/TS SDK migrations, including the application side of a v4 platform migration.
-metadata:
-  required_access:
-    - CODEBASE
-    - LANGFUSE_PROJECT_SCRIPT
 ---
 
 # Langfuse SDK upgrade
