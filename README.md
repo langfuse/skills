@@ -9,6 +9,7 @@
 | Skill                                                           | Description                                                                                        |
 | --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
 | [langfuse](./skills/langfuse)                                   | Main skill to work with Langfuse. Query and manage traces, prompts, datasets, and scores via the Langfuse API; look up documentation; do things with best practices in mind. |
+| [migrate-to-langfuse](./skills/migrate-to-langfuse)             | Migrate from another LLM observability/evals platform (LangSmith, Arize, Braintrust, etc.) to Langfuse. Interviews you about scope, then handles the live tracing cutover and transfer of historical traces, datasets, prompts, and evaluators. |
 
 ## Installation
 

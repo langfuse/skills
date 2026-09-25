@@ -22,11 +22,12 @@ When changing the path to any Langfuse skill in this repo, you must also update 
 
 ## Plugin Version Bumps
 
-The repo ships as a plugin to two marketplaces, each with its own manifest:
+The repo ships as a plugin to three marketplaces, each with its own manifest:
 - `.claude-plugin/plugin.json` (Claude Code)
+- `.codex-plugin/plugin.json` (Codex)
 - `.cursor-plugin/plugin.json` (Cursor)
 
-Both manifests have a `version` field and **must stay in lockstep** — always bump them together to the same value, in the same PR as the change.
+All manifests have a `version` field and **must stay in lockstep** — always bump them together to the same value, in the same PR as the change.
 
 When to bump (follow semver):
 - **Patch** (`1.0.0` → `1.0.1`): bug fixes in a skill, clarifications to skill instructions, small content corrections.
@@ -55,7 +56,7 @@ Then work through these specific checks:
 - **Is the reference ruthlessly concise?** Flag filler, self-explanatory instructions, repeated guidance, and details the agent will already have from the fetched docs or task context. New use-case references should be at most 100 lines including frontmatter; anything longer needs specific, convincing justification and should still be cut as far as possible.
 - **No committed code.** Flag committed code samples that should instead link to a Langfuse docs page; pseudo-code for logic-specific bits is fine.
 - **Routing lives in exactly two places.** Require exactly one compact `## Use case specific references` entry per reference file plus its frontmatter `description`. Flag multiple `SKILL.md` bullets pointing to the same reference, redundant prose routing, and extra prominence given to a newly added workflow.
-- **Version bumps.** If published skill behavior changed, both `.claude-plugin/plugin.json` and `.cursor-plugin/plugin.json` must be bumped to the same version in the PR (and no bump for tooling/docs-only changes).
+- **Version bumps.** If published skill behavior changed, `.claude-plugin/plugin.json`, `.codex-plugin/plugin.json`, and `.cursor-plugin/plugin.json` must all be bumped to the same version in the PR (and no bump for tooling/docs-only changes).
 - **CLI path sync.** If a skill's path changed, the [CLI repo](https://github.com/langfuse/langfuse-cli) reference must be updated too.
 
 Prioritize correctness, and the read above, over pure formatting nits (whitespace, heading casing). "This line is meaningless to the reader" is never a mere nit. If the diff is clean against all of the above, say so plainly.
