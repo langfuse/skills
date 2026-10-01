@@ -26,11 +26,11 @@ Present the resulting plan (scope table plus order of operations) and get the us
 
 ## 2. Defaults to apply
 
-- **Live cutover first.** Historical data migration is optional and billed as new ingestion in Langfuse — say so before migrating history. If the source already emits OTel/OpenInference spans, repoint the exporter instead of re-instrumenting.
+- **Live cutover first.** Historical data migration is optional and billed as new ingestion in Langfuse — say so before migrating history. If the source already emits OTel/OpenInference spans, add Langfuse as a second exporter on the existing instrumentation instead of re-instrumenting; the old destination is dropped only when the parallel-run window below closes.
 - **Datasets and prompts copy. Evaluators and judges are recreated.** Experiment code is rewritten and re-run against the migrated dataset; never import old experiment scores.
 - **Test on a sample before the full run.** Migrate ~10 traces first, link the destination traces, and wait for the user to confirm they look correct before migrating everything.
-- **Show progress** (pages/counts) during long runs and make re-runs idempotent (deterministic destination IDs).
-- **Parallel-run window.** Keep the old exporter until the user confirms the destination data, then remove it in a separate, explicit step. This binds the implementation, not just the plan: after your edits, the old vendor's exporter/instrumentation must still be present and active. Before showing a diff, re-check that no vendor import or register call was deleted or replaced. Implement parallel export as **one instrumentation with two exporters** (both span processors on the same tracer provider) — never instrument the application twice. Duplicated generations and double-counted costs in the destination are the symptom of a second capture path.
+- **Show progress** (pages/counts) during long runs and make re-runs resumable: track sent source IDs in a state file and skip them, re-sending the same IDs creates duplicate observations (see references/reingest-history.md).
+- **Parallel-run window.** Keep the old exporter until the user confirms the destination data, then remove it in a separate, explicit step. This binds the implementation, not just the plan: after your edits, the old vendor's exporter/instrumentation must still be present and active. Before showing a diff, re-check that no vendor import, register call, exporter endpoint, or exporter env var was deleted or repointed. Implement parallel export as **one instrumentation with two exporters** (both span processors on the same tracer provider) — never instrument the application twice. Duplicated generations and double-counted costs in the destination are the symptom of a second capture path.
 
 ## 3. Route by scenario
 
