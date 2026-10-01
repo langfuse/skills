@@ -39,5 +39,6 @@ For evaluator functionality, use the unstable API endpoints.
 
 - Before creating an evaluator, fetch the observations matched by its target filter and confirm that they are correct and will not be scored twice.
 - Name the score after what is measured (`refusal`), not the evaluator (`refusal judge`).
+- If the project has a clear existing naming convention, follow it when creating a new evaluator and score. Consider naming best practices, but prioritize the existing project convention.
 - If an LLM-as-a-judge is the best fit, calibrate it on real examples before treating it as ready.
 - Share a link to each evaluator.
