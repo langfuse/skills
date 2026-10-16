@@ -14,7 +14,7 @@ Instrument LLM applications with Langfuse tracing, following best practices and 
 Check the project:
 
 - Is Langfuse SDK installed?
-- What LLM frameworks are used? (OpenAI SDK, LangChain, LlamaIndex, Vercel AI SDK, etc.)
+- Identify the framework or coding harness and its Langfuse integration.
 - Is there existing instrumentation?
 
 **No integration yet:** Set up Langfuse using a framework integration if available. Integrations capture more context automatically and require less code than manual instrumentation.
