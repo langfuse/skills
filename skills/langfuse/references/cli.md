@@ -21,6 +21,10 @@ langfuse api <resource> <action>
 
 ## Discovery
 
+For self-hosted deployments, pass `--api-version auto` for discovery and subsequent reads, using the existing scoped helper when available. It detects the server via `/api/public/health` and selects a compatible bundled snapshot; the default uses the latest snapshot, not the running server's version. See the [CLI version-selection examples](https://github.com/langfuse/langfuse-cli#usage).
+
+A v2 observations 404 or a locally blocked deprecated action can reflect a snapshot mismatch, not missing authentication or an unavailable legacy server endpoint. Rediscover commands under the compatible snapshot before proposing upgrades or a different client.
+
 ```bash
 # List all resources and auth info
 langfuse api __schema
@@ -50,8 +54,5 @@ export LANGFUSE_BASE_URL=https://cloud.langfuse.com
 - Use `--json` for machine-readable JSON output
 - Use `--curl` to preview the HTTP request without executing
 - All list commands support filtering — check `<resource> <action> --help` for available options
-- Prefer `observations` over `legacy-observations-v1s` — `observations` is the modern high-performance endpoint (cursor pagination, selective field groups); `legacy-observations-v1s` is the deprecated v1
-- Prefer `metrics` over `legacy-metrics-v1s` for the same reason
-- Prefer `scores` over `legacy-score-v1s` for list/get operations
-- Always query via `observations`, not `traces`, even when the user phrases the request in terms of traces — the `traces` endpoints are outdated (add `--trace-id` to scope to a known trace). See the [Observations API docs](https://langfuse.com/docs/api-and-data-platform/features/observations-api) for the v1 → v2 mapping.
-- Pagination: legacy v1 endpoints use `--limit` and `--page`; modern endpoints (`observations`, `metrics`, `scores`) use cursor-based pagination — pass `--limit`, then thread `meta.cursor` from the response into the next request's `--cursor`
+- Choose observation, trace, metric, and score commands from the selected snapshot's help; names and supported endpoints differ across versions. On self-hosted v3, `observations list` and `traces list` can be the supported v1 read paths.
+- Rediscover filters, field selection, and pagination under that snapshot. V1 observations use `--limit` and `--page` without `--fields`; v2 observations support field groups and cursor pagination. Scope reads by trace ID or time and a small limit, and display only necessary fields locally when server-side field selection is unavailable.
