@@ -1,1 +1,4 @@
 .DS_Store
+.env*
+!.env*.example
+.halo-skills/
