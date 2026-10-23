@@ -1,7 +1,0 @@
-{
-  "name": "halo-cli",
-  "private": true,
-  "dependencies": {
-    "@langfuse/cli": "1.3.0-beta.3"
-  }
-}

@@ -2,4 +2,4 @@
 .env*
 !.env*.example
 .halo-skills/
-scripts/halo-cli/node_modules/
+node_modules/

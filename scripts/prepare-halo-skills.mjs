@@ -1,35 +1,21 @@
 import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { parse } from "yaml";
 
 const references = new URL("../skills/langfuse/references/", import.meta.url);
 
-// Match the reference-to-skill conversion in Langfuse's embedded catalogue.
 export function parseSkill(filename, markdown) {
   const frontmatter = /^---\n([\s\S]*?)\n---\n?/.exec(markdown);
   if (!frontmatter) throw new Error(`${filename}: missing frontmatter`);
-  const metadata = {};
-  let key;
-  for (const line of frontmatter[1].split("\n")) {
-    const match = /^([a-z_]+):\s*(.*)$/.exec(line);
-    if (match) {
-      key = match[1];
-      metadata[key] = match[2];
-    } else if (key === "description" && line.trim()) {
-      metadata.description += ` ${line.trim()}`;
-    }
-  }
-  for (const field of ["name", "description"]) {
-    if (metadata[field]?.startsWith("'") && metadata[field]?.endsWith("'")) {
-      metadata[field] = metadata[field].slice(1, -1).replaceAll("''", "'");
-    }
-  }
-  const { name, description } = metadata;
+  const { name, description } = parse(frontmatter[1]) ?? {};
   const instructions = markdown.slice(frontmatter[0].length).trim();
   if (
-    !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(name ?? "") ||
+    typeof name !== "string" ||
+    !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(name) ||
     name.length > 64 ||
-    !description?.trim() ||
+    typeof description !== "string" ||
+    !description.trim() ||
     description.length > 1024 ||
     !instructions
   ) {
