@@ -5,7 +5,7 @@ any branch; EU, US, JP, and HIPAA publish only from `main`.
 The `prepare` job converts
 `skills/langfuse/references/*.md` to `<skill-name>/SKILL.md` and uploads a
 `halo-skills` artifact. It also installs `@langfuse/cli@1.3.0-beta.3` once using
-`npm ci` and the lockfile in `scripts`, then uploads
+`npm ci` and the lockfile in `halo-skill-publishing`, then uploads
 that package as `halo-cli`. Preparation has no project credentials.
 
 Five regional jobs download both artifacts through the shared
@@ -41,9 +41,9 @@ has edited the skill in the UI.
 Install the CLI and prepare the skill directories (Node.js 24 required):
 
 ```sh
-npm ci --prefix scripts --ignore-scripts --no-audit --no-fund
-node --test scripts/prepare-halo-skills.test.mjs
-node scripts/prepare-halo-skills.mjs .halo-skills
+npm ci --prefix halo-skill-publishing --ignore-scripts --no-audit --no-fund
+node --test halo-skill-publishing/prepare-halo-skills.test.mjs
+node halo-skill-publishing/prepare-halo-skills.mjs .halo-skills
 ```
 
 Preparation validates the references, then clears and rebuilds the output directory.

@@ -24,9 +24,9 @@ jobs:
           node-version: "24"
           package-manager-cache: false
       - name: Install publishing dependencies once
-        run: npm ci --prefix "scripts" --ignore-scripts --no-audit --no-fund
-      - run: node --test scripts/prepare-halo-skills.test.mjs
-      - run: node scripts/prepare-halo-skills.mjs .halo-skills
+        run: npm ci --prefix "halo-skill-publishing" --ignore-scripts --no-audit --no-fund
+      - run: node --test "halo-skill-publishing/prepare-halo-skills.test.mjs"
+      - run: node "halo-skill-publishing/prepare-halo-skills.mjs" .halo-skills
       - name: Upload prepared skills
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
@@ -37,12 +37,12 @@ jobs:
           retention-days: 2
 
       - name: Verify skill commands are available
-        run: node "scripts/node_modules/@langfuse/cli/bin/langfuse.mjs" skills push --help
+        run: node "halo-skill-publishing/node_modules/@langfuse/cli/bin/langfuse.mjs" skills push --help
       - name: Upload Langfuse CLI
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: halo-cli
-          path: scripts/node_modules/@langfuse/cli/
+          path: halo-skill-publishing/node_modules/@langfuse/cli/
           if-no-files-found: error
           retention-days: 2
 

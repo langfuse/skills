@@ -23,7 +23,7 @@ const markdown = (name, instructions = "Read the documentation.") =>
 
 function temporary(t) {
   const root = mkdtempSync(join(tmpdir(), "halo-skills-test-"));
-  t.after(() => rmSync(root, { recursive: true, force: true }));
+  t.after(() => rmSync(root, { recursive: true }));
   return root;
 }
 

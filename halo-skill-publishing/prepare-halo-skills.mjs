@@ -1,4 +1,4 @@
-import { mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { resolve, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parse } from "yaml";
@@ -52,7 +52,7 @@ export function loadSkills(directory = references) {
 export function prepareSkills(output, directory = references) {
   const skills = loadSkills(directory);
   // Remove stale files only after all source skills have been validated.
-  rmSync(output, { recursive: true, force: true });
+  if (existsSync(output)) rmSync(output, { recursive: true });
   mkdirSync(output);
   for (const skill of skills) {
     const folder = join(output, skill.name);
@@ -70,10 +70,12 @@ if (
     const [output, ...extra] = process.argv.slice(2);
     if (!output || extra.length)
       throw new Error(
-        "Usage: node scripts/prepare-halo-skills.mjs <output-directory>",
+        "Usage: node halo-skill-publishing/prepare-halo-skills.mjs <output-directory>",
       );
+
+    const skills = prepareSkills(resolve(output));
     console.log(
-      `Prepared ${prepareSkills(resolve(output))} Halo skills in ${output}.`,
+      `Prepared ${skills} Halo skills in ${output}.`,
     );
   } catch (error) {
     console.error(error.message);
