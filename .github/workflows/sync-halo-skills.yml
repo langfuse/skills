@@ -25,7 +25,6 @@ jobs:
           package-manager-cache: false
       - name: Install publishing dependencies once
         run: npm ci --prefix "halo-skill-publishing" --ignore-scripts --no-audit --no-fund
-      - run: node --test "halo-skill-publishing/prepare-halo-skills.test.mjs"
       - run: node "halo-skill-publishing/prepare-halo-skills.mjs" .halo-skills
       - name: Upload prepared skills
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

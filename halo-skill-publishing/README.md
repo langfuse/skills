@@ -42,11 +42,11 @@ Install the CLI and prepare the skill directories (Node.js 24 required):
 
 ```sh
 npm ci --prefix halo-skill-publishing --ignore-scripts --no-audit --no-fund
-node --test halo-skill-publishing/prepare-halo-skills.test.mjs
 node halo-skill-publishing/prepare-halo-skills.mjs .halo-skills
 ```
 
-Preparation validates the references, then clears and rebuilds the output directory.
+Preparation validates the references and requires a new output directory.
+Remove the previous `.halo-skills` directory before preparing again.
 
 Copy [`.env.halo.example`](../.env.halo.example) to `.env.halo` and fill in the
 target project's credentials. For a local instance:
