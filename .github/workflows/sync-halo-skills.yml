@@ -63,6 +63,7 @@ jobs:
 
   publish-eu:
     name: Publish EU
+    if: github.ref == 'refs/heads/main'
     needs: prepare
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -78,6 +79,7 @@ jobs:
 
   publish-us:
     name: Publish US
+    if: github.ref == 'refs/heads/main'
     needs: prepare
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -93,6 +95,7 @@ jobs:
 
   publish-jp:
     name: Publish JP
+    if: github.ref == 'refs/heads/main'
     needs: prepare
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -108,6 +111,7 @@ jobs:
 
   publish-hipaa:
     name: Publish HIPAA
+    if: github.ref == 'refs/heads/main'
     needs: prepare
     runs-on: ubuntu-latest
     timeout-minutes: 5

@@ -1,7 +1,8 @@
 # Halo skill publishing
 
-Run **Sync Halo skills** manually from GitHub Actions to publish to all five
-regions. The `prepare` job converts
+Run **Sync Halo skills** manually from GitHub Actions. Staging can publish from
+any branch; EU, US, JP, and HIPAA publish only from `main`.
+The `prepare` job converts
 `skills/langfuse/references/*.md` to `<skill-name>/SKILL.md` and uploads a
 `halo-skills` artifact. It also installs `@langfuse/cli@1.3.0-beta.3` once using
 `npm ci` and the lockfile in `scripts`, then uploads
