@@ -46,6 +46,8 @@ node --test scripts/prepare-halo-skills.test.mjs
 node scripts/prepare-halo-skills.mjs .halo-skills
 ```
 
+Preparation validates the references, then clears and rebuilds the output directory.
+
 Copy [`.env.halo.example`](../.env.halo.example) to `.env.halo` and fill in the
 target project's credentials. For a local instance:
 

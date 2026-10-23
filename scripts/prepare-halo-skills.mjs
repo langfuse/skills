@@ -1,4 +1,4 @@
-import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { resolve, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parse } from "yaml";
@@ -51,7 +51,8 @@ export function loadSkills(directory = references) {
 
 export function prepareSkills(output, directory = references) {
   const skills = loadSkills(directory);
-  // Require a fresh directory so removed references cannot linger in the artifact.
+  // Remove stale files only after all source skills have been validated.
+  rmSync(output, { recursive: true, force: true });
   mkdirSync(output);
   for (const skill of skills) {
     const folder = join(output, skill.name);
@@ -69,7 +70,7 @@ if (
     const [output, ...extra] = process.argv.slice(2);
     if (!output || extra.length)
       throw new Error(
-        "Usage: node scripts/prepare-halo-skills.mjs <new-output-directory>",
+        "Usage: node scripts/prepare-halo-skills.mjs <output-directory>",
       );
     console.log(
       `Prepared ${prepareSkills(resolve(output))} Halo skills in ${output}.`,

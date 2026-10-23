@@ -49,10 +49,11 @@ test("preparation produces standalone skill directories with converted reference
     readFileSync(join(output, "second", "SKILL.md"), "utf8"),
     parseSkill("b.md", markdown("second")).content,
   );
-  assert.throws(
-    () => prepareSkills(output, pathToFileURL(`${source}/`)),
-    /EEXIST/,
-  );
+  rmSync(join(source, "b.md"));
+  writeFileSync(join(output, "first", "stale.txt"), "old content");
+  assert.equal(prepareSkills(output, pathToFileURL(`${source}/`)), 1);
+  assert.deepEqual(readdirSync(output), ["first"]);
+  assert.deepEqual(readdirSync(join(output, "first")), ["SKILL.md"]);
 });
 
 test("YAML descriptions preserve folding, line breaks, and quoting without absorbing other keys", () => {
@@ -99,4 +100,8 @@ test("empty, invalid, or duplicate references fail before creating an artifact",
   writeFileSync(join(source, "b.md"), markdown("first"));
   assert.throws(() => prepareSkills(output, url), /unique names/);
   assert.equal(existsSync(output), false);
+  mkdirSync(output);
+  writeFileSync(join(output, "keep.txt"), "previous artifact");
+  assert.throws(() => prepareSkills(output, url), /unique names/);
+  assert.equal(readFileSync(join(output, "keep.txt"), "utf8"), "previous artifact");
 });
