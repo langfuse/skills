@@ -55,3 +55,7 @@ export LANGFUSE_BASE_URL=https://cloud.langfuse.com
 - Prefer `scores` over `legacy-score-v1s` for list/get operations
 - Always query via `observations`, not `traces`, even when the user phrases the request in terms of traces — the `traces` endpoints are outdated (add `--trace-id` to scope to a known trace). See the [Observations API docs](https://langfuse.com/docs/api-and-data-platform/features/observations-api) for the v1 → v2 mapping.
 - Pagination: legacy v1 endpoints use `--limit` and `--page`; modern endpoints (`observations`, `metrics`, `scores`) use cursor-based pagination — pass `--limit`, then thread `meta.cursor` from the response into the next request's `--cursor`
+- `observations list` returns the `core,basic` field groups by default, which leave out inputs and outputs; add groups only when needed, for example `--fields core,basic,io` (`io` is usually most of the payload)
+- Find failures across traces in one call: `observations list --level ERROR --from-start-time <iso>`; each row carries `traceId`, `name` and `statusMessage`
+- With the `metadata` field group, values longer than 200 characters come back truncated; pass `--expand-metadata <key>` for the keys you need in full
+- Read a whole conversation with `observations list --session-id <id>`
