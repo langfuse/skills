@@ -4,7 +4,8 @@ description: >-
   Migrate to Langfuse from another LLM observability/evals platform (LangSmith, Arize AX, Phoenix, Braintrust, Helicone, Promptfoo, ...). A one-off vendor switch: live tracing cutover plus transfer of historical traces, datasets, prompts, and evaluators. Not for anything Langfuse-to-Langfuse — SDK or version upgrades, project/region moves, self-hosted to Cloud — and not for moving in-code prompts into Langfuse; the main langfuse skill covers those.
 allowed-tools:
   - WebFetch(domain:langfuse.com)
-  - Bash(curl *langfuse.com/*)
+  - Bash(curl -s https://langfuse.com/*)
+  - Bash(curl -s "https://langfuse.com/*)
 ---
 
 # Migrate to Langfuse
