@@ -26,7 +26,7 @@ Follow these principles for ALL Langfuse work:
 1. **Documentation First**: NEVER implement based on memory. Always fetch current docs before writing code (Langfuse updates frequently) See the section below on how to access documentation.
 2. **CLI for Data Access**: Use `langfuse-cli` when querying/modifying Langfuse data. See the section below on how to use the CLI.
 3. **Best Practices by Use Case**: Read the relevant reference below use-case-specific guidelines before asking the user for more details or implementing.
-4. **Use latest Langfuse versions**: Unless the user specified otherwise or there's a good reason, always use the latest version of Langfuse SDKs/APIs. Even if you're only creating a plan for another agent to execute, be explicit about the exact version to use.
+4. **Use latest compatible Langfuse versions**: Unless the user specified otherwise or there's a good reason, use the latest Langfuse SDKs/APIs compatible with the running server. Even if you're only creating a plan for another agent to execute, be explicit about the exact version to use.
 5. **If you guide the user through UI** and are unsure about a label or location, inspect the user’s screenshots or ask to see the relevant screen. Do not assume UI labels have the exact same names as API, SDK, or CLI fields.
 
 
@@ -42,6 +42,7 @@ Follow these principles for ALL Langfuse work:
 - preparing a Langfuse project for the v4 platform migration: references/v4-project-migration.md
 - calibrating a new or existing LLM-as-a-Judge against labeled examples, iterating on its prompt, and deploying the approved judge: references/judge-calibration.md
 - systematic error analysis when requested directly or eval setup still lacks concrete failure modes after agent-led trace inspection: references/error-analysis.md
+- release-planning-agents PR review run reports from saved traces or artifacts: references/release-planning-pr-review-run-report.md
 - setting up CI/CD experiment gates with `langfuse/experiment-action`: references/ci-cd.md
 - optimizing the cost of an LLM application or AI agent: references/cost-optimization.md
 - submitting feedback about this skill: references/skill-feedback.md
@@ -50,6 +51,8 @@ Follow these principles for ALL Langfuse work:
 ## 1. Langfuse API via CLI
 
 Use the `langfuse-cli` to interact with the full Langfuse REST API from the command line. Run via npx (no install required):
+
+For self-hosted deployments, select a server-compatible API snapshot before discovery or data access; follow [references/cli.md](references/cli.md#discovery).
 
 Start by discovering the schema and available arguments:
 
@@ -75,6 +78,29 @@ export LANGFUSE_BASE_URL=https://cloud.langfuse.com # example for EU cloud. For 
 ```
 If `LANGFUSE_BASE_URL` is used instead of `LANGFUSE_HOST`, run `export LANGFUSE_HOST="$LANGFUSE_BASE_URL"`.
 If not set, ask the user to set them in their shell or a `.env` file. Keys are found in the Langfuse project under Settings -> API Keys; the user should create a project API key pair there. If they do not have a Langfuse account yet, share that they can create one for free at `https://langfuse.com/cloud`. Do not ask them to paste keys into chat for security reasons.
+
+#### Credential discovery before declaring credentials unavailable
+
+Before saying Langfuse credentials are unavailable, check whether the user's shell startup files define Langfuse helper functions or scoped credential variables. Shell functions are not inherited by unrelated non-interactive shells, so a missing `LANGFUSE_*` variable in one `bash` command does not prove credentials are unavailable. Do this without printing secrets:
+
+```bash
+# Show only Langfuse-related lines, redacting key values.
+grep -n -i 'langfuse\|lf_' ~/.zshenv ~/.zprofile ~/.zshrc ~/.bash_profile ~/.bashrc 2>/dev/null \
+  | sed -E 's/(LANGFUSE_[A-Z0-9_]*(PUBLIC_KEY|SECRET_KEY|BASE_URL)[A-Z0-9_]*=).*/\1<redacted>/; s/(pk-lf-[A-Za-z0-9_-]+)/<redacted-public-key>/g; s/(sk-lf-[A-Za-z0-9_-]+)/<redacted-secret-key>/g'
+
+# List helper function names after loading the user's shell env.
+zsh -lc 'source ~/.zshenv >/dev/null 2>&1 || true; functions | grep -i "^[a-zA-Z0-9_-]*.*\(lf_\|langfuse\)" || true' \
+  | sed -E 's/(LANGFUSE_[A-Z0-9_]*(PUBLIC_KEY|SECRET_KEY|BASE_URL)[A-Z0-9_]*=).*/\1<redacted>/; s/(pk-lf-[A-Za-z0-9_-]+)/<redacted-public-key>/g; s/(sk-lf-[A-Za-z0-9_-]+)/<redacted-secret-key>/g'
+```
+
+If a helper function exists, prefer it for read-only CLI calls. Run the helper through the shell that defines it instead of retyping or printing the underlying env values. For zsh helpers in startup files, use `zsh -lc`:
+
+```bash
+zsh -lc '<helper-name> --api-version auto traces list --help'
+zsh -lc '<helper-name> --api-version auto observations list --trace-id <trace-id> --limit 1 --json'
+```
+
+Never print full `LANGFUSE_PUBLIC_KEY` or `LANGFUSE_SECRET_KEY` values. If no env vars and no helper functions are found, then ask the user to configure credentials.
 
 ### Detailed CLI Reference
 
