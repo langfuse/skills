@@ -32,6 +32,7 @@ Follow these principles for ALL Langfuse work:
 
 ## Use case specific references
 
+- deciding on the next step in the AI engineering loop: references/consultant.md
 - instrumenting an existing function/application: references/instrumentation.md
 - creating or getting to a good (evaluation) dataset to measure quality or test for regressions in AI systems: references/create-dataset.md
 - migrating prompts from a codebase into Langfuse: references/prompt-migration.md
