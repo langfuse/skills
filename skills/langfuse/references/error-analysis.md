@@ -44,7 +44,7 @@ Verify you can actually reach the user's project before proceeding. If access fa
 
 ### Representative sample
 
-If the project has Topics (see `references/cli.md`), draw the sample across its topics and outliers, over-representing topics that point to failures, instead of finding candidates by reading through traces.
+If the project has Langfuse Topics enabled (`npx langfuse-cli api unstable-topic-facets list` returns 404 if not), draw the sample across its topics and outliers, over-representing topics that point to failures, instead of finding candidates by reading through traces.
 
 ### Annotation target: OBSERVATION versus TRACE
 
