@@ -17,11 +17,9 @@ Check the project:
 - What LLM frameworks are used? (OpenAI SDK, LangChain, LlamaIndex, Vercel AI SDK, etc.)
 - Is there existing instrumentation?
 
-**No integration yet:** Set up Langfuse using a framework integration if available. Integrations capture more context automatically and require less code than manual instrumentation.
+**No integration yet:** Set up Langfuse using a framework integration if available. Integrations capture more context automatically and require less code than manual instrumentation. If an integration exists via the [Langfuse AI Gateway](https://langfuse.com/docs/gateway/get-started/first-request), prefer that route.
 
 **Integration exists:** Audit against baseline requirements below.
-
-**Coding agent (Claude Code, Codex, etc.):** First check whether the [Langfuse AI Gateway](https://langfuse.com/docs/gateway/get-started/first-request) supports that agent and its model provider. If it does, set it up through the gateway; otherwise use the agent's dedicated integration.
 
 ### 2. Verify Baseline Requirements
 
