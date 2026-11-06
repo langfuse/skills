@@ -1,4 +1,10 @@
-import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import {
+  cpSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  writeFileSync,
+} from "node:fs";
 import { resolve, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parse } from "yaml";
@@ -21,23 +27,23 @@ export function parseSkill(filename, markdown) {
   ) {
     throw new Error(`${filename}: invalid skill metadata or instructions`);
   }
-  const content = `---\nname: ${JSON.stringify(name)}\ndescription: ${JSON.stringify(description)}\n---\n\n${instructions}\n`;
-  if (Buffer.byteLength(content) > 1_000_000 || content.includes("\0")) {
+  if (Buffer.byteLength(markdown) > 1_000_000 || markdown.includes("\0")) {
     throw new Error(`${filename}: invalid skill content`);
   }
   return {
     name,
-    content,
+    description,
   };
 }
 
 export function loadSkills(directory = references) {
-  const skills = readdirSync(directory)
+  const skills = readdirSync(directory, { recursive: true })
     .filter((name) => name.endsWith(".md"))
-    .sort()
-    .map((name) =>
-      parseSkill(name, readFileSync(new URL(name, directory), "utf8")),
-    );
+    .sort((a, b) => a.localeCompare(b))
+    .map((name) => ({
+      ...parseSkill(name, readFileSync(new URL(name, directory), "utf8")),
+      path: `references/${name}`,
+    }));
   if (
     !skills.length ||
     new Set(skills.map(({ name }) => name)).size !== skills.length
@@ -51,13 +57,35 @@ export function loadSkills(directory = references) {
 
 export function prepareSkills(output, directory = references) {
   const skills = loadSkills(directory);
+  const table = skills
+    .map(({ name, description, path }) => {
+      const cells = [name, description, `[${path}](${path})`].map((value) =>
+        value.replace(/\s+/g, " ").replace(/\|/g, "\\|").trim(),
+      );
+      return `| ${cells.join(" | ")} |`;
+    })
+    .join("\n");
+  const content = `---
+name: langfuse
+description: References for working with Langfuse, including tracing, prompts, datasets, evaluations, and integrations.
+---
+
+# Langfuse
+
+Read the relevant reference below for the task at hand.
+
+## References
+
+| Name | Description | Path |
+| --- | --- | --- |
+${table}
+`;
   mkdirSync(output);
-  for (const skill of skills) {
-    const folder = join(output, skill.name);
-    mkdirSync(folder);
-    writeFileSync(join(folder, "SKILL.md"), skill.content);
-  }
-  return skills.length;
+  const folder = join(output, "langfuse");
+  mkdirSync(folder);
+  cpSync(directory, join(folder, "references"), { recursive: true });
+  writeFileSync(join(folder, "SKILL.md"), content);
+  return 1;
 }
 
 if (
