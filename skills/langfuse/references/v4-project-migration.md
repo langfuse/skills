@@ -35,6 +35,7 @@ Discover the current schemas before use.
 - For raw `/api/public/ingestion`, use the current Langfuse SDK in Python or JS/TS. For other languages, use the language's native OpenTelemetry API and follow the custom-ingestion guide.
 - When replacing synchronous ingestion, assess buffering, retries, flushing, shutdown, and error propagation. Do not claim identical delivery semantics without verification.
 - For other deprecated APIs, migrate the path, parameters, pagination, filters, field groups, response parsing, and downstream consumer together using the deprecated-API guide.
+- `GET /api/public/traces` is replaced by the per-trace steps in [references/cli.md](cli.md). Group Observations API v2 rows by `traceId` for a full list with name, timestamp, and total cost, and include `usage` in `fields` — the default `core,basic` response has no `totalCost`. Use Metrics API v2 with dimension `traceId` only for the most expensive traces or for known trace IDs.
 - Check self-hosted compatibility before replacing calls; report code targeting a v3 server as blocked on the server upgrade.
 
 ## Migrate evaluators
