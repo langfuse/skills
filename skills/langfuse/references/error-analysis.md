@@ -42,6 +42,10 @@ Make sure Langfuse credentials are available before starting — a public key (`
 
 Verify you can actually reach the user's project before proceeding. If access fails, stop and ask the user to check their credentials and host.
 
+### Representative sample
+
+If the project has Langfuse Topics enabled, draw the sample across its topics and outliers (traces no topic fits), over-representing topics that point to failures, instead of finding candidates by reading through traces.
+
 ### Annotation target: OBSERVATION versus TRACE
 
 > **CRITICAL:** In OpenTelemetry-instrumented apps, trace-level `input`/`output` can be null — content often lives in a GENERATION observation. In that case, add the GENERATION observation (not the trace) to the annotation queue, so the content being reviewed is actually visible.

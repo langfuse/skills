@@ -17,7 +17,7 @@ Guide the user through dataset creation as an interview, proposal, approval, imp
 
 1. Read the primary guide and relevant current Langfuse docs.
 2. Clarify the problem the user is facing, interviewing them if context is thin, to decide the goal, release, or evaluation decision the dataset should support.
-3. Inspect available context: the user's goal, the application path or codebase when available, existing datasets, traces, prompts, scores, monitors, user feedback, tickets, expert examples, existing eval and dataset assets.
+3. Inspect available context: the user's goal, the application path or codebase when available, Langfuse Topics if enabled (important), existing datasets, traces, prompts, scores, evaluators.
 4. Interview the user on available sources beyond production traces.
 5. For each step going forward, propose a direction and get the user's approval, specifically:
    - Dataset distribution dimensions (propose and get user input).

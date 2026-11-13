@@ -2,8 +2,9 @@
 
 Run **Sync Halo skills** manually from GitHub Actions. Staging can publish from
 any branch; EU, US, JP, and HIPAA publish only from `main`.
-The `prepare` job converts
-`skills/langfuse/references/*.md` to `<skill-name>/SKILL.md` and uploads a
+The `prepare` job builds one `langfuse` skill with a generated `SKILL.md`
+containing the Halo entrypoint and a reference table. It copies
+`skills/langfuse/references/` unchanged into the bundle and uploads a
 `halo-skills` artifact. It also installs `@langfuse/cli@1.3.0-beta.3` once using
 `npm ci` and the lockfile in `halo-skill-publishing`, then uploads
 that package as `halo-cli`. Preparation has no project credentials.
@@ -20,6 +21,10 @@ installed package avoids five npm installs; each runner still sets up Node.js.
 Regions run independently. A failed job can be rerun without creating duplicate
 versions. Removed references do not delete hosted skills: remove the old
 skill's `in-app-agent` tag in each project to stop Halo loading it.
+
+Deploy Halo's complete-bundle support before publishing this format. After
+verifying the single `langfuse` skill, remove `in-app-agent` from the previous
+reference-derived skills in each project; publishing does not remove their tags.
 
 Configure these repository secrets in `langfuse/skills`, using the same
 AI-features project credentials configured for Halo in each region:

@@ -1,6 +1,6 @@
 ---
 name: langfuse-observability
-description: Instrument LLM applications with Langfuse tracing. Use when setting up Langfuse, adding observability to LLM calls, or auditing existing instrumentation.
+description: Instrument LLM applications and coding agents with Langfuse tracing. Use when setting up Langfuse, adding observability to LLM calls, or auditing existing instrumentation.
 ---
 
 # Langfuse Observability
@@ -17,7 +17,7 @@ Check the project:
 - What LLM frameworks are used? (OpenAI SDK, LangChain, LlamaIndex, Vercel AI SDK, etc.)
 - Is there existing instrumentation?
 
-**No integration yet:** Set up Langfuse using a framework integration if available. Integrations capture more context automatically and require less code than manual instrumentation.
+**No integration yet:** Set up Langfuse using a framework integration if available. Integrations capture more context automatically and require less code than manual instrumentation. For coding agents, if an integration exists via the [Langfuse AI Gateway](https://langfuse.com/docs/gateway/get-started/first-request), prefer that route.
 
 **Integration exists:** Audit against baseline requirements below.
 
