@@ -1,6 +1,6 @@
 ---
 name: langfuse-cli
-description: Langfuse CLI usage reference — install, resource/action discovery, credentials, and common usage tips for `langfuse-cli`. Use for further tips on using the Langfuse CLI.
+description: Langfuse CLI usage reference — invocation, configuration, score creation, and command discovery.
 ---
 
 # Langfuse CLI Reference
@@ -11,19 +11,23 @@ Documentation: https://langfuse.com/docs/api-and-data-platform/features/cli
 
 ```bash
 # Run directly (recommended)
-npx langfuse-cli api <resource> <action>
-bunx langfuse-cli api <resource> <action>
+npx @langfuse/cli api <resource> <action>
+bunx --bun @langfuse/cli api <resource> <action>
 
 # Or install globally
-npm i -g langfuse-cli
+npm i -g @langfuse/cli
 langfuse api <resource> <action>
 ```
+
+`@langfuse/cli` is the package; `langfuse` is its executable and the name printed
+in help. Substitute `npx @langfuse/cli` or `bunx --bun @langfuse/cli` for
+`langfuse` when running without a global installation. Keep the `api` subcommand.
 
 ## Discovery
 
 ```bash
 # List all resources and auth info
-langfuse api __schema
+langfuse api schema --json
 
 # List actions for a resource
 langfuse api <resource> --help
@@ -37,13 +41,25 @@ langfuse api <resource> <action> --curl
 
 ## Credentials
 
-Set environment variables:
+Use the project credentials and regional host described in [Credentials](../SKILL.md#credentials).
+For a file, pass `--env` explicitly:
 
 ```bash
-export LANGFUSE_PUBLIC_KEY=pk-lf-...
-export LANGFUSE_SECRET_KEY=sk-lf-...
-export LANGFUSE_BASE_URL=https://cloud.langfuse.com  
+langfuse --env .env api prompts list
 ```
+
+## Create scores
+
+Run `langfuse api scores create --help` for a body example matching the selected
+API snapshot. Use `--body-json` or `--body-file`; score body fields are not
+individual flags. The current API takes an array even for one score. Older
+self-hosted snapshots take an object; retain the matching `--api-version`.
+
+See the [score creation examples](https://github.com/langfuse/langfuse-cli#create-scores)
+for numeric, boolean, categorical, and file-based requests. Preview with `--curl`.
+Numeric and boolean values are numbers (boolean: 0 or 1); categorical values are
+strings. HTTP 202 accepts a batch asynchronously; for 207, inspect the rejected
+items and errors before retrying. With `--json`, the response is under `body`.
 
 ## Tips
 

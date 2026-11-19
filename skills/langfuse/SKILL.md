@@ -13,6 +13,14 @@ allowed-tools:
   - Bash(bunx langfuse-cli api * --help *)
   - Bash(bunx langfuse-cli api * list *)
   - Bash(bunx langfuse-cli api * get *)
+  - Bash(npx @langfuse/cli api schema *)
+  - Bash(npx @langfuse/cli api * --help *)
+  - Bash(npx @langfuse/cli api * list *)
+  - Bash(npx @langfuse/cli api * get *)
+  - Bash(bunx --bun @langfuse/cli api schema *)
+  - Bash(bunx --bun @langfuse/cli api * --help *)
+  - Bash(bunx --bun @langfuse/cli api * list *)
+  - Bash(bunx --bun @langfuse/cli api * get *)
 ---
 
 # Langfuse
@@ -24,7 +32,7 @@ This skill helps you use Langfuse effectively across all common workflows: instr
 Follow these principles for ALL Langfuse work:
 
 1. **Documentation First**: NEVER implement based on memory. Always fetch current docs before writing code (Langfuse updates frequently) See the section below on how to access documentation.
-2. **CLI for Data Access**: Use `langfuse-cli` when querying/modifying Langfuse data. See the section below on how to use the CLI.
+2. **CLI for Data Access**: Use the Langfuse CLI (`@langfuse/cli`) when querying/modifying Langfuse data. See the section below on how to use the CLI.
 3. **Best Practices by Use Case**: Read the relevant reference below use-case-specific guidelines before asking the user for more details or implementing.
 4. **Use latest Langfuse versions**: Unless the user specified otherwise or there's a good reason, always use the latest version of Langfuse SDKs/APIs. Even if you're only creating a plan for another agent to execute, be explicit about the exact version to use.
 5. **If you guide the user through UI** and are unsure about a label or location, inspect the user’s screenshots or ask to see the relevant screen. Do not assume UI labels have the exact same names as API, SDK, or CLI fields.
@@ -38,7 +46,7 @@ Follow these principles for ALL Langfuse work:
 - creating a prompt or changing any part of an existing prompt, including small edits and debugging/tuning: references/prompt-engineering.md
 - setting up evals when the user needs to identify gaps across signal capture, monitoring, and evaluator metrics ("I have traces, how do I set up evals?"): references/setting-up-evals.md
 - capturing user feedback signals (explicit ratings, behavioral events, conversation signals, task outcomes) as scores: references/user-feedback.md
-- further tips on using the Langfuse CLI: references/cli.md
+- CLI invocation, configuration, and score creation: references/cli.md
 - preparing a Langfuse project for the v4 platform migration: references/v4-project-migration.md
 - calibrating a new or existing LLM-as-a-Judge against labeled examples, iterating on its prompt, and deploying the approved judge: references/judge-calibration.md
 - systematic error analysis when requested directly or eval setup still lacks concrete failure modes after agent-led trace inspection: references/error-analysis.md
@@ -49,19 +57,19 @@ Follow these principles for ALL Langfuse work:
 
 ## 1. Langfuse API via CLI
 
-Use the `langfuse-cli` to interact with the full Langfuse REST API from the command line. Run via npx (no install required):
+Use `npx @langfuse/cli` or `bunx --bun @langfuse/cli` to interact with the Langfuse REST API without a global installation. The installed executable is `langfuse`; replace that word in help examples with your package runner. Keep the `api` subcommand. The older package name `langfuse-cli` remains supported.
 
 Start by discovering the schema and available arguments:
 
 ```bash
 # Discover all available resources
-npx langfuse-cli api __schema
+npx @langfuse/cli api schema --json
 
 # List actions for a resource
-npx langfuse-cli api <resource> --help
+npx @langfuse/cli api <resource> --help
 
 # Show args/options for a specific action
-npx langfuse-cli api <resource> <action> --help
+npx @langfuse/cli api <resource> <action> --help
 ```
 
 ### Credentials
@@ -71,10 +79,14 @@ Set environment variables before making calls:
 ```bash
 export LANGFUSE_PUBLIC_KEY=pk-lf-...
 export LANGFUSE_SECRET_KEY=sk-lf-...
-export LANGFUSE_BASE_URL=https://cloud.langfuse.com # example for EU cloud. For US cloud it's us.cloud.langfuse.com, and can also be a self-hosted URL. The server must always be specified in order to access Langfuse.
+export LANGFUSE_HOST=https://cloud.langfuse.com
 ```
-If `LANGFUSE_BASE_URL` is used instead of `LANGFUSE_HOST`, run `export LANGFUSE_HOST="$LANGFUSE_BASE_URL"`.
-If not set, ask the user to set them in their shell or a `.env` file. Keys are found in the Langfuse project under Settings -> API Keys; the user should create a project API key pair there. If they do not have a Langfuse account yet, share that they can create one for free at `https://langfuse.com/cloud`. Do not ask them to paste keys into chat for security reasons.
+
+Use the host where the project lives: EU `https://cloud.langfuse.com` (default), US `https://us.cloud.langfuse.com`, Japan `https://jp.cloud.langfuse.com`, HIPAA US `https://hipaa.cloud.langfuse.com`, or the self-hosted deployment URL. Supply the base URL without `/api/public` or a project page path.
+
+`LANGFUSE_BASE_URL` is also supported and takes precedence over `LANGFUSE_HOST`; set either one. `--host` overrides both. Files require explicit loading: `npx @langfuse/cli --env .env api prompts list`. File values override shell variables with the same name; `.env` is not loaded automatically.
+
+If credentials are missing, ask the user to set them in their shell or a `.env` file. Keys are found in the Langfuse project under Settings -> API Keys; the user should create a project API key pair there. If they do not have a Langfuse account yet, share that they can create one for free at `https://langfuse.com/cloud`. Do not ask them to paste keys into chat for security reasons.
 
 ### Detailed CLI Reference
 
@@ -115,19 +127,22 @@ When you need to find information across all docs and github issues/discussions 
 curl -s "https://langfuse.com/api/search-docs?query=<url-encoded-query>"
 ```
 
-Example:
-
-```bash
-curl -s "https://langfuse.com/api/search-docs?query=How+do+I+trace+LangGraph+agents"
-```
-
 Returns a JSON response with:
 
 - `query`: the original query
-- `answer`: a JSON string containing an array of matching documents, each with:
+- `answer`: a JSON string encoding an object with a `content` array of matching documents, each with:
   - `url`: link to the doc page
   - `title`: page title
-  - `source.content`: array of relevant text excerpts from the page
+  - `source.content`: array of excerpt objects; each text excerpt has a `text` field
+- `metadata`: backend response details, usually unnecessary
+
+Decode the outer response, then parse `answer` and read its `content` array. For example, with `jq`:
+
+```bash
+curl -fsS --get 'https://langfuse.com/api/search-docs' \
+  --data-urlencode 'query=creating scores' \
+  | jq '.answer | fromjson | .content[] | {title, url, text: [.source.content[]?.text]}'
+```
 
 Search is a great fallback if you cannot find the relevant pages or need more context. Especially useful when debugging issues as all GitHub Issues and Discussions are also indexed. Responses can be large — extract only the relevant portions. Note that changelog posts may also surface here: use them only to confirm a feature exists, never to implement from — their examples may be outdated, so always implement from the docs and API/SDK reference.
 
