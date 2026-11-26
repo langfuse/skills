@@ -5,14 +5,16 @@ description: >-
 allowed-tools:
   - WebFetch(domain:langfuse.com)
   - Bash(curl *langfuse.com/*)
-  - Bash(npx langfuse-cli api __schema *)
-  - Bash(npx langfuse-cli api * --help *)
-  - Bash(npx langfuse-cli api * list *)
-  - Bash(npx langfuse-cli api * get *)
-  - Bash(bunx langfuse-cli api __schema *)
-  - Bash(bunx langfuse-cli api * --help *)
-  - Bash(bunx langfuse-cli api * list *)
-  - Bash(bunx langfuse-cli api * get *)
+  - Bash(npx @langfuse/cli api help *)
+  - Bash(npx @langfuse/cli api schema *)
+  - Bash(npx @langfuse/cli api * --help *)
+  - Bash(npx @langfuse/cli api * list *)
+  - Bash(npx @langfuse/cli api * get *)
+  - Bash(bunx --bun @langfuse/cli api help *)
+  - Bash(bunx --bun @langfuse/cli api schema *)
+  - Bash(bunx --bun @langfuse/cli api * --help *)
+  - Bash(bunx --bun @langfuse/cli api * list *)
+  - Bash(bunx --bun @langfuse/cli api * get *)
 ---
 
 # Langfuse
@@ -24,7 +26,7 @@ This skill helps you use Langfuse effectively across all common workflows: instr
 Follow these principles for ALL Langfuse work:
 
 1. **Documentation First**: NEVER implement based on memory. Always fetch current docs before writing code (Langfuse updates frequently) See the section below on how to access documentation.
-2. **CLI for Data Access**: Use `langfuse-cli` when querying/modifying Langfuse data. See the section below on how to use the CLI.
+2. **CLI for Data Access**: Use `@langfuse/cli` when querying/modifying Langfuse data. See the section below on how to use the CLI.
 3. **Best Practices by Use Case**: Read the relevant reference below use-case-specific guidelines before asking the user for more details or implementing.
 4. **Use latest Langfuse versions**: Unless the user specified otherwise or there's a good reason, always use the latest version of Langfuse SDKs/APIs. Even if you're only creating a plan for another agent to execute, be explicit about the exact version to use.
 5. **If you guide the user through UI** and are unsure about a label or location, inspect the user’s screenshots or ask to see the relevant screen. Do not assume UI labels have the exact same names as API, SDK, or CLI fields.
@@ -49,20 +51,25 @@ Follow these principles for ALL Langfuse work:
 
 ## 1. Langfuse API via CLI
 
-Use the `langfuse-cli` to interact with the full Langfuse REST API from the command line. Run via npx (no install required):
+Use the `@langfuse/cli` to interact with the full Langfuse REST API from the command line. Run via npx (no install required):
 
 Start by discovering the schema and available arguments:
 
 ```bash
-# Discover all available resources
-npx langfuse-cli api __schema
+# List all resources
+npx @langfuse/cli api help
 
 # List actions for a resource
-npx langfuse-cli api <resource> --help
+npx @langfuse/cli api <resource> --help
 
 # Show args/options for a specific action
-npx langfuse-cli api <resource> <action> --help
+npx @langfuse/cli api <resource> <action> --help
+
+# Machine-readable schema of every command
+npx @langfuse/cli api schema --json
 ```
+
+The official Langfuse CLI is the npm package `@langfuse/cli`. Do not run `pip install langfuse-cli`: the deprecated `langfuse-cli` on PyPI is a separate third-party tool that installs a command named `lf`, and it does not talk to Langfuse the way the commands in this skill do.
 
 ### Credentials
 
@@ -130,6 +137,11 @@ Returns a JSON response with:
   - `source.content`: array of relevant text excerpts from the page
 
 Search is a great fallback if you cannot find the relevant pages or need more context. Especially useful when debugging issues as all GitHub Issues and Discussions are also indexed. Responses can be large — extract only the relevant portions. Note that changelog posts may also surface here: use them only to confirm a feature exists, never to implement from — their examples may be outdated, so always implement from the docs and API/SDK reference.
+
+### MCP servers
+
+- Docs, no sign-in: `https://langfuse.com/api/mcp`
+- Project data, Basic auth with the public and secret key: `https://cloud.langfuse.com/api/public/mcp`. Swap `cloud` for `us.cloud`, `jp.cloud` or `hipaa.cloud` for the other regions, or use the self-hosted address with `/api/public/mcp`. Setup snippets are at https://mcp.reference.langfuse.com.
 
 ### Documentation Workflow
 
