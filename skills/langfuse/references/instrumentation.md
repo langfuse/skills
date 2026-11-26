@@ -21,6 +21,14 @@ Check the project:
 
 **Integration exists:** Audit against baseline requirements below.
 
+**Before installing:** Python SDK v5 needs Python 3.11+, JS/TS SDK v6 needs Node.js 22+, and both need Langfuse Cloud or self-hosted Langfuse 4.59.0+. Older runtimes silently install an older SDK major, so check `python --version` or `node --version` first.
+
+**Pitfalls in a first run:**
+- Python: wrong keys do not raise at flush; they print one 401 line and the program exits 0. Call `langfuse.auth_check()` once while setting up.
+- JS/TS: call `sdk.shutdown()` on the OpenTelemetry `NodeSDK` before a short-lived script exits, or the trace is never sent.
+
+**Framework pages** (fetch as Markdown before writing code): [Vercel AI SDK](https://langfuse.com/integrations/frameworks/vercel-ai-sdk), [Mastra](https://langfuse.com/integrations/frameworks/mastra), [Google ADK](https://langfuse.com/integrations/frameworks/google-adk), [LangGraph](https://langfuse.com/integrations/frameworks/langgraph), [OpenAI Agents SDK](https://langfuse.com/integrations/frameworks/openai-agents), [OpenRouter](https://langfuse.com/integrations/gateways/openrouter), [LiteLLM proxy](https://langfuse.com/integrations/gateways/litellm).
+
 ### 2. Verify Baseline Requirements
 
 Every trace should have these fundamentals:

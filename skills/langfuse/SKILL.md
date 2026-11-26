@@ -35,7 +35,6 @@ Follow these principles for ALL Langfuse work:
 ## Use case specific references
 
 - instrumenting an existing function/application or a coding agent: references/instrumentation.md
-- setup of tracing: section 3
 - creating or getting to a good (evaluation) dataset to measure quality or test for regressions in AI systems: references/create-dataset.md
 - migrating prompts from a codebase into Langfuse: references/prompt-migration.md
 - creating a prompt or changing any part of an existing prompt, including small edits and debugging/tuning: references/prompt-engineering.md
@@ -139,105 +138,16 @@ Returns a JSON response with:
 
 Search is a great fallback if you cannot find the relevant pages or need more context. Especially useful when debugging issues as all GitHub Issues and Discussions are also indexed. Responses can be large — extract only the relevant portions. Note that changelog posts may also surface here: use them only to confirm a feature exists, never to implement from — their examples may be outdated, so always implement from the docs and API/SDK reference.
 
+### MCP servers
+
+- Docs, no sign-in: `https://langfuse.com/api/mcp`
+- Project data, Basic auth with the public and secret key: `https://cloud.langfuse.com/api/public/mcp`. Swap `cloud` for `us.cloud`, `jp.cloud` or `hipaa.cloud` for the other regions, or use the self-hosted address with `/api/public/mcp`. Setup snippets are at https://mcp.reference.langfuse.com.
+
 ### Documentation Workflow
 
 1. Start with **llms.txt** to orient — scan for relevant page titles
 2. **Fetch specific pages** when you identify the right one
 3. Fall back to **search** when the topic is unclear and you want more context
-
-## 3. Set up tracing
-
-Python SDK v5 needs Python 3.11 or newer. JS/TS SDK v6 needs Node.js 22 or newer. Both need Langfuse Cloud or self-hosted Langfuse 4.59.0 or newer. Older runtimes install an older SDK major without a warning, so check `python --version` or `node --version` first.
-
-Put the credentials in `.env` with no spaces around `=`. Keys are in the project under Settings, API Keys. Never ask the user to paste them into chat.
-
-```bash
-LANGFUSE_PUBLIC_KEY=pk-lf-...
-LANGFUSE_SECRET_KEY=sk-lf-...
-LANGFUSE_BASE_URL=https://cloud.langfuse.com
-```
-
-Use `https://us.cloud.langfuse.com` for the US region, `https://jp.cloud.langfuse.com` for Japan, `https://hipaa.cloud.langfuse.com` for HIPAA, or the self-hosted URL.
-
-The SDKs, `tsx` and the CLI read only the process environment. Load the file into the shell before running the examples below: `set -a; . ./.env; set +a`, or `load_dotenv()` in Python.
-
-**Python**
-
-```bash
-pip install langfuse
-```
-
-```python
-from langfuse import get_client
-
-langfuse = get_client()
-assert langfuse.auth_check(), "Langfuse rejected the keys or the host"
-
-with langfuse.start_as_current_observation(as_type="span", name="process-request") as span:
-    span.update(output="done")
-
-langfuse.flush()
-```
-
-Wrong keys do not raise an error at flush. They print one 401 line and the program exits 0, so keep `auth_check()`. For the OpenAI client, run `pip install langfuse openai`, because `langfuse` does not install `openai`.
-
-**TypeScript**
-
-```bash
-npm install @langfuse/tracing @langfuse/otel "@opentelemetry/sdk-node@>=0.202.0 <0.300.0"
-```
-
-```ts
-// instrumentation.ts
-import { NodeSDK } from "@opentelemetry/sdk-node";
-import { LangfuseSpanProcessor } from "@langfuse/otel";
-
-export const sdk = new NodeSDK({ spanProcessors: [new LangfuseSpanProcessor()] });
-sdk.start();
-```
-
-```ts
-// index.ts
-import { sdk } from "./instrumentation";
-import { startActiveObservation } from "@langfuse/tracing";
-
-async function main() {
-  await startActiveObservation("my-first-trace", async (span) => {
-    span.update({ input: "Hello, Langfuse!", output: "This is my first trace!" });
-  });
-}
-
-main().finally(() => sdk.shutdown());
-```
-
-Run it with `npx tsx index.ts`. Without `sdk.shutdown()` a short program exits before the trace is sent.
-
-**Check that the trace arrived**
-
-```bash
-npx @langfuse/cli api observations list --limit 1
-```
-
-Then audit the trace as described in [references/instrumentation.md](references/instrumentation.md).
-
-**Framework pages**
-
-| Stack | Page |
-| --- | --- |
-| Vercel AI SDK | https://langfuse.com/integrations/frameworks/vercel-ai-sdk |
-| Mastra | https://langfuse.com/integrations/frameworks/mastra |
-| Google ADK | https://langfuse.com/integrations/frameworks/google-adk |
-| LangGraph | https://langfuse.com/integrations/frameworks/langgraph |
-| OpenAI Agents SDK | https://langfuse.com/integrations/frameworks/openai-agents |
-| OpenRouter | https://langfuse.com/integrations/gateways/openrouter |
-| LiteLLM proxy | https://langfuse.com/integrations/gateways/litellm |
-
-Fetch the page for the stack as Markdown before writing code.
-
-**MCP servers**
-
-- Docs, no sign-in: `https://langfuse.com/api/mcp`
-- Project data, Basic auth with the public and secret key: `https://cloud.langfuse.com/api/public/mcp`. Swap `cloud` for `us.cloud`, `jp.cloud` or `hipaa.cloud` for the other regions, or use the self-hosted address with `/api/public/mcp`. Setup snippets are at https://mcp.reference.langfuse.com.
 
 ## Skill Feedback
 
