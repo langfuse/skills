@@ -12,7 +12,7 @@ After every version bump:
 
 1. Confirm `main` has the same `version` in `.claude-plugin/plugin.json`, `.codex-plugin/plugin.json`, and `.cursor-plugin/plugin.json`.
 2. Copy the merge commit SHA (`git rev-parse origin/main`).
-3. Walk the channels below. Skip a channel only if we are sure we are not listed there.
+3. Walk each channel below.
 4. Optionally run **Sync Halo skills** (separate product surface; see below).
 
 ## Channels
@@ -32,7 +32,7 @@ Do:
 1. Open [claude.ai/directory/manage](https://claude.ai/directory/manage) on the Claude org that owns the listing. Needs a paid plan and GitHub push access to `langfuse/skills`. Docs: [Submit a plugin](https://claude.com/docs/plugins/submit), [Update a published plugin](https://claude.com/docs/plugins/submit#update-a-published-plugin).
 2. **Check for new commits** (or rely on the GitHub push webhook / scheduled check if those are on). The skill PR must already have raised `version` in `.claude-plugin/plugin.json`, or installed copies will not see an update.
 3. **Publish** the passing version unless auto-publish is on for later versions. Until it is published, the directory keeps serving the last live version.
-4. If the official marketplace SHA did not move, ask the Anthropic partner contact (historically Sophie Ball in `#clickhouse-anthropic-partnership-external`) to point `claude-plugins-official` and `knowledge-work-plugins` at the new SHA. Official marketplace listings are not self-serve; [Anthropic says](https://code.claude.com/docs/en/plugins/publish) `claude-plugins-official` does not take directory-portal submissions.
+4. If the official marketplace SHA did not move, ask the Anthropic partner contact to point `claude-plugins-official` and `knowledge-work-plugins` at the new SHA. Official marketplace listings are not self-serve; [Anthropic says](https://code.claude.com/docs/en/plugins/publish) `claude-plugins-official` does not take directory-portal submissions.
 
 ### OpenAI Codex / ChatGPT plugin directory — **manual ZIP**
 
@@ -43,11 +43,9 @@ Skill and metadata updates are **not** picked up from GitHub. Docs: [Upload and 
 Do:
 
 1. Open the Plugins page for the verified OpenAI org that owns the listing (org owner, or Apps Management Write).
-2. Zip the plugin (manifest, `skills/`, `assets/`). Bump `version` first.
+2. Zip from the merged SHA (manifest, `skills/`, `assets/`). Do not change `version`.
 3. **Upload plugin** onto the existing listing (not a new plugin). Resolve automated metadata/skill findings.
 4. Submit for review if required, then **Publish** the approved package. Publishing replaces the previous ZIP.
-
-MCP-server-only changes (not this repo) can go live from daily scans without a new ZIP.
 
 ### Cursor Marketplace — **manual re-index**
 
