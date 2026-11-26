@@ -159,6 +159,8 @@ LANGFUSE_BASE_URL=https://cloud.langfuse.com
 
 Use `https://us.cloud.langfuse.com` for the US region, `https://jp.cloud.langfuse.com` for Japan, `https://hipaa.cloud.langfuse.com` for HIPAA, or the self-hosted URL.
 
+The SDKs, `tsx` and the CLI read only the process environment. Load the file into the shell before running the examples below: `set -a; . ./.env; set +a`, or `load_dotenv()` in Python.
+
 **Python**
 
 ```bash
@@ -215,6 +217,8 @@ Run it with `npx tsx index.ts`. Without `sdk.shutdown()` a short program exits b
 ```bash
 npx @langfuse/cli api observations list --limit 1
 ```
+
+Then audit the trace as described in [references/instrumentation.md](references/instrumentation.md).
 
 **Framework pages**
 
