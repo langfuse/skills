@@ -134,3 +134,7 @@ Before a skill change counts as tested, you should have done all of the followin
 - [ ] Merged any new environments you need for testing.
 - [ ] Run the experiment on **both** Claude Code and Codex, with a baseline to compare against.
 - [ ] Reviewed the results and found them acceptable.
+
+## Publishing a plugin version
+
+Merging to `main` does not update the Claude, Codex/ChatGPT, or Cursor marketplace listings. After a version bump, follow [RELEASING.md](./RELEASING.md).
