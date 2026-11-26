@@ -19,7 +19,7 @@ npm i -g @langfuse/cli
 langfuse api <resource> <action>
 ```
 
-Note: The official Langfuse CLI is the npm package `@langfuse/cli`. Do not run `pip install langfuse-cli`: that PyPI package is a separate third-party tool that installs a command named `lf`, and it does not talk to Langfuse the way the commands in this skill do.
+Note: The official Langfuse CLI is the npm package `@langfuse/cli`. Do not run `pip install langfuse-cli`: the deprecated `langfuse-cli` on PyPI is a separate third-party tool that installs a command named `lf`, and it does not talk to Langfuse the way the commands in this skill do.
 
 ## Discovery
 

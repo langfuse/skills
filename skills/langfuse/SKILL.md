@@ -69,7 +69,7 @@ npx @langfuse/cli api <resource> <action> --help
 npx @langfuse/cli api schema --json
 ```
 
-The official Langfuse CLI is the npm package `@langfuse/cli`. Do not run `pip install langfuse-cli`: that PyPI package is a separate third-party tool that installs a command named `lf`, and it does not talk to Langfuse the way the commands in this skill do.
+The official Langfuse CLI is the npm package `@langfuse/cli`. Do not run `pip install langfuse-cli`: the deprecated `langfuse-cli` on PyPI is a separate third-party tool that installs a command named `lf`, and it does not talk to Langfuse the way the commands in this skill do.
 
 ### Credentials
 
