@@ -56,7 +56,7 @@ Instrumentation isn't done when the code compiles. This is a loop you own as the
 
 **a.** Execute the instrumented path end-to-end so a trace is actually sent.
 
-**b.** Fetch the trace(s) you just created from Langfuse. Any method works (`langfuse-cli`, REST API, SDK, MCP); the CLI is usually simplest — see [references/cli.md](references/cli.md).
+**b.** Fetch the trace(s) you just created from Langfuse. Any method works (the [Langfuse CLI](https://langfuse.com/docs/api-and-data-platform/features/cli), REST API, SDK, MCP); the CLI is usually simplest — see [references/cli.md](references/cli.md).
 
 **c.** Audit the trace against the best-practices page. **Always fetch it fresh — never audit from memory, this cannot be skipped** (the guidance changes over time):
 

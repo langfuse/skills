@@ -5,14 +5,16 @@ description: >-
 allowed-tools:
   - WebFetch(domain:langfuse.com)
   - Bash(curl *langfuse.com/*)
-  - Bash(npx langfuse-cli api __schema *)
-  - Bash(npx langfuse-cli api * --help *)
-  - Bash(npx langfuse-cli api * list *)
-  - Bash(npx langfuse-cli api * get *)
-  - Bash(bunx langfuse-cli api __schema *)
-  - Bash(bunx langfuse-cli api * --help *)
-  - Bash(bunx langfuse-cli api * list *)
-  - Bash(bunx langfuse-cli api * get *)
+  - Bash(npx @langfuse/cli api help *)
+  - Bash(npx @langfuse/cli api schema *)
+  - Bash(npx @langfuse/cli api * --help *)
+  - Bash(npx @langfuse/cli api * list *)
+  - Bash(npx @langfuse/cli api * get *)
+  - Bash(bunx --bun @langfuse/cli api help *)
+  - Bash(bunx --bun @langfuse/cli api schema *)
+  - Bash(bunx --bun @langfuse/cli api * --help *)
+  - Bash(bunx --bun @langfuse/cli api * list *)
+  - Bash(bunx --bun @langfuse/cli api * get *)
 ---
 
 # Langfuse
@@ -24,7 +26,7 @@ This skill helps you use Langfuse effectively across all common workflows: instr
 Follow these principles for ALL Langfuse work:
 
 1. **Documentation First**: NEVER implement based on memory. Always fetch current docs before writing code (Langfuse updates frequently) See the section below on how to access documentation.
-2. **CLI for Data Access**: Use `langfuse-cli` when querying/modifying Langfuse data. See the section below on how to use the CLI.
+2. **CLI for Data Access**: Use `@langfuse/cli` (run it with `npx @langfuse/cli`) when querying or modifying Langfuse data. See the section below on how to use the CLI.
 3. **Best Practices by Use Case**: Read the relevant reference below use-case-specific guidelines before asking the user for more details or implementing.
 4. **Use latest Langfuse versions**: Unless the user specified otherwise or there's a good reason, always use the latest version of Langfuse SDKs/APIs. Even if you're only creating a plan for another agent to execute, be explicit about the exact version to use.
 5. **If you guide the user through UI** and are unsure about a label or location, inspect the user’s screenshots or ask to see the relevant screen. Do not assume UI labels have the exact same names as API, SDK, or CLI fields.
@@ -33,6 +35,7 @@ Follow these principles for ALL Langfuse work:
 ## Use case specific references
 
 - instrumenting an existing function/application or a coding agent: references/instrumentation.md
+- setup of tracing: section 3
 - creating or getting to a good (evaluation) dataset to measure quality or test for regressions in AI systems: references/create-dataset.md
 - migrating prompts from a codebase into Langfuse: references/prompt-migration.md
 - creating a prompt or changing any part of an existing prompt, including small edits and debugging/tuning: references/prompt-engineering.md
@@ -49,20 +52,25 @@ Follow these principles for ALL Langfuse work:
 
 ## 1. Langfuse API via CLI
 
-Use the `langfuse-cli` to interact with the full Langfuse REST API from the command line. Run via npx (no install required):
+Use the Langfuse CLI to interact with the full Langfuse REST API from the command line. Run it with npx, no install required:
 
-Start by discovering the schema and available arguments:
+Start by discovering the resources and their arguments:
 
 ```bash
-# Discover all available resources
-npx langfuse-cli api __schema
+# List all resources
+npx @langfuse/cli api help
 
 # List actions for a resource
-npx langfuse-cli api <resource> --help
+npx @langfuse/cli api <resource> --help
 
 # Show args/options for a specific action
-npx langfuse-cli api <resource> <action> --help
+npx @langfuse/cli api <resource> <action> --help
+
+# Machine-readable schema of every command
+npx @langfuse/cli api schema --json
 ```
+
+The official Langfuse CLI is the npm package `@langfuse/cli`. Do not run `pip install langfuse-cli`: that PyPI package is a separate third-party tool that installs a command named `lf`, and it does not talk to Langfuse the way the commands in this skill do.
 
 ### Credentials
 
@@ -136,6 +144,96 @@ Search is a great fallback if you cannot find the relevant pages or need more co
 1. Start with **llms.txt** to orient — scan for relevant page titles
 2. **Fetch specific pages** when you identify the right one
 3. Fall back to **search** when the topic is unclear and you want more context
+
+## 3. Set up tracing
+
+Python SDK v5 needs Python 3.11 or newer. JS/TS SDK v6 needs Node.js 22 or newer. Both need Langfuse Cloud or self-hosted Langfuse 4.59.0 or newer. Older runtimes install an older SDK major without a warning, so check `python --version` or `node --version` first.
+
+Put the credentials in `.env` with no spaces around `=`. Keys are in the project under Settings, API Keys. Never ask the user to paste them into chat.
+
+```bash
+LANGFUSE_PUBLIC_KEY=pk-lf-...
+LANGFUSE_SECRET_KEY=sk-lf-...
+LANGFUSE_BASE_URL=https://cloud.langfuse.com
+```
+
+Use `https://us.cloud.langfuse.com` for the US region, `https://jp.cloud.langfuse.com` for Japan, `https://hipaa.cloud.langfuse.com` for HIPAA, or the self-hosted URL.
+
+**Python**
+
+```bash
+pip install langfuse
+```
+
+```python
+from langfuse import get_client
+
+langfuse = get_client()
+assert langfuse.auth_check(), "Langfuse rejected the keys or the host"
+
+with langfuse.start_as_current_observation(as_type="span", name="process-request") as span:
+    span.update(output="done")
+
+langfuse.flush()
+```
+
+Wrong keys do not raise an error at flush. They print one 401 line and the program exits 0, so keep `auth_check()`. For the OpenAI client, run `pip install langfuse openai`, because `langfuse` does not install `openai`.
+
+**TypeScript**
+
+```bash
+npm install @langfuse/tracing @langfuse/otel "@opentelemetry/sdk-node@>=0.202.0 <0.300.0"
+```
+
+```ts
+// instrumentation.ts
+import { NodeSDK } from "@opentelemetry/sdk-node";
+import { LangfuseSpanProcessor } from "@langfuse/otel";
+
+export const sdk = new NodeSDK({ spanProcessors: [new LangfuseSpanProcessor()] });
+sdk.start();
+```
+
+```ts
+// index.ts
+import { sdk } from "./instrumentation";
+import { startActiveObservation } from "@langfuse/tracing";
+
+async function main() {
+  await startActiveObservation("my-first-trace", async (span) => {
+    span.update({ input: "Hello, Langfuse!", output: "This is my first trace!" });
+  });
+}
+
+main().finally(() => sdk.shutdown());
+```
+
+Run it with `npx tsx index.ts`. Without `sdk.shutdown()` a short program exits before the trace is sent.
+
+**Check that the trace arrived**
+
+```bash
+npx @langfuse/cli api observations list --limit 1
+```
+
+**Framework pages**
+
+| Stack | Page |
+| --- | --- |
+| Vercel AI SDK | https://langfuse.com/integrations/frameworks/vercel-ai-sdk |
+| Mastra | https://langfuse.com/integrations/frameworks/mastra |
+| Google ADK | https://langfuse.com/integrations/frameworks/google-adk |
+| LangGraph | https://langfuse.com/integrations/frameworks/langgraph |
+| OpenAI Agents SDK | https://langfuse.com/integrations/frameworks/openai-agents |
+| OpenRouter | https://langfuse.com/integrations/gateways/openrouter |
+| LiteLLM proxy | https://langfuse.com/integrations/gateways/litellm |
+
+Fetch the page for the stack as Markdown before writing code.
+
+**MCP servers**
+
+- Docs, no sign-in: `https://langfuse.com/api/mcp`
+- Project data, Basic auth with the public and secret key: `https://cloud.langfuse.com/api/public/mcp`. Swap `cloud` for `us.cloud`, `jp.cloud` or `hipaa.cloud` for the other regions, or use the self-hosted address with `/api/public/mcp`. Setup snippets are at https://mcp.reference.langfuse.com.
 
 ## Skill Feedback
 

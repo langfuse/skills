@@ -22,7 +22,7 @@ Discover the current schemas before use.
 ## Choose the execution mode
 
 - Confirm the target host and project before project reads or writes. Never request secrets in chat or commit them.
-- Prefer an available project interface. Otherwise use the [CLI](https://langfuse.com/docs/api-and-data-platform/features/cli), starting with `api __schema` and action `--help`.
+- Prefer an available project interface. Otherwise use the [Langfuse CLI](https://langfuse.com/docs/api-and-data-platform/features/cli), starting with `api help` and action `--help`.
 - Without project access, enter **code-only mode**: complete verifiable repository work, do not infer evaluator or export state, and mark every project-dependent result blocked.
 - Without codebase access, inspect the project and return an exact code handoff; do not mark repository work ready.
 

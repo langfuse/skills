@@ -1,6 +1,6 @@
 ---
 name: langfuse-cli
-description: Langfuse CLI usage reference — install, resource/action discovery, credentials, and common usage tips for `langfuse-cli`. Use for further tips on using the Langfuse CLI.
+description: Langfuse CLI usage reference — install, resource/action discovery, credentials, and common usage tips for `@langfuse/cli`. Use for further tips on using the Langfuse CLI.
 ---
 
 # Langfuse CLI Reference
@@ -11,19 +11,24 @@ Documentation: https://langfuse.com/docs/api-and-data-platform/features/cli
 
 ```bash
 # Run directly (recommended)
-npx langfuse-cli api <resource> <action>
-bunx langfuse-cli api <resource> <action>
+npx @langfuse/cli api <resource> <action>
+bunx --bun @langfuse/cli api <resource> <action>
 
 # Or install globally
-npm i -g langfuse-cli
+npm i -g @langfuse/cli
 langfuse api <resource> <action>
 ```
+
+Note: The official Langfuse CLI is the npm package `@langfuse/cli`. Do not run `pip install langfuse-cli`: that PyPI package is a separate third-party tool that installs a command named `lf`, and it does not talk to Langfuse the way the commands in this skill do.
 
 ## Discovery
 
 ```bash
-# List all resources and auth info
-langfuse api __schema
+# List all resources
+langfuse api help
+
+# Machine-readable schema of every command
+langfuse api schema --json
 
 # List actions for a resource
 langfuse api <resource> --help
